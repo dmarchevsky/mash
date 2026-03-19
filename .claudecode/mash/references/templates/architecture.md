@@ -23,7 +23,7 @@ tests/        — Test files
 
 - One module per file unless tightly coupled.
 - Tests mirror source structure (e.g., `src/foo.py` → `tests/test_foo.py`).
-- Story files are the contract between orchestrator, dev, and QA agents.
+- Story files are the contract between MASH, dev, and QA agents.
 
 ## Dependencies
 
