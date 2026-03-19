@@ -8,7 +8,7 @@ This project uses the MASH framework for planning and implementation.
 - **`src/`** contains application source code.
 - **`tests/`** contains test files.
 - Story files live in `.planning/stories/` with YAML frontmatter tracking status.
-- The MASH orchestrator skill (`.claudecode/mash-orchestrator/SKILL.md`) manages planning and delegates implementation to isolated sub-agents.
+- The MASH orchestrator skill (`.claudecode/mash/SKILL.md`) manages planning and delegates implementation to isolated sub-agents.
 
 ## Workflow
 
