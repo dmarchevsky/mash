@@ -12,7 +12,7 @@
 ```
 src/          — Application source code
 tests/        — Test files
-.planning/    — Specs, stories, roadmap
+.mash/        — Planning, features, status
 ```
 
 ## Schema
@@ -23,7 +23,7 @@ tests/        — Test files
 
 - One module per file unless tightly coupled.
 - Tests mirror source structure (e.g., `src/foo.py` → `tests/test_foo.py`).
-- Story files are the contract between MASH, dev, and QA agents.
+- Feature files are the contract between MASH, dev, and QA agents.
 
 ## Dependencies
 

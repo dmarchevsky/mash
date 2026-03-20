@@ -1,4 +1,4 @@
-# Scope
+# Project
 
 ## Overview
 <!-- One-paragraph summary of the project -->
@@ -11,6 +11,10 @@
 <!-- What is explicitly out of scope -->
 -
 
+## Technology Preferences
+<!-- What technologies and frameworks we chose  -->
+-
+
 ## Users
 <!-- Who will use this and how -->
 -
@@ -18,3 +22,4 @@
 ## Success Criteria
 <!-- How we know the project is done -->
 -
+

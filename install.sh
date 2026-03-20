@@ -46,7 +46,7 @@ ok "Scripts marked executable"
 
 created_scaffolding=false
 
-for dir in .planning .planning/stories src tests; do
+for dir in .mash .mash/plan .mash/plan/features .mash/dev src tests; do
   if [ ! -d "$TARGET_DIR/$dir" ]; then
     mkdir -p "$TARGET_DIR/$dir"
     ok "Created $dir/"
@@ -54,20 +54,20 @@ for dir in .planning .planning/stories src tests; do
   fi
 done
 
-if [ ! -f "$TARGET_DIR/.planning/architecture.md" ]; then
-  cp "$TMPDIR_MASH/mash/.planning/architecture.md" "$TARGET_DIR/.planning/architecture.md"
-  ok "Created .planning/architecture.md"
+if [ ! -f "$TARGET_DIR/.mash/plan/architecture.md" ]; then
+  cp "$TMPDIR_MASH/mash/.mash/plan/architecture.md" "$TARGET_DIR/.mash/plan/architecture.md"
+  ok "Created .mash/plan/architecture.md"
   created_scaffolding=true
 fi
 
-if [ ! -f "$TARGET_DIR/.planning/roadmap.md" ]; then
-  cp "$TMPDIR_MASH/mash/.planning/roadmap.md" "$TARGET_DIR/.planning/roadmap.md"
-  ok "Created .planning/roadmap.md"
+if [ ! -f "$TARGET_DIR/.mash/plan/status.md" ]; then
+  cp "$TMPDIR_MASH/mash/.mash/plan/status.md" "$TARGET_DIR/.mash/plan/status.md"
+  ok "Created .mash/plan/status.md"
   created_scaffolding=true
 fi
 
 # Add .gitkeep to empty dirs
-for dir in .planning/stories src tests; do
+for dir in .mash/plan/features .mash/dev src tests; do
   if [ -z "$(ls -A "$TARGET_DIR/$dir" 2>/dev/null)" ]; then
     touch "$TARGET_DIR/$dir/.gitkeep"
   fi
@@ -93,17 +93,17 @@ This project uses the MASH framework for planning and implementation.
 
 ## Conventions
 
-- **`.planning/`** is the source of truth for all specs, stories, and architecture decisions.
+- **`.mash/plan/`** is the source of truth for all specs, features, and architecture decisions.
 - **`src/`** contains application source code.
 - **`tests/`** contains test files.
-- Story files live in `.planning/stories/` with YAML frontmatter tracking status.
+- Feature files live in `.mash/plan/features/` with YAML frontmatter tracking status.
 - The MASH skill (`.claudecode/mash/SKILL.md`) manages planning and delegates implementation to isolated sub-agents.
 
 ## Workflow
 
-1. `mash init` — iteratively define your project (architecture + scope).
-2. `mash plan` — interactively create user stories with clarifying questions.
-3. `mash dev <story-id>` or `mash dev-all` — implement and test stories via sub-agents.
+1. `mash init` — iteratively define your project (architecture + project).
+2. `mash plan` — interactively create features with clarifying questions.
+3. `mash dev <feature-id>` or `mash dev-all` — implement and test features via sub-agents.
 4. MASH never writes code directly — it spawns sub-agents.
 CLAUDE_EOF
   ok "Appended MASH section to CLAUDE.md"
@@ -114,8 +114,8 @@ fi
 GITIGNORE="$TARGET_DIR/.gitignore"
 
 mash_gitignore_entries=(
-  ".planning/stories/*.wip.md"
-  ".mash-tmp/"
+  ".mash/plan/features/*.wip.md"
+  ".mash/dev/"
 )
 
 if [ ! -f "$GITIGNORE" ]; then
