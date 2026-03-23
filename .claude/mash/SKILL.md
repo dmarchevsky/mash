@@ -54,7 +54,7 @@ Check that all of these exist and have content beyond templates:
 If any are missing or empty, ask the user if they want to initialize.
 
 #### INVOKE INIT
-Read `.claudecode/mash/references/init-persona.md` and invoke:
+Read `.claude/mash/references/init-persona.md` and invoke:
 ```
 Agent(
   subagent_type="general-purpose",
@@ -69,7 +69,7 @@ Read `.mash/plan/progress.md`. Check if there are any features not marked DONE.
 - If the user wants new features:
 
 #### INVOKE PLAN
-Read `.claudecode/mash/references/plan-persona.md` and invoke:
+Read `.claude/mash/references/plan-persona.md` and invoke:
 ```
 Agent(
   subagent_type="general-purpose",
@@ -110,7 +110,7 @@ For each feature to implement:
 6. **Set progress.md to WIP.**
 
 #### INVOKE DEV
-Read `.claudecode/mash/references/dev-persona.md` and invoke:
+Read `.claude/mash/references/dev-persona.md` and invoke:
 ```
 Agent(
   subagent_type="general-purpose",
@@ -131,7 +131,7 @@ After the agent returns, read `.mash/dev/feature-<id>.md` to check the status. G
 7. **QA phase**:
 
 #### INVOKE QA
-Read `.claudecode/mash/references/qa-persona.md` and invoke:
+Read `.claude/mash/references/qa-persona.md` and invoke:
 ```
 Agent(
   subagent_type="general-purpose",
