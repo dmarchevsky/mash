@@ -210,3 +210,4 @@ After processing a feature:
 - **Always update status** in both progress.md and dev feature files after state changes.
 - **Commit after QA_PASS.** Create a git commit for each successfully completed feature.
 - **Ask before large plans.** If a `plan` command would create more than 5 features, show the plan and ask for confirmation before creating files.
+- **Always use AskUserQuestion.** When you need user input — choices, confirmations, or clarifications — use the AskUserQuestion tool. Never just print a question as text.
