@@ -33,9 +33,14 @@ git clone --depth 1 --quiet "$MASH_REPO" "$TMPDIR_MASH/mash"
 # --- Step 3: Copy framework files (always overwrite) ---
 
 info "Installing framework files..."
-mkdir -p "$TARGET_DIR/.claudecode/mash"
-cp -r "$TMPDIR_MASH/mash/.claudecode/mash/." "$TARGET_DIR/.claudecode/mash/"
-ok ".claudecode/mash/"
+
+mkdir -p "$TARGET_DIR/.claude/mash"
+cp -r "$TMPDIR_MASH/mash/.claude/mash/." "$TARGET_DIR/.claude/mash/"
+ok ".claude/mash/"
+
+mkdir -p "$TARGET_DIR/.claude/commands"
+cp "$TMPDIR_MASH/mash/.claude/commands/mash.md" "$TARGET_DIR/.claude/commands/mash.md"
+ok ".claude/commands/mash.md"
 
 # --- Step 4: Create scaffolding (only if missing) ---
 
@@ -49,18 +54,6 @@ for dir in .mash .mash/plan .mash/plan/features .mash/dev src tests; do
   fi
 done
 
-if [ ! -f "$TARGET_DIR/.mash/plan/architecture.md" ]; then
-  cp "$TMPDIR_MASH/mash/.mash/plan/architecture.md" "$TARGET_DIR/.mash/plan/architecture.md"
-  ok "Created .mash/plan/architecture.md"
-  created_scaffolding=true
-fi
-
-if [ ! -f "$TARGET_DIR/.mash/plan/progress.md" ]; then
-  cp "$TMPDIR_MASH/mash/.mash/plan/progress.md" "$TARGET_DIR/.mash/plan/progress.md"
-  ok "Created .mash/plan/progress.md"
-  created_scaffolding=true
-fi
-
 # Add .gitkeep to empty dirs
 for dir in .mash/plan/features .mash/dev src tests; do
   if [ -z "$(ls -A "$TARGET_DIR/$dir" 2>/dev/null)" ]; then
@@ -72,7 +65,7 @@ if [ "$created_scaffolding" = false ]; then
   ok "Scaffolding already exists — skipped"
 fi
 
-# --- Step 6: Append MASH section to CLAUDE.md ---
+# --- Step 5: Append MASH section to CLAUDE.md ---
 
 CLAUDE_MD="$TARGET_DIR/CLAUDE.md"
 
@@ -94,7 +87,7 @@ This project uses the MASH framework for planning and implementation.
 - Feature specs live in `.mash/plan/features/` with YAML frontmatter tracking status.
 - Working copies for implementation live in `.mash/dev/`.
 - `.mash/plan/progress.md` is the main status tracker.
-- The MASH skill (`.claudecode/mash/SKILL.md`) manages planning and delegates implementation to isolated sub-agents via the Agent tool.
+- The MASH skill (`.claude/mash/SKILL.md`) manages planning and delegates implementation to isolated sub-agents via the Agent tool.
 
 ## Workflow
 
@@ -107,7 +100,7 @@ CLAUDE_EOF
   ok "Appended MASH section to CLAUDE.md"
 fi
 
-# --- Step 7: Append gitignore entries ---
+# --- Step 6: Append gitignore entries ---
 
 GITIGNORE="$TARGET_DIR/.gitignore"
 
@@ -134,7 +127,7 @@ else
   ok ".gitignore already has MASH entries — skipped"
 fi
 
-# --- Step 8: Done ---
+# --- Step 7: Done ---
 
 printf '\n\033[1;32mMASH installed successfully.\033[0m\n'
-printf 'Run \033[1mmash\033[0m in Claude Code to get started.\n\n'
+printf 'Run \033[1m/mash init\033[0m in Claude Code to get started.\n\n'
