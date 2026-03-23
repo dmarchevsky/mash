@@ -54,13 +54,8 @@ Check that all of these exist and have content beyond templates:
 If any are missing or empty, ask the user if they want to initialize.
 
 #### INVOKE INIT
-Read `.claude/mash/references/init-persona.md` and invoke:
-```
-Agent(
-  subagent_type="general-purpose",
-  prompt="<init-persona.md contents>"
-)
-```
+Read `.claude/mash/references/init-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — init requires multi-turn interaction with the user via AskUserQuestion.
+
 **If command is `init`, stop here.**
 
 ### CHECK FEATURES
@@ -69,13 +64,8 @@ Read `.mash/plan/progress.md`. Check if there are any features not marked DONE.
 - If the user wants new features:
 
 #### INVOKE PLAN
-Read `.claude/mash/references/plan-persona.md` and invoke:
-```
-Agent(
-  subagent_type="general-purpose",
-  prompt="<plan-persona.md contents>"
-)
-```
+Read `.claude/mash/references/plan-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — plan requires multi-turn interaction with the user via AskUserQuestion.
+
 **If command is `plan`, stop here.**
 
 ### PREPARE FOR IMPLEMENTATION
