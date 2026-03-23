@@ -1,7 +1,8 @@
 ---
 id: <feature-id>
 title: <short title>
-status: PLANNED|WIP|DONE|DROPPED
+status: CREATED
+attempt: 0
 ---
 
 # <title>
@@ -10,15 +11,20 @@ status: PLANNED|WIP|DONE|DROPPED
 <!-- What to build -->
 
 ## Acceptance Criteria
-<!-- Describe acceptance criteria - verifications that will be used by QA-persona after the DEV-persona is done to verify completeness of development and release readiness -->
+<!-- Verifications used by QA after development to confirm completeness and release readiness -->
 - [ ] <criterion 1>
 - [ ] <criterion 2>
 
 ## Regression tests
-<!-- Describe regression tests - verifications that will be used by QA-persona after every new feature development to verify that new features did not break existing ones -->
+<!-- Verifications run by QA after every new feature to ensure existing functionality isn't broken -->
 - [ ] <regression test 1>
 - [ ] <regression test 2>
 
-
 ## Technical Notes
 <!-- Implementation hints, constraints, references -->
+
+## Dev outcome
+<!-- Filled by dev-persona after implementation attempt -->
+
+## QA outcome
+<!-- Filled by qa-persona after verification -->
