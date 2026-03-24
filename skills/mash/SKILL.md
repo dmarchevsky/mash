@@ -41,7 +41,7 @@ The user invokes you with `/mash [command] [features]`.
 ### `update`
 `/mash update` — check for framework updates and install them. Run GREET, then:
 
-1. Read `.claude/mash/VERSION` to get the installed version. If missing, report "unknown version" and suggest re-installing.
+1. Read `VERSION` to get the installed version. If missing, report "unknown version" and suggest re-installing.
 2. Fetch the latest version from GitHub: `curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/VERSION`.
 3. Compare versions:
    - If identical, report "MASH is up to date (vX.Y.Z)" and stop.
@@ -105,7 +105,7 @@ Check that all of these exist and have content beyond templates:
 If any are missing or empty, ask the user if they want to initialize.
 
 #### INVOKE INIT
-Read `.claude/mash/references/init-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — init requires multi-turn interaction with the user via AskUserQuestion.
+Read `skills/mash/references/init-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — init requires multi-turn interaction with the user via AskUserQuestion.
 
 **If command is `init`, stop here.**
 
@@ -115,7 +115,7 @@ Read `.mash/plan/progress.md`. Check if there are any features not marked DONE.
 - If the user wants new features:
 
 #### INVOKE PLAN
-Read `.claude/mash/references/plan-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — plan requires multi-turn interaction with the user via AskUserQuestion.
+Read `skills/mash/references/plan-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — plan requires multi-turn interaction with the user via AskUserQuestion.
 
 **If command is `plan`, stop here.**
 
@@ -156,7 +156,7 @@ For each feature to implement:
 7. **Set progress.md to WIP.**
 
 #### INVOKE DEV
-Read `.claude/mash/references/dev-persona.md` and invoke:
+Read `skills/mash/references/dev-persona.md` and invoke:
 ```
 Agent(
   subagent_type="general-purpose",
@@ -177,7 +177,7 @@ After the agent returns, read `.mash/dev/feature-<id>.md` to check the status. G
 8. **QA phase**:
 
 #### INVOKE QA
-Read `.claude/mash/references/qa-persona.md` and invoke:
+Read `skills/mash/references/qa-persona.md` and invoke:
 ```
 Agent(
   subagent_type="general-purpose",

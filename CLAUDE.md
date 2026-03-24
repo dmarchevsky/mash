@@ -11,7 +11,7 @@ This project uses the MASH framework for planning and implementation.
 - Feature specs live in `.mash/plan/features/` with YAML frontmatter tracking status.
 - Working copies for implementation live in `.mash/dev/`.
 - `.mash/plan/progress.md` is the main status tracker.
-- The MASH skill (`.claude/mash/SKILL.md`) manages planning and delegates implementation to isolated sub-agents via the Agent tool.
+- The MASH skill (`skills/mash/SKILL.md`) manages planning and delegates implementation to isolated sub-agents via the Agent tool.
 
 ## Workflow
 

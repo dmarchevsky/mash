@@ -62,8 +62,8 @@ if [ -f "$MASH_SRC/VERSION" ]; then
 fi
 
 INSTALLED_VERSION=""
-if [ -f "$TARGET_DIR/.claude/mash/VERSION" ]; then
-  INSTALLED_VERSION="$(cat "$TARGET_DIR/.claude/mash/VERSION" | tr -d '[:space:]')"
+if [ -f "$TARGET_DIR/skills/mash/VERSION" ]; then
+  INSTALLED_VERSION="$(cat "$TARGET_DIR/skills/mash/VERSION" | tr -d '[:space:]')"
 fi
 
 if [ -n "$INSTALLED_VERSION" ]; then
@@ -91,17 +91,17 @@ fi
 
 info "Installing framework files..."
 
-mkdir -p "$TARGET_DIR/.claude/mash"
-cp -r "$MASH_SRC/.claude/mash/." "$TARGET_DIR/.claude/mash/"
-ok ".claude/mash/"
+mkdir -p "$TARGET_DIR/skills/mash"
+cp -r "$MASH_SRC/skills/mash/." "$TARGET_DIR/skills/mash/"
+ok "skills/mash/"
 
 mkdir -p "$TARGET_DIR/.claude/commands"
-cp "$MASH_SRC/.claude/commands/mash.md" "$TARGET_DIR/.claude/commands/mash.md"
+cp "$MASH_SRC/commands/mash.md" "$TARGET_DIR/.claude/commands/mash.md"
 ok ".claude/commands/mash.md"
 
-# Copy version file
+# Copy version file into skills/mash/ for installed-version tracking
 if [ -f "$MASH_SRC/VERSION" ]; then
-  cp "$MASH_SRC/VERSION" "$TARGET_DIR/.claude/mash/VERSION"
+  cp "$MASH_SRC/VERSION" "$TARGET_DIR/skills/mash/VERSION"
   ok "VERSION (v$NEW_VERSION)"
 fi
 
@@ -146,7 +146,7 @@ This project uses the MASH framework for planning and implementation.
 - Feature specs live in `.mash/plan/features/` with YAML frontmatter tracking status.
 - Working copies for implementation live in `.mash/dev/`.
 - `.mash/plan/progress.md` is the main status tracker.
-- The MASH skill (`.claude/mash/SKILL.md`) manages planning and delegates implementation to isolated sub-agents via the Agent tool.
+- The MASH skill (`skills/mash/SKILL.md`) manages planning and delegates implementation to isolated sub-agents via the Agent tool.
 
 ## Workflow
 

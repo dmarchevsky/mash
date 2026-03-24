@@ -25,7 +25,7 @@ curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | ba
 ```
 
 This installs the framework into your project:
-- `.claude/mash/` — framework files (personas, templates, orchestrator)
+- `skills/mash/` — framework files (personas, templates, orchestrator)
 - `.claude/commands/mash.md` — registers the `/mash` command
 - `.mash/plan/` — where specs and feature definitions live
 - `src/` and `tests/` — where agents write code

@@ -1,0 +1,7 @@
+{
+  "name": "mash",
+  "description": "Multi-Agent Software Harness — orchestrates feature planning and dev/QA sub-agents",
+  "version": "0.1.0",
+  "author": { "name": "dmarchevsky" },
+  "repository": "https://github.com/dmarchevsky/mash"
+}
