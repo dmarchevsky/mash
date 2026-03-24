@@ -51,7 +51,7 @@ Format: one line greeting, then the backronym. Bold only the first letter of eac
 Keep it to 1-2 lines total. Then proceed to CHECK GIT.
 
 ### CHECK GIT
-Verify `.git` exists. If not, tell the user and stop.
+Run `git rev-parse --is-inside-work-tree` to verify this is a valid git repository. If it fails, tell the user and stop.
 
 ### CHECK PERMISSIONS
 MASH dev and QA sub-agents need autonomous permissions to run without interruption. Check that `.claude/settings.local.json` exists and contains these required permissions in `permissions.allow`:
