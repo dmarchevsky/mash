@@ -35,6 +35,21 @@ The user invokes you with `/mash [command] [features]`.
 ### `status`
 `/mash status` — read `.mash/plan/progress.md` and display a summary of all features and their statuses.
 
+### `update`
+`/mash update` — check for framework updates and install them. Run GREET, then:
+
+1. Read `.claude/mash/VERSION` to get the installed version. If missing, report "unknown version" and suggest re-installing.
+2. Fetch the latest version from GitHub: `curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/VERSION`.
+3. Compare versions:
+   - If identical, report "MASH is up to date (vX.Y.Z)" and stop.
+   - If different, report the version difference.
+4. Fetch the changelog section for the new version: `curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/CHANGELOG.md` and display the relevant entries.
+5. Use AskUserQuestion to ask the user whether to update.
+6. If confirmed, run: `curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash`
+7. Report completion.
+
+**If command is `update`, skip all other steps.**
+
 ---
 
 ## Execution Flow
@@ -122,17 +137,17 @@ For each feature to implement:
    - Dev and QA agents should work within the worktree directory.
    - If `branching: current_branch`, skip this step — work directly in the project root.
 4. **Prepare dev copy**: If `.mash/dev/feature-<id>.md` does not exist, copy it from `.mash/plan/features/feature-<id>.md` and set status to DEV_READY in the dev copy.
-4. **Read dev status** from `.mash/dev/feature-<id>.md`:
+5. **Read dev status** from `.mash/dev/feature-<id>.md`:
 
    - **CREATED** → Exit this feature's loop (should not be in dev with this status).
    - **DONE** → Exit this feature's loop (already complete).
-   - **DEV_READY or WIP** → Continue to step 5.
-   - **DEV_DONE** → Skip to step 7 (QA phase).
-   - **DEV_FAIL or QA_FAIL** → Go to step 8 (failure handling).
+   - **DEV_READY or WIP** → Continue to step 6.
+   - **DEV_DONE** → Skip to step 8 (QA phase).
+   - **DEV_FAIL or QA_FAIL** → Go to step 9 (failure handling).
    - **QA_PASS** → Mark as DONE in progress.md, exit this feature's loop.
 
-5. **Increment attempt**: Update the `attempt` field in `.mash/dev/feature-<id>.md` frontmatter. If attempt > 3, set progress.md status to FAILED and stop this feature.
-6. **Set progress.md to WIP.**
+6. **Increment attempt**: Update the `attempt` field in `.mash/dev/feature-<id>.md` frontmatter. If attempt > 3, set progress.md status to FAILED, **clean up worktree** (see WORKTREE CLEANUP below), and stop this feature.
+7. **Set progress.md to WIP.**
 
 #### INVOKE DEV
 Read `.claude/mash/references/dev-persona.md` and invoke:
@@ -151,9 +166,9 @@ Read these files before starting:
 - .mash/dev/feature-<id>.md"
 )
 ```
-After the agent returns, read `.mash/dev/feature-<id>.md` to check the status. Go back to step 4.
+After the agent returns, read `.mash/dev/feature-<id>.md` to check the status. Go back to step 5.
 
-7. **QA phase**:
+8. **QA phase**:
 
 #### INVOKE QA
 Read `.claude/mash/references/qa-persona.md` and invoke:
@@ -172,16 +187,16 @@ Read these files before starting:
 - .mash/dev/feature-<id>.md"
 )
 ```
-After the agent returns, read `.mash/dev/feature-<id>.md` to check the status. Go back to step 4.
+After the agent returns, read `.mash/dev/feature-<id>.md` to check the status. Go back to step 5.
 
-8. **Failure handling** (DEV_FAIL or QA_FAIL):
+9. **Failure handling** (DEV_FAIL or QA_FAIL):
    - Read the Dev outcome / QA outcome sections in `.mash/dev/feature-<id>.md`.
    - Analyze what prevented success.
    - Propose changes to `.mash/plan/features/feature-<id>.md` and/or `.mash/plan/architecture.md`.
    - Present proposed changes to the user for review and confirmation.
    - Apply confirmed changes to the plan feature file and copy updates to the dev feature file.
    - Set dev feature file status to DEV_READY.
-   - Go back to step 4.
+   - Go back to step 5.
 
 ### LOOP COMPLETION
 
@@ -197,12 +212,18 @@ Read `commit` and `branching` from `.mash/plan/settings.md` and act accordingly:
 - Commit the changes for this feature with a descriptive message.
 - If `branching: worktree`:
   - Merge the feature branch (`mash/feature-<id>`) back into the original branch.
-  - Remove the worktree: `git worktree remove .mash/worktrees/feature-<id>`.
-  - Delete the feature branch: `git branch -d mash/feature-<id>`.
+  - Run WORKTREE CLEANUP for this feature.
 
 **If `commit: manual`:**
 - Do NOT commit or merge. Inform the user that feature <id> passed QA and changes are ready.
 - If `branching: worktree`, inform the user which worktree/branch contains the changes and leave it in place.
+
+### WORKTREE CLEANUP
+If `branching: worktree` in settings.md and a worktree exists for the feature:
+1. `git worktree remove .mash/worktrees/feature-<id>` (use `--force` if needed).
+2. `git branch -d mash/feature-<id>` (only if the branch has been merged; use `-D` if FAILED status and user confirms).
+
+This is called from POST-FEATURE (after merge) and from step 6 (when attempt > 3 / FAILED).
 
 ---
 
