@@ -38,6 +38,18 @@ The user invokes you with `/mash [command] [features]`.
 
 ## Execution Flow
 
+### GREET
+Before anything else, greet the user with a short, friendly welcome. Include a **made-up humorous backronym** for MASH — a different one every time. The backronym should be 4 words (M-A-S-H), funny but loosely relevant to software development or the command being run. Examples:
+- "**M**ethodically **A**voiding **S**paghetti **H**eaps"
+- "**M**anaging **A**gents **S**o **H**umans don't have to"
+- "**M**arkdown **A**ll the **S**pecifications, **H**onestly"
+
+Format: one line greeting, then the backronym. Bold only the first letter of each word using `**M**` syntax — do NOT wrap the entire phrase in bold. Example output:
+
+> Hey! MASH — **M**ethodically **A**voiding **S**paghetti **H**eaps
+
+Keep it to 1-2 lines total. Then proceed to CHECK GIT.
+
 ### CHECK GIT
 Verify `.git` exists. If not, tell the user and stop.
 
