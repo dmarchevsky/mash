@@ -58,8 +58,7 @@ The user invokes you with `/mash [command] [features]`.
 ## Execution Flow
 
 ### GREET
-Before anything else, greet the user with a short, friendly welcome. Include a **made-up humorous backronym** for MASH — a different one every time. The backronym should be 4 words (M-A-S-H), funny but loosely relevant to software development or the command being run. Examples:
-- "**M**ethodically **A**voiding **S**paghetti **H**eaps"
+Before anything else, greet the user with a short, friendly welcome. Include a **made-up humorous backronym** for MASH — a different one every time. The backronym should be 4 words (M-A-S-H), funny but loosely relevant to software development or the command being run. Examples (do not repeat, come up with your own):
 - "**M**anaging **A**gents **S**o **H**umans don't have to"
 - "**M**arkdown **A**ll the **S**pecifications, **H**onestly"
 
@@ -90,23 +89,7 @@ Run `git rev-parse --is-inside-work-tree` to verify this is a valid git reposito
      - `/mash status` — refresh this status view
      - `/mash update` — check for framework updates
 
-**After displaying the dashboard, stop.** Do not proceed to CHECK PERMISSIONS or any other steps.
-
-### CHECK PERMISSIONS
-MASH dev and QA sub-agents need autonomous permissions to run without interruption. Check that `.claude/settings.local.json` exists and contains these required permissions in `permissions.allow`:
-- `Bash(*)`
-- `Edit(/**)`
-- `Write(/**)`
-
-1. Read `.claude/settings.local.json`. If it doesn't exist, treat it as `{}`.
-2. Check which of the three required permissions are missing from the `allow` array.
-3. If all are present, proceed silently.
-4. If any are missing, explain to the user what's needed and why:
-   - `Bash(*)` — dev/QA agents run shell commands (tests, builds, installs). Still sandboxed.
-   - `Edit(/**)` / `Write(/**)` — dev/QA agents create and modify files within the project directory only.
-5. Use AskUserQuestion to ask the user whether to add the missing permissions.
-6. If the user approves, update `.claude/settings.local.json` — merge the missing entries into the existing `permissions.allow` array, preserving any other permissions already there. Create the file if it doesn't exist.
-7. If the user declines, warn that dev/QA agents will prompt for approval on each action, then continue.
+**After displaying the dashboard, stop.** Do not proceed to any other steps.
 
 ### CHECK INIT
 Check that all of these exist and have content beyond templates:
