@@ -105,8 +105,8 @@ fi
 GITIGNORE="$TARGET_DIR/.gitignore"
 
 mash_gitignore_entries=(
-  ".mash/plan/features/*.wip.md"
   ".mash/dev/"
+  ".mash/worktrees/"
 )
 
 if [ ! -f "$GITIGNORE" ]; then

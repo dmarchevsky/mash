@@ -75,7 +75,20 @@ Now that the project is defined, make technical decisions informed by its goals 
 7. Summarize and confirm.
 8. Write `.mash/plan/architecture.md` using the template.
 
-### Phase 3 — Scaffolding
+### Phase 3 — Git Workflow
+
+Ask the user how MASH should handle git during development. Ask each question as its own AskUserQuestion call.
+
+1. **Branching strategy:**
+   - `worktree` — create a new git worktree and feature branch (e.g., `mash/feature-<id>-<title>`) for each feature. Keeps the current branch clean.
+   - `current_branch` — work directly on the current branch, whatever it is. Simpler but mixes feature work.
+2. **Commit behavior:**
+   - `auto` — MASH commits changes with a descriptive message after each feature passes QA. If using `worktree` branching, also merges the feature branch back.
+   - `manual` — MASH leaves changes uncommitted after QA passes. The user handles committing and merging themselves.
+
+3. Write `.mash/plan/settings.md` using the template at `.claude/mash/references/templates/settings.md`, filling in the user's choices.
+
+### Phase 4 — Scaffolding
 
 1. Create `.mash/plan/progress.md` from the template at `.claude/mash/references/templates/progress.md`.
 2. Ensure `.mash/plan/features/` directory exists.
