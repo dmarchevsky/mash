@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# MASH — Markdown Agile Sub-agent Hybrid
+# MASH — Multi-Agent Software Harness
 # Install script: curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash
 # Flags: --force to skip version check
 
@@ -134,7 +134,7 @@ CLAUDE_MD="$TARGET_DIR/CLAUDE.md"
 
 MASH_SECTION="$(cat <<'CLAUDE_EOF'
 <!-- MASH -->
-# MASH — Markdown Agile Sub-agent Hybrid
+# MASH — Multi-Agent Software Harness
 
 This project uses the MASH framework for planning and implementation.
 

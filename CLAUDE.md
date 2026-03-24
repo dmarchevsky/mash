@@ -1,5 +1,5 @@
 <!-- MASH -->
-# MASH — Markdown Agile Sub-agent Hybrid
+# MASH — Multi-Agent Software Harness
 
 This project uses the MASH framework for planning and implementation.
 
