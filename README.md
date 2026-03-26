@@ -17,7 +17,7 @@ MASH uses four specialized personas that operate in sequence:
 
 ## Installation
 
-Requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and Git.
+Requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and Git. Works on Linux and macOS.
 
 ```bash
 # In any git repository:

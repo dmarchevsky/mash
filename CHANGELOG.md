@@ -4,6 +4,13 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.1] — 2026-03-26
+
+### Fixed
+- macOS compatibility: use explicit `tar -xz` flags for BSD tar
+- macOS compatibility: replace `ls -A` empty dir check with portable `find`
+- Remove useless `cat` in version reads (`tr < file` instead of `cat file | tr`)
+
 ## [0.1.0] — 2026-03-24
 
 ### Added

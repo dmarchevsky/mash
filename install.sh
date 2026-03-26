@@ -42,7 +42,7 @@ MASH_SRC=""
 # Try tarball first (faster, no git dependency)
 if command -v curl &>/dev/null; then
   info "Downloading MASH framework..."
-  if curl -sL "$MASH_TARBALL" | tar xz -C "$TMPDIR_MASH" 2>/dev/null; then
+  if curl -sL "$MASH_TARBALL" | tar -xz -C "$TMPDIR_MASH" 2>/dev/null; then
     MASH_SRC="$TMPDIR_MASH/mash-main"
   fi
 fi
@@ -58,12 +58,12 @@ fi
 
 NEW_VERSION="unknown"
 if [ -f "$MASH_SRC/VERSION" ]; then
-  NEW_VERSION="$(cat "$MASH_SRC/VERSION" | tr -d '[:space:]')"
+  NEW_VERSION="$(tr -d '[:space:]' < "$MASH_SRC/VERSION")"
 fi
 
 INSTALLED_VERSION=""
 if [ -f "$TARGET_DIR/skills/mash/VERSION" ]; then
-  INSTALLED_VERSION="$(cat "$TARGET_DIR/skills/mash/VERSION" | tr -d '[:space:]')"
+  INSTALLED_VERSION="$(tr -d '[:space:]' < "$TARGET_DIR/skills/mash/VERSION")"
 fi
 
 if [ -n "$INSTALLED_VERSION" ]; then
@@ -119,7 +119,7 @@ done
 
 # Add .gitkeep to empty dirs
 for dir in .mash/plan/features .mash/dev src tests; do
-  if [ -z "$(ls -A "$TARGET_DIR/$dir" 2>/dev/null)" ]; then
+  if ! find "$TARGET_DIR/$dir" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null | grep -q .; then
     touch "$TARGET_DIR/$dir/.gitkeep"
   fi
 done
