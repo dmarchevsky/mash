@@ -34,7 +34,40 @@ Before asking the user anything, silently investigate the project directory:
    - **Brownfield**: Existing manifest, source code, or config files found.
 7. Present a brief summary of findings to the user before proceeding.
 
-### Phase 1 — Project
+### Phase 1 — Configuration
+
+Set up git workflow and permissions for sub-agents before starting the project definition. Ask each question as its own AskUserQuestion call.
+
+#### Git workflow
+
+Ask the user how MASH should handle git during development.
+
+1. **Branching strategy:**
+   - `worktree` — create a new git worktree and feature branch (e.g., `mash/feature-<id>-<title>`) for each feature. Keeps the current branch clean.
+   - `current_branch` — work directly on the current branch, whatever it is. Simpler but mixes feature work.
+2. **Commit behavior:**
+   - `auto` — MASH commits changes with a descriptive message after each feature passes QA. If using `worktree` branching, also merges the feature branch back.
+   - `manual` — MASH leaves changes uncommitted after QA passes. The user handles committing and merging themselves.
+
+3. Write `.mash/plan/settings.md` using the template at `skills/mash/references/templates/settings.md`, filling in the user's choices.
+
+#### Sub-agent permissions
+
+MASH dev and QA sub-agents need autonomous permissions to run without interruption. Check that `.claude/settings.local.json` exists and contains these required permissions in `permissions.allow`:
+- `Bash(*)` — dev/QA agents run shell commands (tests, builds, installs). Still sandboxed.
+- `Edit(/**)` / `Write(/**)` — dev/QA agents create and modify files within the project directory only.
+
+If `auto` commit behavior was chosen in the git workflow step, sub-agents will also run git commands autonomously. Make this explicit when presenting the permissions request to the user — they are granting permission for `git commit`, `git merge`, and `git checkout` operations (covered by `Bash(*)`).
+
+1. Read `.claude/settings.local.json`. If it doesn't exist, treat it as `{}`.
+2. Check which of the three required permissions (`Bash(*)`, `Edit(/**)`, `Write(/**)`) are missing from the `allow` array.
+3. If all are present, confirm to the user that permissions are already configured and move on.
+4. If any are missing, explain what's needed and why. If `auto` commit was chosen, explicitly mention that this includes autonomous git operations (`git commit`, `git merge`, `git checkout`).
+5. Use AskUserQuestion to ask the user whether to add the missing permissions.
+6. If the user approves, update `.claude/settings.local.json` — merge the missing entries into the existing `permissions.allow` array, preserving any other permissions already there. Create the file if it doesn't exist.
+7. If the user declines, warn that dev/QA agents will prompt for approval on each action, then continue.
+
+### Phase 2 — Project
 
 Define what we're building before deciding how to build it. **This phase requires at minimum 4 separate AskUserQuestion calls — one for each topic below.** Do NOT combine topics.
 
@@ -49,7 +82,7 @@ Define what we're building before deciding how to build it. **This phase require
 5. Summarize and confirm.
 6. Write `.mash/plan/project.md` using the template.
 
-### Phase 2 — Architecture
+### Phase 3 — Architecture
 
 Now that the project is defined, make technical decisions informed by its goals and constraints.
 
@@ -74,37 +107,6 @@ Now that the project is defined, make technical decisions informed by its goals 
 6. **Gate: "Anything else about the technical approach before I write this up?"** Only proceed if they confirm.
 7. Summarize and confirm.
 8. Write `.mash/plan/architecture.md` using the template.
-
-### Phase 3 — Configuration
-
-Set up permissions for sub-agents and git workflow. Ask each question as its own AskUserQuestion call.
-
-#### Sub-agent permissions
-
-MASH dev and QA sub-agents need autonomous permissions to run without interruption. Check that `.claude/settings.local.json` exists and contains these required permissions in `permissions.allow`:
-- `Bash(*)` — dev/QA agents run shell commands (tests, builds, installs). Still sandboxed.
-- `Edit(/**)` / `Write(/**)` — dev/QA agents create and modify files within the project directory only.
-
-1. Read `.claude/settings.local.json`. If it doesn't exist, treat it as `{}`.
-2. Check which of the three required permissions (`Bash(*)`, `Edit(/**)`, `Write(/**)`) are missing from the `allow` array.
-3. If all are present, confirm to the user that permissions are already configured and move on.
-4. If any are missing, explain what's needed and why.
-5. Use AskUserQuestion to ask the user whether to add the missing permissions.
-6. If the user approves, update `.claude/settings.local.json` — merge the missing entries into the existing `permissions.allow` array, preserving any other permissions already there. Create the file if it doesn't exist.
-7. If the user declines, warn that dev/QA agents will prompt for approval on each action, then continue.
-
-#### Git workflow
-
-Ask the user how MASH should handle git during development.
-
-1. **Branching strategy:**
-   - `worktree` — create a new git worktree and feature branch (e.g., `mash/feature-<id>-<title>`) for each feature. Keeps the current branch clean.
-   - `current_branch` — work directly on the current branch, whatever it is. Simpler but mixes feature work.
-2. **Commit behavior:**
-   - `auto` — MASH commits changes with a descriptive message after each feature passes QA. If using `worktree` branching, also merges the feature branch back.
-   - `manual` — MASH leaves changes uncommitted after QA passes. The user handles committing and merging themselves.
-
-3. Write `.mash/plan/settings.md` using the template at `skills/mash/references/templates/settings.md`, filling in the user's choices.
 
 ### Phase 4 — Scaffolding
 
