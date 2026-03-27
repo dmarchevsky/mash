@@ -101,7 +101,7 @@ Run `git rev-parse --is-inside-work-tree` to verify this is a valid git reposito
    - Then suggest relevant next commands based on the state:
      - If there are CREATED features not yet planned in detail → `/mash plan` — refine and add feature specs
      - If there are DEV_READY or WIP features → `/mash dev` — implement all pending features, or `/mash dev <ids>` — implement specific features
-     - If all features are DONE → `/mash plan` — plan new features
+     - If all features are DONE → `/mash plan` — plan new features, or `/mash fix` — log and fix a defect
      - If there are FAILED features → mention them and suggest reviewing the failure details
    - Also always show:
      - `/mash status` — refresh this status view
