@@ -107,7 +107,7 @@ elif [ "$HAS_CLAUDE" = true  ] && [ "$HAS_OPENCODE" = true  ]; then
   printf '  2) opencode only\n'
   printf '  3) Both\n'
   printf 'Choice [3]: '
-  read -r CLIENT_CHOICE
+  read -r CLIENT_CHOICE </dev/tty
   CLIENT_CHOICE="${CLIENT_CHOICE:-3}"
   case "$CLIENT_CHOICE" in
     1) INSTALL_CLAUDE=true ;;
