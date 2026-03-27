@@ -21,14 +21,14 @@ Requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [openc
 
 ```bash
 # In any git repository:
-curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash
+bash <(curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh)
 
-# Target a specific client:
+# Target a specific client (non-interactive):
 curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash -s -- --claude
 curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash -s -- --opencode
 ```
 
-The installer detects which AI client(s) are available and sets up support accordingly. If both are installed and no flag is given, it prompts interactively (or installs for both in non-interactive/piped mode).
+The installer detects which AI client(s) are available and sets up support accordingly. If both are installed and no flag is given, it prompts you to choose.
 
 This installs the framework into your project:
 - `skills/mash/` — framework files (personas, templates, orchestrator)
@@ -161,7 +161,7 @@ your-project/
 Or manually:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash
+bash <(curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh)
 ```
 
 Use `--force` to reinstall the current version:

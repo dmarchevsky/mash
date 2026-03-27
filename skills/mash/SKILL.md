@@ -66,7 +66,7 @@ In both cases, proceed with the same execution flow.
    - If different, report the version difference.
 4. Fetch the changelog section for the new version: `curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/CHANGELOG.md` and display the relevant entries.
 5. Use AskUserQuestion to ask the user whether to update.
-6. If confirmed, run: `curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash`
+6. If confirmed, run: `bash <(curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh)`
 7. Report completion.
 
 **If command is `update`, skip all other steps.**

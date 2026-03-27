@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # MASH — Multi-Agent Software Harness
-# Install script: curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash
+# Install script: bash <(curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh)
 # Flags: --force to skip version check
 #        --claude   install Claude Code support only
 #        --opencode install opencode support only
