@@ -66,10 +66,7 @@ In both cases, proceed with the same execution flow.
    - If different, report the version difference.
 4. Fetch the changelog section for the new version: `curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/CHANGELOG.md` and display the relevant entries.
 5. Use AskUserQuestion to ask the user whether to update.
-6. If confirmed, detect the platform and run the appropriate installer:
-   - **Linux / macOS / Git Bash on Windows**: `curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash`
-   - **Windows (PowerShell)**: `iex (irm 'https://raw.githubusercontent.com/dmarchevsky/mash/main/install.ps1')`
-   To detect: check if running in bash (`$BASH_VERSION` set) vs PowerShell (`$env:OS` or `$PSVersionTable`).
+6. If confirmed, run: `curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash`
 7. Report completion.
 
 **If command is `update`, skip all other steps.**
