@@ -4,6 +4,8 @@ set -euo pipefail
 # MASH — Multi-Agent Software Harness
 # Install script: curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash
 # Flags: --force to skip version check
+#        --claude   install Claude Code support only
+#        --opencode install opencode support only
 
 MASH_REPO="https://github.com/dmarchevsky/mash.git"
 MASH_TARBALL="https://github.com/dmarchevsky/mash/archive/refs/heads/main.tar.gz"
@@ -12,10 +14,14 @@ MARKER_END="<!-- /MASH -->"
 
 TARGET_DIR="$PWD"
 FORCE=false
+FLAG_CLAUDE=false
+FLAG_OPENCODE=false
 
 for arg in "$@"; do
   case "$arg" in
-    --force) FORCE=true ;;
+    --force)    FORCE=true ;;
+    --claude)   FLAG_CLAUDE=true ;;
+    --opencode) FLAG_OPENCODE=true ;;
   esac
 done
 
@@ -97,23 +103,33 @@ command -v opencode &>/dev/null && HAS_OPENCODE=true
 INSTALL_CLAUDE=false
 INSTALL_OPENCODE=false
 
-if   [ "$HAS_CLAUDE" = true  ] && [ "$HAS_OPENCODE" = false ]; then
+# Explicit flags take priority over auto-detection
+if [ "$FLAG_CLAUDE" = true ] || [ "$FLAG_OPENCODE" = true ]; then
+  [ "$FLAG_CLAUDE"   = true ] && INSTALL_CLAUDE=true
+  [ "$FLAG_OPENCODE" = true ] && INSTALL_OPENCODE=true
+elif [ "$HAS_CLAUDE" = true  ] && [ "$HAS_OPENCODE" = false ]; then
   INSTALL_CLAUDE=true
 elif [ "$HAS_CLAUDE" = false ] && [ "$HAS_OPENCODE" = true  ]; then
   INSTALL_OPENCODE=true
 elif [ "$HAS_CLAUDE" = true  ] && [ "$HAS_OPENCODE" = true  ]; then
-  printf '\nBoth Claude Code and opencode are installed. Install MASH for:\n'
-  printf '  1) Claude Code only\n'
-  printf '  2) opencode only\n'
-  printf '  3) Both\n'
-  printf 'Choice [3]: '
-  read -r CLIENT_CHOICE </dev/tty
-  CLIENT_CHOICE="${CLIENT_CHOICE:-3}"
-  case "$CLIENT_CHOICE" in
-    1) INSTALL_CLAUDE=true ;;
-    2) INSTALL_OPENCODE=true ;;
-    *) INSTALL_CLAUDE=true; INSTALL_OPENCODE=true ;;
-  esac
+  if [ -t 0 ]; then
+    printf '\nBoth Claude Code and opencode are installed. Install MASH for:\n'
+    printf '  1) Claude Code only\n'
+    printf '  2) opencode only\n'
+    printf '  3) Both\n'
+    printf 'Choice [3]: '
+    read -r CLIENT_CHOICE
+    CLIENT_CHOICE="${CLIENT_CHOICE:-3}"
+    case "$CLIENT_CHOICE" in
+      1) INSTALL_CLAUDE=true ;;
+      2) INSTALL_OPENCODE=true ;;
+      *) INSTALL_CLAUDE=true; INSTALL_OPENCODE=true ;;
+    esac
+  else
+    info "Both clients detected. Pass --claude or --opencode to install for one. Installing for both."
+    INSTALL_CLAUDE=true
+    INSTALL_OPENCODE=true
+  fi
 else
   die "Neither 'claude' nor 'opencode' found in PATH. Install one of them first."
 fi
