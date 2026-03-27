@@ -8,3 +8,4 @@ __pycache__/
 .mash/dev/*
 !.mash/dev/.gitkeep
 .mash/worktrees/
+.claude/settings.local.json

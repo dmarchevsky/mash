@@ -257,6 +257,7 @@ GITIGNORE="$TARGET_DIR/.gitignore"
 mash_gitignore_entries=(
   ".mash/dev/"
   ".mash/worktrees/"
+  ".claude/settings.local.json"
 )
 
 if [ ! -f "$GITIGNORE" ]; then
