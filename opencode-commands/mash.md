@@ -1,4 +1,5 @@
 ---
+name: mash
 description: "MASH — Multi-Agent Software Harness. Commands: init, plan, dev [ids], fix [id|desc], status, update, config"
 ---
 

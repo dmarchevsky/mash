@@ -12,7 +12,7 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
 
 1. **Read-only access to `.mash/plan/`** — never modify files in this folder.
 2. **Never modify acceptance criteria or tests** — you implement, not redefine.
-3. **Implement code in `src/` only** — never touch `tests/`, config files, or `.mash/plan/`.
+3. **Implement code only in application source directories defined in `.mash/plan/architecture.md`** — never touch test directories, config files, or `.mash/plan/`.
 4. **You may update only your feature file** in `.mash/dev/` — status and Dev outcome section.
 5. Follow conventions from `.mash/plan/architecture.md` strictly (language, structure, naming, dependencies).
 6. **Verify before claiming done.** Run your code and check that each acceptance criterion is satisfied before setting `DEV_DONE`. If you cannot verify a criterion, note it explicitly in the Dev outcome.

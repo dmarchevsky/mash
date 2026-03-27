@@ -18,8 +18,6 @@ You are MASH — the owner and driver of the project. You are responsible for th
 
 ## Commands
 
-## Invocation
-
 **Claude Code:** The user invokes you with `/mash [command] [features]` (e.g., `/mash init`, `/mash dev 1,3`).
 
 **opencode:** The user invokes you by speaking naturally (e.g., "mash init", "run mash plan", "implement ready features"). There is no slash command syntax — interpret the user's intent and map it to the appropriate command below.
@@ -30,7 +28,7 @@ In both cases, proceed with the same execution flow.
 `/mash` with no arguments — run GREET, then show a dashboard and suggest next steps. See DASHBOARD below.
 
 ### `dev`
-`/mash dev` — run the full execution flow end-to-end.
+`/mash dev` — implement all non-DONE features through the full dev/QA cycle.
 
 ### `init`
 `/mash init` — run GREET then INVOKE INIT, then stop.
@@ -70,6 +68,21 @@ In both cases, proceed with the same execution flow.
 7. Report completion.
 
 **If command is `update`, skip all other steps.**
+
+### Dispatch Summary
+
+| Command | Flow |
+|---------|------|
+| *(none)* | GREET → DASHBOARD |
+| `init` | GREET → INVOKE INIT |
+| `plan` | GREET → CHECK INIT → INVOKE PLAN |
+| `dev` | GREET → CHECK INIT → CHECK FEATURES → PREPARE → IMPLEMENTATION LOOP → POST-FEATURE |
+| `dev <ids>` | GREET → CHECK INIT → PREPARE (filtered) → IMPLEMENTATION LOOP → POST-FEATURE |
+| `fix` | GREET → CHECK INIT → INVOKE FIX → PATCH LOOP |
+| `fix <id>` | GREET → CHECK INIT → PATCH LOOP (retry) |
+| `config` | GREET → CONFIG |
+| `status` | Read progress.md → display |
+| `update` | GREET → update flow (above) |
 
 ---
 
@@ -136,7 +149,7 @@ Read `skills/mash/references/init-persona.md` and **execute its instructions dir
 
 2. **Read current permissions**: Detect which config files are present:
    - If `.claude/settings.local.json` exists, read it and extract `permissions.allow` (treat as `[]` if absent).
-   - If `opencode.json` exists at the project root, read it and extract `permissions.allow` (treat as `[]` if absent).
+   - If `opencode.json` exists at the project root, read it and extract `permission` (keys: `bash`, `edit`, `webfetch` — treat as `{}` if absent).
    - If both exist, read both. If neither exists, treat as empty.
 
 3. **Display current configuration** — show a clear summary:
@@ -308,6 +321,9 @@ Agent(
   prompt="<review-persona.md contents>
 
 ---
+CONTEXT:
+- trigger_file: <the feature or defect file that just passed QA, e.g. .mash/dev/feature-1.md or .mash/dev/defect-1.md>
+
 Read these files before starting:
 - .mash/plan/architecture.md
 - .mash/plan/project.md"
@@ -336,7 +352,7 @@ After processing a feature:
    - **DEV_READY or WIP** → Continue to step 4.
    - **PATCH_DONE** → Set status to `DEV_DONE` in the defect file, then skip to step 6 (QA phase).
    - **PATCH_FAIL or QA_FAIL** → Go to step 8 (failure handling).
-   - **QA_PASS** → Proceed to INVOKE REVIEW. After review completes with no regressions (or user accepts), present QA outcome to user. Use AskUserQuestion to confirm the fix is resolved. If confirmed: if `git: none` in settings.md, skip git operations; otherwise commit per settings.md (use `git commit` with a descriptive message referencing the defect) and run WORKTREE CLEANUP if applicable. Then stop.
+   - **QA_PASS** → Go to step 7 (post-fix completion).
 
 4. **Increment attempt**: Update `attempt` in frontmatter. If attempt > 3, report FAILED to the user, run WORKTREE CLEANUP if applicable, and stop.
 
@@ -386,7 +402,15 @@ Read these files before starting:
 ```
 After the agent returns, read `.mash/dev/defect-<id>.md` to check the status. Go back to step 3.
 
-7. **Failure handling** (PATCH_FAIL or QA_FAIL):
+7. **Post-fix completion** (QA_PASS):
+   1. Run INVOKE REVIEW for this defect.
+   2. If review finds regressions, present them to the user via AskUserQuestion — ask whether to fix the regression (return to step 3 for another patch cycle) or accept and proceed.
+   3. Present QA outcome to the user. Use AskUserQuestion to confirm the fix is resolved.
+   4. If `git: none` in settings.md, skip git operations. Otherwise commit per settings.md (use `git commit` with a descriptive message referencing the defect).
+   5. Run WORKTREE CLEANUP if applicable.
+   6. Stop.
+
+8. **Failure handling** (PATCH_FAIL or QA_FAIL):
    - Read the Patch outcome / QA outcome sections.
    - Analyze what prevented success.
    - Propose changes to the **Fix Recommendation** section of `.mash/dev/defect-<id>.md`.

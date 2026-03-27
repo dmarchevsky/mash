@@ -68,18 +68,20 @@ Ask the user how MASH should handle git during development.
 
 #### Sub-agent permissions
 
-MASH dev and QA sub-agents need autonomous permissions to run without interruption. Check that `.claude/settings.local.json` exists and contains these required permissions in `permissions.allow`:
-- `Bash(*)` — dev/QA agents run shell commands (tests, builds, installs). Still sandboxed.
-- `Edit(/**)` / `Write(/**)` — dev/QA agents create and modify files within the project directory only.
+MASH dev and QA sub-agents need autonomous permissions to run without interruption. Detect which config files are present and check each for the required permissions:
+
+- If `.claude/settings.local.json` exists → check `permissions.allow` for: `Bash(*)`, `Edit(/**)`, `Write(/**)`.
+- If `opencode.json` exists at the project root → check `permission` for: `bash: "allow"`, `edit: "allow"`.
+- If both exist, check both. If neither exists, treat as empty.
 
 If `auto` commit behavior was chosen in the git workflow step, sub-agents will also run git commands autonomously. Make this explicit when presenting the permissions request to the user — they are granting permission for `git commit`, `git merge`, and `git checkout` operations (covered by `Bash(*)`).
 
-1. Read `.claude/settings.local.json`. If it doesn't exist, treat it as `{}`.
-2. Check which of the three required permissions (`Bash(*)`, `Edit(/**)`, `Write(/**)`) are missing from the `allow` array.
-3. If all are present, confirm to the user that permissions are already configured and move on.
+1. Read the applicable config file(s). If a file doesn't exist, treat it as `{}`.
+2. Check which required permissions are missing from each config file.
+3. If all are present in every applicable config, confirm to the user that permissions are already configured and move on.
 4. If any are missing, explain what's needed and why. If `auto` commit was chosen, explicitly mention that this includes autonomous git operations (`git commit`, `git merge`, `git checkout`).
 5. Use AskUserQuestion to ask the user whether to add the missing permissions.
-6. If the user approves, update `.claude/settings.local.json` — merge the missing entries into the existing `permissions.allow` array, preserving any other permissions already there. Create the file if it doesn't exist.
+6. If the user approves, write missing permissions to the applicable config file(s) — merge into the existing structure, preserving any other entries. Create `.claude/settings.local.json` if no config file exists. If both files exist, write to both.
 7. If the user declines, warn that dev/QA agents will prompt for approval on each action, then continue.
 
 ### Phase 2 — Project

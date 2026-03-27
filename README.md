@@ -4,16 +4,19 @@ MASH is a framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-
 
 ## How It Works
 
-MASH uses four specialized personas that operate in sequence:
+MASH uses seven specialized personas:
 
 ```
-  You ──► /mash init ──► Init Agent     → defines project scope & architecture
-       ──► /mash plan ──► Plan Agent    → turns ideas into detailed feature specs
-       ──► /mash dev  ──► Dev Agent(s)  → implements features autonomously
-                       ──► QA Agent(s)   → writes and runs tests to verify
+  You ──► /mash init ──► Init Agent      → defines project scope & architecture
+       ──► /mash plan ──► Plan Agent     → turns ideas into detailed feature specs
+       ──► /mash dev  ──► Dev Agent(s)   → implements features autonomously
+                       ──► QA Agent(s)    → writes and runs tests to verify
+                       ──► Review Agent   → maintains test suite after changes
+       ──► /mash fix  ──► Fix Agent      → collaborative debugging with the user
+                       ──► Patch Agent    → minimal-change fix implementation
 ```
 
-**Init** and **Plan** run interactively in your conversation, asking clarifying questions to refine requirements. **Dev** and **QA** are spawned as isolated sub-agents that work autonomously within defined boundaries.
+**Init**, **Plan**, and **Fix** run interactively in your conversation, asking clarifying questions. **Dev**, **QA**, **Patch**, and **Review** are spawned as isolated sub-agents that work autonomously within defined boundaries.
 
 ## Installation
 
@@ -71,6 +74,10 @@ The same `.mash/plan/` directory, feature specs, and full workflow apply in both
 | `/mash plan` | Create new feature specifications through guided conversation |
 | `/mash dev` | Implement and test all DEV_READY features |
 | `/mash dev 1,3` | Implement only specific features by ID |
+| `/mash fix` | Debug a defect collaboratively, then patch and verify |
+| `/mash fix <id>` | Retry a previously logged defect by ID |
+| `/mash fix <desc>` | Debug with a pre-seeded description |
+| `/mash config` | View or change git settings and sub-agent permissions |
 | `/mash status` | Show current progress table |
 | `/mash update` | Check for and install framework updates |
 
@@ -86,6 +93,9 @@ Each persona has a defined role and strict file access boundaries:
 | **Plan** | Turn ideas into detailed, testable feature specs | All plan files, `src/` | `.mash/plan/features/feature-<id>.md`, `progress.md` |
 | **Dev** | Implement a single feature according to spec | Plan files (read-only) | `src/`, `.mash/dev/feature-<id>.md` |
 | **QA** | Verify implementation through tests | Plan files, `src/` (read-only) | `tests/`, `.mash/dev/feature-<id>.md` |
+| **Fix** | Collaborative debugging with the user | Project context, `src/` | `.mash/dev/defect-<id>.md` |
+| **Patch** | Minimal-change fix implementation | Everything (read-only except defect file) | `src/`, `.mash/dev/defect-<id>.md` |
+| **Review** | Test maintenance after dev/QA cycles | Implementation history, test suite | Existing test files (fixes only) |
 
 ### Feature Lifecycle
 
@@ -127,29 +137,37 @@ Configured during `/mash init` via `.mash/plan/settings.md`:
 
 ```
 your-project/
-├── .claude/
-│   ├── commands/mash.md        # Command registration
-│   ├── settings.local.json     # Sub-agent permissions
-│   └── mash/                   # Framework (managed by install/update)
-│       ├── SKILL.md            # Orchestrator
+├── .claude/                           # Claude Code integration
+│   ├── commands/mash.md               #   Command registration
+│   └── settings.local.json            #   Sub-agent permissions
+├── .opencode/                         # opencode integration
+│   ├── skills/mash/SKILL.md           #   Skill registration
+│   └── commands/mash.md               #   Command registration
+├── opencode.json                      # opencode config & permissions
+├── skills/
+│   └── mash/                          # Framework (managed by install/update)
+│       ├── SKILL.md                   #   Orchestrator
 │       ├── VERSION
 │       └── references/
 │           ├── init-persona.md
 │           ├── plan-persona.md
 │           ├── dev-persona.md
 │           ├── qa-persona.md
-│           └── templates/      # Spec templates
+│           ├── fix-persona.md
+│           ├── patch-persona.md
+│           ├── review-persona.md
+│           └── templates/             #   Spec templates
 ├── .mash/
-│   ├── plan/                   # Source of truth (specs, architecture)
+│   ├── plan/                          # Source of truth (specs, architecture)
 │   │   ├── project.md
 │   │   ├── architecture.md
 │   │   ├── settings.md
 │   │   ├── progress.md
 │   │   └── features/
 │   │       └── feature-1.md
-│   └── dev/                    # Working copies (gitignored)
-├── src/                        # Application code (written by dev agents)
-└── tests/                      # Test code (written by QA agents)
+│   └── dev/                           # Working copies (gitignored)
+├── src/                               # Application code (written by dev agents)
+└── tests/                             # Test code (written by QA agents)
 ```
 
 ## Updating

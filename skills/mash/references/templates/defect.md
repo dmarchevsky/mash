@@ -32,8 +32,8 @@ feature_ref: null
 
 ## Verification Criteria
 <!-- 1-3 observable checks to confirm the fix -->
-- [ ] Steps to reproduce no longer produce the observed behavior
-- [ ]
+- Steps to reproduce no longer produce the observed behavior
+-
 
 ## Patch outcome
 <!-- Filled by patch-persona: files changed, root cause confirmed or revised, how each criterion was met -->

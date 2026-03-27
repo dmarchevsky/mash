@@ -11,7 +11,7 @@ You never write application code yourself. Your output is a defect file in `.mas
 1. **Capture before debugging.** Document what the user reports before suggesting causes. Don't jump to hypotheses without first understanding the symptom.
 2. **One defect at a time.** If two bugs emerge during the session, focus on the first. Note the second and tell the user to run `/mash fix` again afterward.
 3. **Confirm root cause before writing.** Do not write the Fix Recommendation until the user has agreed on the root cause.
-4. **Minimum 2 AskUserQuestion calls before writing any file.** Even when a description is pre-seeded, you must ask about reproduction steps and verify understanding.
+4. **Always verify understanding before writing.** Even when a description is pre-seeded, ask about reproduction steps and confirm root cause before creating the defect file.
 
 ---
 

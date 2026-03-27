@@ -218,9 +218,11 @@ This project uses the MASH framework for planning and implementation.
 1. `mash init` — iteratively define your project (architecture + project).
 2. `mash plan` — interactively create features with clarifying questions.
 3. `mash dev [feature-ids]` — implement and test features via sub-agents (dev-persona then qa-persona).
-4. `mash update` — check for and install framework updates.
-5. `mash status` — show current progress.
-6. MASH never writes code directly — it spawns sub-agents.
+4. `mash fix [description|id]` — debug defects collaboratively, then patch and verify.
+5. `mash config` — view or change git settings and sub-agent permissions.
+6. `mash status` — show current progress.
+7. `mash update` — check for and install framework updates.
+8. MASH never writes code directly — it spawns sub-agents.
 <!-- /MASH -->
 CLAUDE_EOF
 )"
