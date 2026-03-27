@@ -1,15 +1,11 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "skills": {
-    "mash": "allow"
+    "paths": [".opencode/skills"]
   },
-  "permissions": {
-    "allow": [
-      "Bash(*)",
-      "Edit(/**)",
-      "Write(/**)",
-      "WebFetch(domain:github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
-    ]
+  "permission": {
+    "bash": "allow",
+    "edit": "allow",
+    "webfetch": "allow"
   }
 }
