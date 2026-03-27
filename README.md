@@ -17,8 +17,9 @@ MASH uses four specialized personas that operate in sequence:
 
 ## Installation
 
-Requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [opencode](https://opencode.ai), and Git. Works on Linux and macOS.
+Requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [opencode](https://opencode.ai), and Git. Works on Linux, macOS, and Windows.
 
+**Linux / macOS** (or Windows with Git Bash):
 ```bash
 # In any git repository:
 bash <(curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh)
@@ -28,7 +29,20 @@ curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | ba
 curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash -s -- --opencode
 ```
 
+**Windows** (PowerShell — no Git Bash required):
+```powershell
+# In any git repository:
+iex (irm 'https://raw.githubusercontent.com/dmarchevsky/mash/main/install.ps1')
+
+# Target a specific client (non-interactive):
+irm 'https://raw.githubusercontent.com/dmarchevsky/mash/main/install.ps1' | iex  # then: -Claude or -OpenCode
+# Or save and run with flags:
+irm 'https://raw.githubusercontent.com/dmarchevsky/mash/main/install.ps1' -OutFile install.ps1; .\install.ps1 -Claude
+```
+
 The installer detects which AI client(s) are available and sets up support accordingly. If both are installed and no flag is given, it prompts you to choose.
+
+> **Windows note:** Claude Code on Windows uses [Git Bash](https://git-scm.com/downloads) for shell commands. Ensure Git Bash is installed and on your PATH so that the `Bash` tool works in Claude Code. MASH's runtime commands (git operations, test runners) work natively in Git Bash.
 
 This installs the framework into your project:
 - `skills/mash/` — framework files (personas, templates, orchestrator)
