@@ -35,6 +35,9 @@ The user invokes you with `/mash [command] [features]`.
 ### `dev <id>[,<id>...]`
 `/mash dev 1,3` — implement only the specified features (comma-separated IDs).
 
+### `config`
+`/mash config` — display current MASH settings and allow the user to change them or reapply sub-agent permissions.
+
 ### `fix`
 `/mash fix` — run GREET, CHECK GIT, CHECK INIT, then INVOKE FIX (interactive debugging session), then immediately PATCH LOOP.
 
@@ -96,6 +99,7 @@ Run `git rev-parse --is-inside-work-tree` to verify this is a valid git reposito
      - If there are FAILED features → mention them and suggest reviewing the failure details
    - Also always show:
      - `/mash status` — refresh this status view
+     - `/mash config` — view or change git settings and sub-agent permissions
      - `/mash update` — check for framework updates
 4. **Defect summary**: Scan `.mash/dev/defect-*.md` for any files with status other than `QA_PASS`. If any exist, show a count of open defects and suggest:
    - `/mash fix <id>` — resume an in-progress defect
@@ -120,6 +124,61 @@ If any are missing or empty, ask the user if they want to initialize.
 Read `skills/mash/references/init-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — init requires multi-turn interaction with the user via AskUserQuestion.
 
 **If command is `init`, stop here.**
+
+### CONFIG
+
+**Only runs for `config` command.** Run GREET and CHECK GIT first, then:
+
+1. **Read current settings**: Read `.mash/plan/settings.md`. If it doesn't exist, tell the user the project hasn't been initialized yet and suggest `/mash init`. Stop.
+
+2. **Read current permissions**: Read `.claude/settings.local.json`. Extract the `permissions.allow` array (treat as `[]` if the file doesn't exist or has no allow list).
+
+3. **Display current configuration** — show a clear summary:
+   ```
+   ## Current MASH Configuration
+
+   Git branching:  <branching value>
+   Git commit:     <commit value>
+
+   Sub-agent permissions (.claude/settings.local.json):
+     Bash(*)      <present / MISSING>
+     Edit(/**)    <present / MISSING>
+     Write(/**)   <present / MISSING>
+   ```
+
+4. **Ask what to change** using AskUserQuestion with multiSelect enabled. Options:
+   - `Git branching` — switch between `worktree` and `current_branch`
+   - `Git commit` — switch between `auto` and `manual`
+   - `Reapply permissions` — add any missing sub-agent permissions to `.claude/settings.local.json`
+   - `Nothing — just viewing`
+
+5. **Handle each selected change:**
+
+   #### Git branching
+   Ask the user to choose with AskUserQuestion:
+   - `worktree` — create a per-feature branch and git worktree. Keeps the current branch clean.
+   - `current_branch` — work directly on the current branch. Simpler but mixes feature work.
+
+   Update the `branching:` line in `.mash/plan/settings.md`.
+
+   #### Git commit
+   Ask the user to choose with AskUserQuestion:
+   - `auto` — MASH commits and merges after each feature/defect passes QA.
+   - `manual` — MASH leaves changes uncommitted. The user handles commits and merges.
+
+   If switching to `auto`, note that sub-agents will run git commands autonomously (`git commit`, `git merge`, `git checkout`) — covered by `Bash(*)`.
+   Update the `commit:` line in `.mash/plan/settings.md`.
+
+   #### Reapply permissions
+   Check which of the three required permissions (`Bash(*)`, `Edit(/**)`, `Write(/**)`) are missing from `.claude/settings.local.json`. If `commit: auto` is set, mention that this includes autonomous git operations.
+   - If all are already present: report "All required permissions are already configured."
+   - If any are missing: show which ones and use AskUserQuestion to ask whether to add them.
+   - If approved: update `.claude/settings.local.json` — merge the missing entries into the existing `allow` array, preserving any other entries. Create the file if it doesn't exist.
+   - If declined: warn that sub-agents will prompt for each action.
+
+6. After applying all changes, display the updated configuration summary (same format as step 3).
+
+7. **Stop.** Do not proceed to any other steps.
 
 ### CHECK FEATURES
 Read `.mash/plan/progress.md`. Check if there are any features not marked DONE.
@@ -176,7 +235,7 @@ For each feature to implement:
    - **DEV_READY or WIP** → Continue to step 6.
    - **DEV_DONE** → Skip to step 8 (QA phase).
    - **DEV_FAIL or QA_FAIL** → Go to step 9 (failure handling).
-   - **QA_PASS** → Mark as DONE in progress.md, exit this feature's loop.
+   - **QA_PASS** → Mark as DONE in progress.md, then proceed to INVOKE REVIEW.
 
 6. **Increment attempt**: Update the `attempt` field in `.mash/dev/feature-<id>.md` frontmatter. If attempt > 3, set progress.md status to FAILED, **clean up worktree** (see WORKTREE CLEANUP below), and stop this feature.
 7. **Set progress.md to WIP.**
@@ -230,6 +289,27 @@ After the agent returns, read `.mash/dev/feature-<id>.md` to check the status. G
    - Set dev feature file status to DEV_READY.
    - Go back to step 5.
 
+### INVOKE REVIEW
+
+Runs after QA_PASS for both features and defects. Invoked by MASH — not a sub-agent of QA.
+
+Read `skills/mash/references/review-persona.md` and invoke:
+```
+Agent(
+  subagent_type="general-purpose",
+  prompt="<review-persona.md contents>
+
+---
+Read these files before starting:
+- .mash/plan/architecture.md
+- .mash/plan/project.md"
+)
+```
+
+After the agent returns, check its report:
+- **If regressions were found**: present the regression details to the user via AskUserQuestion — ask whether to fix the regression (return to IMPLEMENTATION LOOP / PATCH LOOP for another dev cycle) or accept and proceed.
+- **If only stale tests were fixed, or suite is clean**: proceed normally (POST-FEATURE for features, user confirmation for defects).
+
 ### LOOP COMPLETION
 
 After processing a feature:
@@ -248,7 +328,7 @@ After processing a feature:
    - **DEV_READY or WIP** → Continue to step 4.
    - **PATCH_DONE** → Set status to `DEV_DONE` in the defect file, then skip to step 6 (QA phase).
    - **PATCH_FAIL or QA_FAIL** → Go to step 8 (failure handling).
-   - **QA_PASS** → Present QA outcome to user. Use AskUserQuestion to confirm the fix is resolved. If confirmed, commit per settings.md (use `git commit` with a descriptive message referencing the defect), run WORKTREE CLEANUP if applicable, then stop.
+   - **QA_PASS** → Proceed to INVOKE REVIEW. After review completes with no regressions (or user accepts), present QA outcome to user. Use AskUserQuestion to confirm the fix is resolved. If confirmed, commit per settings.md (use `git commit` with a descriptive message referencing the defect), run WORKTREE CLEANUP if applicable, then stop.
 
 4. **Increment attempt**: Update `attempt` in frontmatter. If attempt > 3, report FAILED to the user, run WORKTREE CLEANUP if applicable, and stop.
 
@@ -284,6 +364,11 @@ Agent(
 ---
 PARAMETERS:
 - feature_file: .mash/dev/defect-<id>.md
+
+IMPORTANT — test location for defects:
+Write all new tests for this defect under `tests/defects/defect-<id>/` (not alongside feature tests).
+This namespaces defect tests so they can be reviewed and cleaned up after the fix is confirmed.
+Existing tests in `tests/` must still be run for regression — do not move or modify them.
 
 Read these files before starting:
 - .mash/plan/architecture.md
