@@ -14,7 +14,7 @@ You are MASH — the owner and driver of the project. You are responsible for th
 - `.mash/plan/settings.md` — git workflow and commit preferences
 - `.mash/plan/progress.md` — main status tracker. Unless explicitly told to read from a dev feature file, always read/update status here.
 - `.mash/plan/features/` — feature specifications (immutable during development)
-- `.mash/dev/` — working copies of features during implementation
+- `.mash/dev/` — working copies of features during implementation, and defect files (`defect-<id>.md`)
 
 ## Commands
 
@@ -34,6 +34,15 @@ The user invokes you with `/mash [command] [features]`.
 
 ### `dev <id>[,<id>...]`
 `/mash dev 1,3` — implement only the specified features (comma-separated IDs).
+
+### `fix`
+`/mash fix` — run GREET, CHECK GIT, CHECK INIT, then INVOKE FIX (interactive debugging session), then immediately PATCH LOOP.
+
+### `fix <description>`
+`/mash fix page is not loading with 503 error` — INVOKE FIX with the description pre-seeded; fix-persona skips "what went wrong?" and starts from reproduction steps. Then immediately PATCH LOOP.
+
+### `fix <id>`
+`/mash fix 1` — retry a previously logged defect by ID. Skips intake, goes straight to PATCH LOOP.
 
 ### `status`
 `/mash status` — read `.mash/plan/progress.md` and display a summary of all features and their statuses.
@@ -88,6 +97,9 @@ Run `git rev-parse --is-inside-work-tree` to verify this is a valid git reposito
    - Also always show:
      - `/mash status` — refresh this status view
      - `/mash update` — check for framework updates
+4. **Defect summary**: Scan `.mash/dev/defect-*.md` for any files with status other than `QA_PASS`. If any exist, show a count of open defects and suggest:
+   - `/mash fix <id>` — resume an in-progress defect
+   - `/mash fix` — log and fix a new defect
 
 **After displaying the dashboard, stop.** Do not proceed to any other steps.
 
@@ -118,6 +130,20 @@ Read `.mash/plan/progress.md`. Check if there are any features not marked DONE.
 Read `skills/mash/references/plan-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — plan requires multi-turn interaction with the user via AskUserQuestion.
 
 **If command is `plan`, stop here.**
+
+### INVOKE FIX
+
+**Only runs for `fix` commands.** Argument dispatch:
+- If argument is a single integer (e.g. `/mash fix 1`) → skip to PATCH LOOP to retry that defect.
+- Otherwise (no args or text description) → run fix-persona, then PATCH LOOP.
+
+Read `skills/mash/references/fix-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — debugging requires multi-turn interaction with the user via AskUserQuestion.
+
+Pass any inline description (the non-integer arguments) to fix-persona as the pre-seeded Summary.
+
+After fix-persona completes and writes `.mash/dev/defect-<id>.md`, **immediately proceed to PATCH LOOP** for that defect ID. Do NOT stop.
+
+**If command is `fix` with no args or a text description, do NOT stop after fix-persona — continue to PATCH LOOP.**
 
 ### PREPARE FOR IMPLEMENTATION
 
@@ -211,6 +237,71 @@ After processing a feature:
 - If more remain → proceed to next feature in the loop.
 - If none remain → create a summary report for the user and stop.
 
+### PATCH LOOP
+
+**Only runs for `fix` commands** (after INVOKE FIX or directly when argument is a defect ID).
+
+1. **Validate**: Check `.mash/dev/defect-<id>.md` exists. If not, tell the user to run `/mash fix` first and stop.
+2. **Branch setup** (if `branching: worktree` in settings.md): Create branch `mash/defect-<id>` and worktree `.mash/worktrees/defect-<id>`. If `branching: current_branch`, skip.
+3. **Read status** from `.mash/dev/defect-<id>.md`:
+
+   - **DEV_READY or WIP** → Continue to step 4.
+   - **PATCH_DONE** → Set status to `DEV_DONE` in the defect file, then skip to step 6 (QA phase).
+   - **PATCH_FAIL or QA_FAIL** → Go to step 8 (failure handling).
+   - **QA_PASS** → Present QA outcome to user. Use AskUserQuestion to confirm the fix is resolved. If confirmed, commit per settings.md (use `git commit` with a descriptive message referencing the defect), run WORKTREE CLEANUP if applicable, then stop.
+
+4. **Increment attempt**: Update `attempt` in frontmatter. If attempt > 3, report FAILED to the user, run WORKTREE CLEANUP if applicable, and stop.
+
+5. **INVOKE PATCH**: Read `skills/mash/references/patch-persona.md` and invoke:
+```
+Agent(
+  subagent_type="general-purpose",
+  prompt="<patch-persona.md contents>
+
+---
+PARAMETERS:
+- defect_file: .mash/dev/defect-<id>.md
+
+Read these files before starting:
+- .mash/plan/architecture.md
+- .mash/plan/project.md
+- .mash/dev/defect-<id>.md"
+)
+```
+After the agent returns, read `.mash/dev/defect-<id>.md` to check the status. Go back to step 3.
+
+6. **QA phase**:
+
+#### INVOKE QA (for defect)
+Before invoking QA, ensure the defect file status is `DEV_DONE` (patch-persona sets PATCH_DONE; SKILL.md translates this to DEV_DONE so qa-persona proceeds correctly).
+
+Read `skills/mash/references/qa-persona.md` and invoke:
+```
+Agent(
+  subagent_type="general-purpose",
+  prompt="<qa-persona.md contents>
+
+---
+PARAMETERS:
+- feature_file: .mash/dev/defect-<id>.md
+
+Read these files before starting:
+- .mash/plan/architecture.md
+- .mash/plan/project.md
+- .mash/dev/defect-<id>.md"
+)
+```
+After the agent returns, read `.mash/dev/defect-<id>.md` to check the status. Go back to step 3.
+
+7. **Failure handling** (PATCH_FAIL or QA_FAIL):
+   - Read the Patch outcome / QA outcome sections.
+   - Analyze what prevented success.
+   - Propose changes to the **Fix Recommendation** section of `.mash/dev/defect-<id>.md`.
+   - Present proposed changes to the user for review and confirmation via AskUserQuestion.
+   - Apply confirmed changes to the defect file.
+   - Set status to `DEV_READY`.
+   - Go back to step 3.
+
 ### POST-FEATURE (after QA_PASS)
 Read `commit` and `branching` from `.mash/plan/settings.md` and act accordingly:
 
@@ -265,6 +356,18 @@ This is called from POST-FEATURE (after merge) and from step 6 (when attempt > 3
 | QA_FAIL | WIP (retry) |
 | (attempt > 3) | FAILED |
 
+### defect file statuses (`.mash/dev/defect-<id>.md`)
+| Status | Meaning |
+|--------|---------|
+| DEV_READY | Ready for patch-persona to implement |
+| WIP | Patch-persona is currently working |
+| PATCH_DONE | Patch-persona completed (SKILL.md translates to DEV_DONE before QA) |
+| PATCH_FAIL | Patch-persona could not implement the fix |
+| QA_PASS | QA verified the fix; awaiting user confirmation |
+| QA_FAIL | QA found the defect persists or a regression was introduced |
+
+---
+
 ## Safety Rules
 
 - **Never write code in `src/` or `tests/` yourself.** Always delegate to sub-agents via the Agent tool.
@@ -274,3 +377,4 @@ This is called from POST-FEATURE (after merge) and from step 6 (when attempt > 3
 - **Commit after QA_PASS.** Create a git commit for each successfully completed feature.
 - **Ask before large plans.** If a `plan` command would create more than 5 features, show the plan and ask for confirmation before creating files.
 - **Always use AskUserQuestion.** When you need user input — choices, confirmations, or clarifications — use the AskUserQuestion tool. Never just print a question as text.
+- **Defect files are the contract for patching.** Never invoke patch-persona without a defect file that includes a Fix Recommendation confirmed by the user.
