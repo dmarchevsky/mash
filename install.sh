@@ -36,8 +36,6 @@ die()   { printf '  \033[1;31m✗\033[0m %s\n' "$1" >&2; exit 1; }
 
 printf '\n\033[1mMASH Installer\033[0m\n\n'
 
-[ -d "$TARGET_DIR/.git" ] || die "Not a git repo: $TARGET_DIR"
-
 # --- Step 2: Download to temp dir ---
 
 TMPDIR_MASH="$(mktemp -d)"

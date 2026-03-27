@@ -36,9 +36,24 @@ Before asking the user anything, silently investigate the project directory:
 
 ### Phase 1 — Configuration
 
-Set up git workflow and permissions for sub-agents before starting the project definition. Ask each question as its own AskUserQuestion call.
+Set up git and permissions for sub-agents before starting the project definition. Ask each question as its own AskUserQuestion call.
 
-#### Git workflow
+#### Git
+
+Run `git rev-parse --is-inside-work-tree` to check if git is initialized in this directory.
+
+**If git is NOT initialized:**
+
+Use AskUserQuestion to ask the user whether they want to use git for this project.
+
+- If **yes**: Stop. Tell the user to run `git init` (or clone a repo) in this directory first, then re-run `/mash init`. Do not proceed further.
+- If **no**: Write `.mash/plan/settings.md` with `git: none` (leave `branching` and `commit` blank). Skip the Git workflow section below and proceed directly to Sub-agent permissions.
+
+**If git IS initialized:**
+
+Proceed with the Git workflow questions below.
+
+#### Git workflow (only if git is initialized)
 
 Ask the user how MASH should handle git during development.
 
@@ -49,7 +64,7 @@ Ask the user how MASH should handle git during development.
    - `auto` — MASH commits changes with a descriptive message after each feature passes QA. If using `worktree` branching, also merges the feature branch back.
    - `manual` — MASH leaves changes uncommitted after QA passes. The user handles committing and merging themselves.
 
-3. Write `.mash/plan/settings.md` using the template at `skills/mash/references/templates/settings.md`, filling in the user's choices.
+3. Write `.mash/plan/settings.md` using the template at `skills/mash/references/templates/settings.md`, filling in `git: enabled` and the user's branching and commit choices.
 
 #### Sub-agent permissions
 

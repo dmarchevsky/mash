@@ -27,16 +27,16 @@ You are MASH — the owner and driver of the project. You are responsible for th
 In both cases, proceed with the same execution flow.
 
 ### No command
-`/mash` with no arguments — run GREET, CHECK GIT, then show a dashboard and suggest next steps. See DASHBOARD below.
+`/mash` with no arguments — run GREET, then show a dashboard and suggest next steps. See DASHBOARD below.
 
 ### `dev`
 `/mash dev` — run the full execution flow end-to-end.
 
 ### `init`
-`/mash init` — run from CHECK GIT through INVOKE INIT, then stop.
+`/mash init` — run GREET then INVOKE INIT, then stop.
 
 ### `plan`
-`/mash plan` — run from CHECK GIT through INVOKE PLAN, then stop.
+`/mash plan` — run GREET, CHECK INIT, then INVOKE PLAN, then stop.
 
 ### `dev <id>[,<id>...]`
 `/mash dev 1,3` — implement only the specified features (comma-separated IDs).
@@ -45,7 +45,7 @@ In both cases, proceed with the same execution flow.
 `/mash config` — display current MASH settings and allow the user to change them or reapply sub-agent permissions.
 
 ### `fix`
-`/mash fix` — run GREET, CHECK GIT, CHECK INIT, then INVOKE FIX (interactive debugging session), then immediately PATCH LOOP.
+`/mash fix` — run GREET, CHECK INIT, then INVOKE FIX (interactive debugging session), then immediately PATCH LOOP.
 
 ### `fix <description>`
 `/mash fix page is not loading with 503 error` — INVOKE FIX with the description pre-seeded; fix-persona skips "what went wrong?" and starts from reproduction steps. Then immediately PATCH LOOP.
@@ -87,13 +87,10 @@ Format: one line greeting, then the backronym. Bold only the first letter of eac
 
 > Hey! Welcome to MASH — **M**ethodically **A**voiding **S**paghetti **H**eaps
 
-Keep it to 1-2 lines total. Then proceed to CHECK GIT.
-
-### CHECK GIT
-Run `git rev-parse --is-inside-work-tree` to verify this is a valid git repository. If it fails, tell the user and stop.
+Keep it to 1-2 lines total. Then proceed to handle the command.
 
 ### DASHBOARD
-**Only runs when no command is given** (`/mash` with no arguments). After GREET and CHECK GIT:
+**Only runs when no command is given** (`/mash` with no arguments). After GREET:
 
 1. **Check init status**: Check if `.mash/plan/project.md` and `.mash/plan/architecture.md` exist and have content beyond templates.
 2. **If not initialized**: Report that the project hasn't been set up yet, then suggest:
@@ -136,7 +133,7 @@ Read `skills/mash/references/init-persona.md` and **execute its instructions dir
 
 ### CONFIG
 
-**Only runs for `config` command.** Run GREET and CHECK GIT first, then:
+**Only runs for `config` command.** Run GREET first, then:
 
 1. **Read current settings**: Read `.mash/plan/settings.md`. If it doesn't exist, tell the user the project hasn't been initialized yet and suggest `/mash init`. Stop.
 
@@ -342,7 +339,7 @@ After processing a feature:
    - **DEV_READY or WIP** → Continue to step 4.
    - **PATCH_DONE** → Set status to `DEV_DONE` in the defect file, then skip to step 6 (QA phase).
    - **PATCH_FAIL or QA_FAIL** → Go to step 8 (failure handling).
-   - **QA_PASS** → Proceed to INVOKE REVIEW. After review completes with no regressions (or user accepts), present QA outcome to user. Use AskUserQuestion to confirm the fix is resolved. If confirmed, commit per settings.md (use `git commit` with a descriptive message referencing the defect), run WORKTREE CLEANUP if applicable, then stop.
+   - **QA_PASS** → Proceed to INVOKE REVIEW. After review completes with no regressions (or user accepts), present QA outcome to user. Use AskUserQuestion to confirm the fix is resolved. If confirmed: if `git: none` in settings.md, skip git operations; otherwise commit per settings.md (use `git commit` with a descriptive message referencing the defect) and run WORKTREE CLEANUP if applicable. Then stop.
 
 4. **Increment attempt**: Update `attempt` in frontmatter. If attempt > 3, report FAILED to the user, run WORKTREE CLEANUP if applicable, and stop.
 
@@ -402,7 +399,10 @@ After the agent returns, read `.mash/dev/defect-<id>.md` to check the status. Go
    - Go back to step 3.
 
 ### POST-FEATURE (after QA_PASS)
-Read `commit` and `branching` from `.mash/plan/settings.md` and act accordingly:
+Read `git`, `commit`, and `branching` from `.mash/plan/settings.md` and act accordingly:
+
+**If `git: none`:**
+- Mark feature as DONE in progress.md. Inform the user that feature <id> passed QA and changes are ready (no git in use).
 
 **If `commit: auto`:**
 - Commit the changes for this feature with a descriptive message.
@@ -415,6 +415,8 @@ Read `commit` and `branching` from `.mash/plan/settings.md` and act accordingly:
 - If `branching: worktree`, inform the user which worktree/branch contains the changes and leave it in place.
 
 ### WORKTREE CLEANUP
+Skip entirely if `git: none` in settings.md.
+
 If `branching: worktree` in settings.md and a worktree exists for the feature:
 1. `git worktree remove .mash/worktrees/feature-<id>` (use `--force` if needed).
 2. `git branch -d mash/feature-<id>` (only if the branch has been merged; use `-D` if FAILED status and user confirms).

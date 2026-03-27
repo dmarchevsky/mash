@@ -40,10 +40,6 @@ function Die {
 
 Write-Host "`nMASH Installer`n" -ForegroundColor White
 
-if (-not (Test-Path (Join-Path $TargetDir '.git'))) {
-  Die "Not a git repo: $TargetDir"
-}
-
 # --- Step 2: Download ---
 
 $TmpDir  = Join-Path ([System.IO.Path]::GetTempPath()) "mash-$(([System.Guid]::NewGuid()).ToString('N'))"
