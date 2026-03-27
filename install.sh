@@ -153,6 +153,10 @@ if [ "$INSTALL_OPENCODE" = true ]; then
   cp "$MASH_SRC/opencode-skills/mash/SKILL.md" "$TARGET_DIR/.opencode/skills/mash/SKILL.md"
   ok ".opencode/skills/mash/SKILL.md"
 
+  mkdir -p "$TARGET_DIR/.opencode/commands"
+  cp "$MASH_SRC/opencode-commands/mash.md" "$TARGET_DIR/.opencode/commands/mash.md"
+  ok ".opencode/commands/mash.md"
+
   OPENCODE_JSON="$TARGET_DIR/opencode.json"
   if [ ! -f "$OPENCODE_JSON" ]; then
     cp "$MASH_SRC/opencode.json" "$OPENCODE_JSON"
