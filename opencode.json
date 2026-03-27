@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "skills": {
+    "mash": "allow"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Edit(/**)",
+      "Write(/**)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ]
+  }
+}

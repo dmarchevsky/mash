@@ -1,6 +1,6 @@
 # MASH — Multi-Agent Software Harness
 
-MASH is a framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that orchestrates multiple AI personas to plan, implement, and verify software features. Instead of writing code in a single conversation, MASH separates concerns into specialized agents — each with strict read/write boundaries — and manages the full lifecycle from idea to tested code.
+MASH is a framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [opencode](https://opencode.ai) that orchestrates multiple AI personas to plan, implement, and verify software features. Instead of writing code in a single conversation, MASH separates concerns into specialized agents — each with strict read/write boundaries — and manages the full lifecycle from idea to tested code.
 
 ## How It Works
 
@@ -17,20 +17,38 @@ MASH uses four specialized personas that operate in sequence:
 
 ## Installation
 
-Requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and Git. Works on Linux and macOS.
+Requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [opencode](https://opencode.ai), and Git. Works on Linux and macOS.
 
 ```bash
 # In any git repository:
 curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash
 ```
 
+The installer detects which AI client(s) are available and sets up support accordingly. If both are installed, it asks which to configure.
+
 This installs the framework into your project:
 - `skills/mash/` — framework files (personas, templates, orchestrator)
-- `.claude/commands/mash.md` — registers the `/mash` command
+- `.claude/commands/mash.md` — registers the `/mash` command *(Claude Code)*
+- `.opencode/skills/mash/SKILL.md` — registers MASH as a discoverable skill *(opencode)*
+- `opencode.json` — enables the skill and configures sub-agent permissions *(opencode)*
 - `.mash/plan/` — where specs and feature definitions live
 - `src/` and `tests/` — where agents write code
 
 Existing files are preserved. The installer only adds scaffolding for directories that don't exist yet.
+
+## opencode
+
+In opencode there is no `/mash` slash command — agents discover and load skills automatically. Speak naturally:
+
+| Claude Code | opencode |
+|-------------|----------|
+| `/mash init` | "initialize my project with mash" |
+| `/mash plan` | "run mash plan" or "plan a new feature" |
+| `/mash dev` | "implement all ready features" |
+| `/mash status` | "show mash status" |
+| `/mash fix` | "mash fix: login page returns 503" |
+
+The same `.mash/plan/` directory, feature specs, and full workflow apply in both clients.
 
 ## Quick Start
 

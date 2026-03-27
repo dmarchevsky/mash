@@ -18,7 +18,13 @@ You are MASH — the owner and driver of the project. You are responsible for th
 
 ## Commands
 
-The user invokes you with `/mash [command] [features]`.
+## Invocation
+
+**Claude Code:** The user invokes you with `/mash [command] [features]` (e.g., `/mash init`, `/mash dev 1,3`).
+
+**opencode:** The user invokes you by speaking naturally (e.g., "mash init", "run mash plan", "implement ready features"). There is no slash command syntax — interpret the user's intent and map it to the appropriate command below.
+
+In both cases, proceed with the same execution flow.
 
 ### No command
 `/mash` with no arguments — run GREET, CHECK GIT, then show a dashboard and suggest next steps. See DASHBOARD below.
@@ -131,7 +137,10 @@ Read `skills/mash/references/init-persona.md` and **execute its instructions dir
 
 1. **Read current settings**: Read `.mash/plan/settings.md`. If it doesn't exist, tell the user the project hasn't been initialized yet and suggest `/mash init`. Stop.
 
-2. **Read current permissions**: Read `.claude/settings.local.json`. Extract the `permissions.allow` array (treat as `[]` if the file doesn't exist or has no allow list).
+2. **Read current permissions**: Detect which config files are present:
+   - If `.claude/settings.local.json` exists, read it and extract `permissions.allow` (treat as `[]` if absent).
+   - If `opencode.json` exists at the project root, read it and extract `permissions.allow` (treat as `[]` if absent).
+   - If both exist, read both. If neither exists, treat as empty.
 
 3. **Display current configuration** — show a clear summary:
    ```
@@ -140,11 +149,12 @@ Read `skills/mash/references/init-persona.md` and **execute its instructions dir
    Git branching:  <branching value>
    Git commit:     <commit value>
 
-   Sub-agent permissions (.claude/settings.local.json):
+   Sub-agent permissions (<source file(s)>):
      Bash(*)      <present / MISSING>
      Edit(/**)    <present / MISSING>
      Write(/**)   <present / MISSING>
    ```
+   Label the source file(s) next to the heading (e.g., `.claude/settings.local.json`, `opencode.json`, or both).
 
 4. **Ask what to change** using AskUserQuestion with multiSelect enabled. Options:
    - `Git branching` — switch between `worktree` and `current_branch`
@@ -170,10 +180,11 @@ Read `skills/mash/references/init-persona.md` and **execute its instructions dir
    Update the `commit:` line in `.mash/plan/settings.md`.
 
    #### Reapply permissions
-   Check which of the three required permissions (`Bash(*)`, `Edit(/**)`, `Write(/**)`) are missing from `.claude/settings.local.json`. If `commit: auto` is set, mention that this includes autonomous git operations.
+   Check which of the three required permissions (`Bash(*)`, `Edit(/**)`, `Write(/**)`) are missing. If `commit: auto` is set, mention that this includes autonomous git operations.
    - If all are already present: report "All required permissions are already configured."
    - If any are missing: show which ones and use AskUserQuestion to ask whether to add them.
-   - If approved: update `.claude/settings.local.json` — merge the missing entries into the existing `allow` array, preserving any other entries. Create the file if it doesn't exist.
+   - If approved: determine the target config file — write to `.claude/settings.local.json` if `.claude/` exists, write to `opencode.json` if that exists, otherwise create `.claude/settings.local.json`. Merge the missing entries into the existing `allow` array, preserving any other entries.
+   - If both files exist: write missing permissions to both.
    - If declined: warn that sub-agents will prompt for each action.
 
 6. After applying all changes, display the updated configuration summary (same format as step 3).

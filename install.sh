@@ -87,6 +87,37 @@ else
   info "Installing MASH v$NEW_VERSION"
 fi
 
+# --- Step 3b: Detect AI clients ---
+
+HAS_CLAUDE=false
+HAS_OPENCODE=false
+command -v claude   &>/dev/null && HAS_CLAUDE=true
+command -v opencode &>/dev/null && HAS_OPENCODE=true
+
+INSTALL_CLAUDE=false
+INSTALL_OPENCODE=false
+
+if   [ "$HAS_CLAUDE" = true  ] && [ "$HAS_OPENCODE" = false ]; then
+  INSTALL_CLAUDE=true
+elif [ "$HAS_CLAUDE" = false ] && [ "$HAS_OPENCODE" = true  ]; then
+  INSTALL_OPENCODE=true
+elif [ "$HAS_CLAUDE" = true  ] && [ "$HAS_OPENCODE" = true  ]; then
+  printf '\nBoth Claude Code and opencode are installed. Install MASH for:\n'
+  printf '  1) Claude Code only\n'
+  printf '  2) opencode only\n'
+  printf '  3) Both\n'
+  printf 'Choice [3]: '
+  read -r CLIENT_CHOICE
+  CLIENT_CHOICE="${CLIENT_CHOICE:-3}"
+  case "$CLIENT_CHOICE" in
+    1) INSTALL_CLAUDE=true ;;
+    2) INSTALL_OPENCODE=true ;;
+    *) INSTALL_CLAUDE=true; INSTALL_OPENCODE=true ;;
+  esac
+else
+  die "Neither 'claude' nor 'opencode' found in PATH. Install one of them first."
+fi
+
 # --- Step 4: Copy framework files (always overwrite) ---
 
 info "Installing framework files..."
@@ -95,9 +126,25 @@ mkdir -p "$TARGET_DIR/skills/mash"
 cp -r "$MASH_SRC/skills/mash/." "$TARGET_DIR/skills/mash/"
 ok "skills/mash/"
 
-mkdir -p "$TARGET_DIR/.claude/commands"
-cp "$MASH_SRC/commands/mash.md" "$TARGET_DIR/.claude/commands/mash.md"
-ok ".claude/commands/mash.md"
+if [ "$INSTALL_CLAUDE" = true ]; then
+  mkdir -p "$TARGET_DIR/.claude/commands"
+  cp "$MASH_SRC/commands/mash.md" "$TARGET_DIR/.claude/commands/mash.md"
+  ok ".claude/commands/mash.md"
+fi
+
+if [ "$INSTALL_OPENCODE" = true ]; then
+  mkdir -p "$TARGET_DIR/.opencode/skills/mash"
+  cp "$MASH_SRC/opencode-skills/mash/SKILL.md" "$TARGET_DIR/.opencode/skills/mash/SKILL.md"
+  ok ".opencode/skills/mash/SKILL.md"
+
+  OPENCODE_JSON="$TARGET_DIR/opencode.json"
+  if [ ! -f "$OPENCODE_JSON" ]; then
+    cp "$MASH_SRC/opencode.json" "$OPENCODE_JSON"
+    ok "opencode.json"
+  else
+    ok "opencode.json already exists — skipped"
+  fi
+fi
 
 # Copy version file into skills/mash/ for installed-version tracking
 if [ -f "$MASH_SRC/VERSION" ]; then
@@ -216,5 +263,11 @@ if [ -n "$INSTALLED_VERSION" ] && [ "$INSTALLED_VERSION" != "$NEW_VERSION" ]; th
   printf '\n\033[1;32mMASH updated to v%s.\033[0m\n\n' "$NEW_VERSION"
 else
   printf '\n\033[1;32mMASH v%s installed successfully.\033[0m\n' "$NEW_VERSION"
-  printf 'Run \033[1m/mash init\033[0m in Claude Code to get started.\n\n'
+  if [ "$INSTALL_CLAUDE" = true ] && [ "$INSTALL_OPENCODE" = true ]; then
+    printf 'Run \033[1m/mash init\033[0m in Claude Code or ask MASH to initialize your project in opencode.\n\n'
+  elif [ "$INSTALL_OPENCODE" = true ]; then
+    printf 'Ask MASH to initialize your project in opencode (e.g. "mash init").\n\n'
+  else
+    printf 'Run \033[1m/mash init\033[0m in Claude Code to get started.\n\n'
+  fi
 fi
