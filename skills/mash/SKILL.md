@@ -278,7 +278,7 @@ Read these files before starting:
 - .mash/dev/feature-<id>.md"
 )
 ```
-After the agent returns, read `.mash/dev/feature-<id>.md` to check the status. Go back to step 5.
+After the agent returns, read `.mash/dev/feature-<id>.md` to check the status. **If status is DEV_DONE, validate verification evidence:** read the Verification Steps from the feature spec and check the Dev outcome section for corresponding command + actual output entries. If any verification step has no evidence (and no documented reason for inspection-only verification), set status back to DEV_READY and re-invoke dev with a note that verification evidence is required for each step. Go back to step 5.
 
 8. **QA phase**:
 

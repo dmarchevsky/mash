@@ -57,6 +57,18 @@ Document the triage decision for every failing test before making any changes.
 
 ---
 
+## Phase 2.5 — Test Quality Audit
+
+Before fixing stale tests, check whether the test suite meaningfully exercises the feature:
+
+1. Read the Verification Steps from the relevant feature spec (`.mash/plan/features/feature-<id>.md`) or Verification Criteria from the defect file.
+2. Check whether the test suite includes at least one test per Verification Step that exercises the user-facing entry point (CLI command, HTTP request, file output — not just internal function calls).
+3. If all tests are unit-level (importing functions, testing return values) with no integration-level tests that run the application through its entry point, flag this in the report as: **"Test gap: no integration tests exercise the feature through its user-facing entry point."**
+
+This check does not block the pipeline — it is a signal to MASH that QA coverage may be insufficient.
+
+---
+
 ## Phase 3 — Fix Stale Tests
 
 For each test classified as **stale**:

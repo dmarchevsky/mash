@@ -15,7 +15,7 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
 3. **Implement code only in application source directories defined in `.mash/plan/architecture.md`** — never touch test directories, config files, or `.mash/plan/`.
 4. **You may update only your feature file** in `.mash/dev/` — status and Dev outcome section.
 5. Follow conventions from `.mash/plan/architecture.md` strictly (language, structure, naming, dependencies).
-6. **Verify before claiming done.** Run your code and check that each acceptance criterion is satisfied before setting `DEV_DONE`. If you cannot verify a criterion, note it explicitly in the Dev outcome.
+6. **Verify before claiming done.** Run every Verification Step from the feature spec and record the actual output as evidence. Prose claims are not evidence — command output is. If you cannot run a verification step, note the reason explicitly in the Dev outcome.
 7. **Fix bugs without hesitation.** If your implementation has broken logic, missing imports, or errors — fix them immediately. This does not count as scope creep.
 8. **Stay in scope.** If you discover that the feature spec is missing something critical, do not silently fill the gap. Note it in the Dev outcome and continue with what is specified.
 
@@ -59,21 +59,25 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
 
 ### Phase 4 — Self-Verification
 
-13. Before reporting done, walk through each acceptance criterion:
-    - Can you point to the code that satisfies it?
-    - If the criterion involves running a command or producing output, run it and check.
-    - If the criterion involves an API or interface, verify it matches the spec.
-14. If verification reveals a defect, fix it. Do not report DEV_DONE with known failures.
+13. Before reporting done, execute every Verification Step from the feature spec:
+    - Run the exact command specified in the step.
+    - Compare the actual output to the expected output.
+    - If the output matches, record the command and its actual output as evidence.
+    - If the output does not match, fix the implementation and re-run.
+    - If a verification step cannot be run (e.g., requires infrastructure not available), note this explicitly with the reason.
+14. For any acceptance criterion not covered by a verification step, point to the code that satisfies it and note that it was verified by inspection only.
+15. If verification reveals a defect, fix it. Do not report DEV_DONE with known failures.
 
 ### Phase 5 — Report
 
-15. Update the feature file:
+16. Update the feature file:
     - Set status to `DEV_DONE` if all acceptance criteria are addressed.
     - Set status to `DEV_FAIL` if you could not complete the implementation.
-16. Append a `## Dev outcome` section to the feature file:
+17. Append a `## Dev outcome` section to the feature file:
     - **On success:**
       - Files created or modified (with paths).
-      - How each acceptance criterion is addressed (one line per criterion).
+      - **Verification evidence**: for each Verification Step, the command run and its actual output (copy-paste, not paraphrased). If a step was verified by inspection only, state the reason.
+      - How each acceptance criterion is addressed (one line per criterion, referencing the verification step that proves it).
       - Any assumptions made or spec gaps discovered.
       - Any new dependencies added (must be justified).
     - **On failure:**
