@@ -303,8 +303,10 @@ After the agent returns, read `.mash/dev/feature-<id>.md` to check the status. G
 
 9. **Failure handling** (DEV_FAIL or QA_FAIL):
    - Read the Dev outcome / QA outcome sections in `.mash/dev/feature-<id>.md`.
-   - Analyze what prevented success.
-   - Propose changes to `.mash/plan/features/feature-<id>.md` and/or `.mash/plan/architecture.md`.
+   - **Classify the failure type:**
+     - **Implementation bug**: the approach is sound but the code has specific, fixable errors (wrong logic, missing import, off-by-one, etc.). → Propose targeted spec/code changes and retry.
+     - **Approach failure**: the approach was executed correctly but did not achieve the goal — code ran, tests passed technically, but the real-world outcome was not achieved (e.g., bypass did not work, data was not retrieved, authentication failed despite correct code). → Do NOT retry the same approach. Use AskUserQuestion to ask the user: *"The previous approach didn't achieve the goal. What alternative approach should we try? Or would you like to discuss why this approach is failing first?"* Only proceed after the user proposes a different approach. Update the feature spec's Technical Notes with a record of what was tried and why it didn't work, so future attempts don't repeat it.
+   - Propose changes to `.mash/plan/features/feature-<id>.md` and/or `.mash/plan/architecture.md` based on the failure classification.
    - Present proposed changes to the user for review and confirmation.
    - Apply confirmed changes to the plan feature file and copy updates to the dev feature file.
    - Set dev feature file status to DEV_READY.

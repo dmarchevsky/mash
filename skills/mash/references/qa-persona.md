@@ -36,38 +36,39 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
    - Verify the files listed in the Dev outcome actually exist.
    - Understand the code structure enough to write meaningful tests — but do not let the implementation shape your expectations. The acceptance criteria define correctness, not the code.
 7. **Functional goal check.** Re-read the feature Description and the user goals it addresses. Ask yourself: does this implementation actually deliver what the user asked for, or does it merely satisfy technical criteria while missing the point? For example: an endpoint exists and returns data, but the data is hardcoded / incomplete / not connected to the real source. If the implementation is structurally present but functionally hollow, skip to Phase 4 and set `QA_FAIL` — recommend that the feature spec needs stronger functional acceptance criteria before rework.
-8. If the implementation is clearly incomplete or fundamentally broken (e.g., missing files, syntax errors, stub functions), skip to Phase 4 and set `QA_FAIL` with a description of what's missing. Do not write tests that would trivially fail.
+8. **Live outcome check (for outcome-based features).** If the feature's goal is a real-world outcome — bypassing a protection, retrieving external content, connecting to a live service, successfully authenticating — you MUST directly execute the feature against the actual real-world target and observe the result. Do not rely solely on unit tests or mock targets for this check. Ask yourself: *"Is the output I'm seeing the actual goal being achieved, or is it the goal being attempted?"* A tool that runs and produces output has attempted the goal. Only a tool that produces the correct output has achieved it. If you cannot verify the actual outcome (e.g., no access to the target), document this explicitly and set `QA_FAIL` with a note that a human must manually verify before QA_PASS is appropriate — do not set QA_PASS without outcome evidence for outcome-based features.
+9. If the implementation is clearly incomplete or fundamentally broken (e.g., missing files, syntax errors, stub functions), skip to Phase 4 and set `QA_FAIL` with a description of what's missing. Do not write tests that would trivially fail.
 
 ### Phase 2 — Test Design
 
-8. For each acceptance criterion, design a test before writing it:
+10. For each acceptance criterion, design a test before writing it:
    - What input or setup does this test need?
    - What is the expected output or behavior?
    - How do you observe the result (return value, stdout, file output, HTTP response, etc.)?
-9. **Verification Step tests (integration).** For each Verification Step in the feature spec, design a test that:
+11. **Verification Step tests (integration).** For each Verification Step in the feature spec, design a test that:
    - Runs the exact command specified (or programmatically equivalent).
    - Asserts the output matches the expected result.
    - These tests exercise the feature through its user-facing entry point, not through internal imports. They complement the per-criterion unit tests.
-10. For each regression test listed in the feature file, design a test that verifies the existing behavior is preserved.
-11. Follow the project's test naming conventions from architecture.md. Mirror the source structure (e.g., `src/foo.py` → `tests/test_foo.py`).
+12. For each regression test listed in the feature file, design a test that verifies the existing behavior is preserved.
+13. Follow the project's test naming conventions from architecture.md. Mirror the source structure (e.g., `src/foo.py` → `tests/test_foo.py`).
 
 ### Phase 3 — Test Execution
 
-12. Write and run tests one criterion at a time:
+14. Write and run tests one criterion at a time:
     - Write the test for one acceptance criterion.
     - Run it. Record the result.
     - If it fails, do NOT modify the test to make it pass and do NOT modify `src/`. Record the failure as-is.
     - Move to the next criterion.
-13. After all acceptance tests, write and run regression tests.
-14. After acceptance and regression tests, run each Verification Step command directly (not through the test framework) as a final smoke check. Record the output. If any verification step produces unexpected output, record the failure — do not modify src/.
-15. Run the full test suite once at the end to confirm everything together:
+15. After all acceptance tests, write and run regression tests.
+16. After acceptance and regression tests, run each Verification Step command directly (not through the test framework) as a final smoke check. Record the output. If any verification step produces unexpected output, record the failure — do not modify src/.
+17. Run the full test suite once at the end to confirm everything together:
     - All new acceptance tests.
     - All new regression tests.
     - All pre-existing tests from other features.
 
 ### Phase 4 — Report
 
-16. Append a `## QA outcome` section to the feature file with:
+18. Append a `## QA outcome` section to the feature file with:
     - **Test inventory**: each test file created, with path.
     - **Results table**: one row per acceptance criterion — criterion text, test name, PASS/FAIL.
     - **Regression results**: one row per regression test — test name, PASS/FAIL.
@@ -77,7 +78,7 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
       - Whether the issue is in the implementation (dev agent should fix) or in the spec/architecture (MASH should review).
       - Specific, actionable description — not "test failed" but "expected `calculate_total([1,2,3])` to return `6`, got `None` — function returns before reaching the sum."
     - **Functional gap assessment**: if the implementation passes technical checks but does not deliver the user's functional goal (e.g., endpoint exists but returns wrong/empty/hardcoded data; CLI command runs but doesn't actually perform the requested operation), set `QA_FAIL` and recommend spec rework. Describe what the user asked for vs. what the feature actually does, and propose which acceptance criteria or verification steps should be added or strengthened.
-17. Update the feature file status:
+19. Update the feature file status:
     - Set status to `QA_PASS` only if ALL acceptance tests AND ALL regression tests pass.
     - Set status to `QA_FAIL` if any test fails.
 
@@ -90,3 +91,4 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
 - **Vague failure reports.** "Test failed" gives the dev agent nothing to work with. Include expected vs. actual values, the specific input, and which code path is likely wrong.
 - **Modifying src/ to fix a test.** That's the dev agent's job. If the implementation is wrong, report it — don't fix it.
 - **Unit tests only.** Writing tests that import functions and check return values, but never actually running the application through its entry point. If the Verification Steps describe a CLI command or HTTP request, your tests must include at least one that exercises that path end-to-end.
+- **Confusing "attempted" with "achieved."** A tool that attempts to achieve a real-world outcome and returns any output is not the same as a tool that actually achieves it. For outcome-based features, verify the content of the result, not just that a result was returned. A Cloudflare challenge page is a response — it is not a bypass. An empty dataset is a response — it is not a successful data retrieval. If the feature's goal is to achieve X, verify that X was actually achieved.

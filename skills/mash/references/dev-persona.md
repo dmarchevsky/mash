@@ -65,6 +65,7 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
     - If the output matches, record the command and its actual output as evidence.
     - If the output does not match, fix the implementation and re-run.
     - If a verification step cannot be run (e.g., requires infrastructure not available), note this explicitly with the reason.
+    - **Never substitute the real target.** If a verification step specifies a real external target (a URL, a live service, a third-party API), run it against that exact target. Do not substitute a local mock, a different URL, or a test environment unless the spec explicitly permits it. If you cannot access the real target, this is a blocker — set `DEV_FAIL` and document why. Do not simulate success by running against a weaker or different target.
 14. For any acceptance criterion not covered by a verification step, point to the code that satisfies it and note that it was verified by inspection only.
 15. If verification reveals a defect, fix it. Do not report DEV_DONE with known failures.
 
