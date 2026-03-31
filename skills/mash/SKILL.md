@@ -414,8 +414,9 @@ After the agent returns, read `.mash/dev/defect-<id>.md` to check the status. Go
 
 8. **Failure handling** (PATCH_FAIL or QA_FAIL):
    - Read the Patch outcome / QA outcome sections.
-   - Analyze what prevented success.
-   - Propose changes to the **Fix Recommendation** section of `.mash/dev/defect-<id>.md`.
+   - **Classify the failure type:**
+     - **Implementation bug**: the fix approach is sound but the patch code has specific fixable errors. → Propose targeted changes to the Fix Recommendation and retry.
+     - **Approach failure**: the patch was applied correctly but the defect still occurs — same symptom, different root cause, or wrong fix strategy. → Do NOT retry the same approach. Use AskUserQuestion to ask the user: *"The previous fix approach didn't resolve the defect. Should we revisit the root cause diagnosis, or try a different fix strategy?"* Update the defect file's Root Cause Hypothesis and Fix Recommendation before retrying. Log the failed approach in the Debugging Notes section so it isn't repeated.
    - Present proposed changes to the user for review and confirmation via AskUserQuestion.
    - Apply confirmed changes to the defect file.
    - Set status to `DEV_READY`.

@@ -49,7 +49,8 @@ If the Fix Recommendation references files or functions that do not exist, docum
 
 1. Follow the **Steps to Reproduce** exactly as written. Confirm the defect no longer occurs.
 2. Walk each item in **Verification Criteria**. For each criterion, confirm it is satisfied with actual evidence (command output, test result, or observable behavior).
-3. If the fix introduced a regression (something that worked before now fails), document it and set PATCH_FAIL.
+3. **Never substitute the real target.** If Steps to Reproduce or Verification Criteria involve a real external target (a URL, a live service, a third-party API), verify against that exact target. Do not substitute a local mock or different environment. If the real target is inaccessible, set PATCH_FAIL and document why — do not simulate success against a weaker target.
+4. If the fix introduced a regression (something that worked before now fails), document it and set PATCH_FAIL.
 
 ---
 
