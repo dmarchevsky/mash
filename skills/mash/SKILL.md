@@ -36,6 +36,9 @@ In both cases, proceed with the same execution flow.
 ### `plan`
 `/mash plan` — run GREET, CHECK INIT, then INVOKE PLAN, then stop.
 
+### `plan <description>`
+`/mash plan build a site checker` — same as `plan` but passes the inline description to plan-persona as a pre-seeded starting point, skipping the "what do you want to build?" question.
+
 ### `dev <id>[,<id>...]`
 `/mash dev 1,3` — implement only the specified features (comma-separated IDs).
 
@@ -76,6 +79,7 @@ In both cases, proceed with the same execution flow.
 | *(none)* | GREET → DASHBOARD |
 | `init` | GREET → INVOKE INIT |
 | `plan` | GREET → CHECK INIT → INVOKE PLAN |
+| `plan <description>` | GREET → CHECK INIT → INVOKE PLAN (with pre-seeded description) |
 | `dev` | GREET → CHECK INIT → CHECK FEATURES → PREPARE → IMPLEMENTATION LOOP → POST-FEATURE |
 | `dev <ids>` | GREET → CHECK INIT → PREPARE (filtered) → IMPLEMENTATION LOOP → POST-FEATURE |
 | `fix` | GREET → CHECK INIT → INVOKE FIX → PATCH LOOP |
@@ -208,6 +212,8 @@ Read `.mash/plan/progress.md`. Check if there are any features not marked DONE.
 
 #### INVOKE PLAN
 Read `skills/mash/references/plan-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — plan requires multi-turn interaction with the user via AskUserQuestion.
+
+If the user provided an inline description (e.g. `/mash plan build a site checker`), pass it to plan-persona as the pre-seeded feature description. Plan-persona should skip asking "what do you want to build?" and begin Phase 1 with this description already in hand — treating it as the user's initial answer and proceeding directly to follow-up clarifying questions.
 
 **If command is `plan`, stop here.**
 
