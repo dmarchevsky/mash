@@ -271,7 +271,7 @@ For each feature to implement:
 Read `skills/mash/references/dev-persona.md` and invoke:
 ```
 Agent(
-  subagent_type="general-purpose",
+
   prompt="<dev-persona.md contents>
 
 ---
@@ -292,7 +292,7 @@ After the agent returns, read `.mash/dev/feature-<id>.md` to check the status. *
 Read `skills/mash/references/qa-persona.md` and invoke:
 ```
 Agent(
-  subagent_type="general-purpose",
+
   prompt="<qa-persona.md contents>
 
 ---
@@ -325,7 +325,7 @@ Runs after QA_PASS for both features and defects. Invoked by MASH — not a sub-
 Read `skills/mash/references/review-persona.md` and invoke:
 ```
 Agent(
-  subagent_type="general-purpose",
+
   prompt="<review-persona.md contents>
 
 ---
@@ -367,7 +367,7 @@ After processing a feature:
 5. **INVOKE PATCH**: Read `skills/mash/references/patch-persona.md` and invoke:
 ```
 Agent(
-  subagent_type="general-purpose",
+
   prompt="<patch-persona.md contents>
 
 ---
@@ -390,7 +390,7 @@ Before invoking QA, ensure the defect file status is `DEV_DONE` (patch-persona s
 Read `skills/mash/references/qa-persona.md` and invoke:
 ```
 Agent(
-  subagent_type="general-purpose",
+
   prompt="<qa-persona.md contents>
 
 ---
