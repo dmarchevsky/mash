@@ -165,17 +165,22 @@ If the user provided a filepath argument (e.g. `/mash init path/to/brief.md`), r
    Git branching:  <branching value>
    Git commit:     <commit value>
 
-   Sub-agent permissions (<source file(s)>):
+   Sub-agent permissions (.claude/settings.local.json):   ← only if file exists
      Bash(*)      <present / MISSING>
      Edit(/**)    <present / MISSING>
      Write(/**)   <present / MISSING>
+
+   Sub-agent permissions (opencode.json):                 ← only if file exists
+     bash         <present / MISSING>
+     edit         <present / MISSING>
+     webfetch     <present / MISSING>
    ```
-   Label the source file(s) next to the heading (e.g., `.claude/settings.local.json`, `opencode.json`, or both).
+   Show only the section(s) for config files that actually exist. If neither exists, show a single line: "No permission config file found."
 
 4. **Ask what to change** using AskUserQuestion with multiSelect enabled. Options:
    - `Git branching` — switch between `worktree` and `current_branch`
    - `Git commit` — switch between `auto` and `manual`
-   - `Reapply permissions` — add any missing sub-agent permissions to `.claude/settings.local.json`
+   - `Reapply permissions` — add any missing sub-agent permissions to the applicable config file(s)
    - `Nothing — just viewing`
 
 5. **Handle each selected change:**
@@ -196,11 +201,10 @@ If the user provided a filepath argument (e.g. `/mash init path/to/brief.md`), r
    Update the `commit:` line in `.mash/plan/settings.md`.
 
    #### Reapply permissions
-   Check which of the three required permissions (`Bash(*)`, `Edit(/**)`, `Write(/**)`) are missing. If `commit: auto` is set, mention that this includes autonomous git operations.
-   - If all are already present: report "All required permissions are already configured."
-   - If any are missing: show which ones and use AskUserQuestion to ask whether to add them.
-   - If approved: determine the target config file — write to `.claude/settings.local.json` if `.claude/` exists, write to `opencode.json` if that exists, otherwise create `.claude/settings.local.json`. Merge the missing entries into the existing `allow` array, preserving any other entries.
-   - If both files exist: write missing permissions to both.
+   Check required permissions per config file: for `.claude/settings.local.json` check `Bash(*)`, `Edit(/**)`, `Write(/**)` ; for `opencode.json` check `bash`, `edit`, `webfetch`. If `commit: auto` is set, mention that this includes autonomous git operations.
+   - If all are already present in every applicable config: report "All required permissions are already configured."
+   - If any are missing: show which ones (per file) and use AskUserQuestion to ask whether to add them.
+   - If approved: write missing permissions to each applicable config file, merging into the existing structure and preserving any other entries. If both files exist, write to both. If neither exists: check whether `.opencode/` directory is present — if so, create `opencode.json`; otherwise create `.claude/settings.local.json`.
    - If declined: warn that sub-agents will prompt for each action.
 
 6. After applying all changes, display the updated configuration summary (same format as step 3).

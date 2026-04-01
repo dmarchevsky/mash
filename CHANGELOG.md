@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.3] — 2026-04-01
+
+### Fixed
+- **`/mash config` opencode sync** — permission display now shows separate sections for `.claude/settings.local.json` (Bash, Edit, Write) and `opencode.json` (bash, edit, webfetch), shown only when each file exists. "Reapply permissions" option label no longer hardcodes `.claude/settings.local.json`. Reapply handler now checks `webfetch` for opencode and uses `.opencode/` directory detection for fallback config creation, matching init-persona behavior from 0.4.1.
+
 ## [0.4.2] — 2026-04-01
 
 ### Added
