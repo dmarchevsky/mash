@@ -256,9 +256,10 @@ For each feature to implement:
 1. **Validate**: Check `.mash/plan/features/feature-<id>.md` exists and has valid content. If not, stop.
 2. **Check progress.md entry**: If no entry exists, stop.
 3. **Branch setup** (if `branching: worktree` in settings.md):
-   - Create a new branch `mash/feature-<id>` from the current branch.
-   - Create a git worktree for that branch: `git worktree add .mash/worktrees/feature-<id> mash/feature-<id>`.
-   - Dev and QA agents should work within the worktree directory.
+   - Before creating, check if `.mash/worktrees/feature-<id>` already exists (stale from an interrupted run):
+     - If both the directory and branch `mash/feature-<id>` exist: skip creation and continue.
+     - If only one exists (mismatched state): warn the user and use AskUserQuestion to ask how to proceed before continuing.
+   - Otherwise: create a new branch `mash/feature-<id>` from the current branch, then create a git worktree: `git worktree add .mash/worktrees/feature-<id> mash/feature-<id>`.
    - If `branching: current_branch`, skip this step — work directly in the project root.
 4. **Prepare dev copy**: If `.mash/dev/feature-<id>.md` does not exist, copy it from `.mash/plan/features/feature-<id>.md` and set status to DEV_READY in the dev copy.
 5. **Read dev status** from `.mash/dev/feature-<id>.md`:
@@ -307,7 +308,18 @@ PARAMETERS:
 Read these files before starting:
 - .mash/plan/architecture.md
 - .mash/plan/project.md
-- .mash/dev/feature-<id>.md"
+- .mash/dev/feature-<id>.md
+
+<If branching: worktree — append this block:>
+---
+WORKTREE CONTEXT:
+This feature is being developed in an isolated git worktree.
+- worktree_path: .mash/worktrees/feature-<id>
+- All source code exploration must use this path (e.g., .mash/worktrees/feature-<id>/src/ instead of src/)
+- All source code creation and modification must write to this path
+- The feature file (.mash/dev/feature-<id>.md) and .mash/plan/ files remain in the main project directory — access them there as normal
+- Do NOT read or modify src/ in the main project directory
+</If branching: worktree>"
 )
 ```
 After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/feature-<id>.md`. **If status is DEV_DONE, validate verification evidence:** check `verified_steps` in the MASH_STATUS block — if not all steps have evidence, or if the block is absent and the Dev outcome section lacks command + actual output for each Verification Step, set status back to DEV_READY and re-invoke dev with a note that verification evidence is required for each step. Go back to step 5.
@@ -328,7 +340,18 @@ PARAMETERS:
 Read these files before starting:
 - .mash/plan/architecture.md
 - .mash/plan/project.md
-- .mash/dev/feature-<id>.md"
+- .mash/dev/feature-<id>.md
+
+<If branching: worktree — append this block:>
+---
+WORKTREE CONTEXT:
+This feature was implemented in an isolated git worktree.
+- worktree_path: .mash/worktrees/feature-<id>
+- All source code inspection and test execution must use this path (e.g., .mash/worktrees/feature-<id>/src/)
+- Write tests to the test directory within the worktree (e.g., .mash/worktrees/feature-<id>/tests/)
+- The feature file (.mash/dev/feature-<id>.md) and .mash/plan/ files remain in the main project directory — access them there as normal
+- Do NOT read or test src/ in the main project directory
+</If branching: worktree>"
 )
 ```
 After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/feature-<id>.md`. Go back to step 5.
@@ -427,7 +450,12 @@ After processing a feature:
 **Only runs for `fix` commands** (after INVOKE FIX or directly when argument is a defect ID).
 
 1. **Validate**: Check `.mash/dev/defect-<id>.md` exists. If not, tell the user to run `/mash fix` first and stop.
-2. **Branch setup** (if `branching: worktree` in settings.md): Create branch `mash/defect-<id>` and worktree `.mash/worktrees/defect-<id>`. If `branching: current_branch`, skip.
+2. **Branch setup** (if `branching: worktree` in settings.md):
+   - Before creating, check if `.mash/worktrees/defect-<id>` already exists (stale from an interrupted run):
+     - If both the directory and branch `mash/defect-<id>` exist: skip creation and continue.
+     - If only one exists (mismatched state): warn the user and use AskUserQuestion to ask how to proceed before continuing.
+   - Otherwise: create branch `mash/defect-<id>` from the current branch, then create the worktree: `git worktree add .mash/worktrees/defect-<id> mash/defect-<id>`.
+   - If `branching: current_branch`, skip.
 3. **Read status** from `.mash/dev/defect-<id>.md`:
 
    - **DEV_READY or WIP** → Continue to step 4.
@@ -459,7 +487,18 @@ PARAMETERS:
 Read these files before starting:
 - .mash/plan/architecture.md
 - .mash/plan/project.md
-- .mash/dev/defect-<id>.md"
+- .mash/dev/defect-<id>.md
+
+<If branching: worktree — append this block:>
+---
+WORKTREE CONTEXT:
+This defect fix is being developed in an isolated git worktree.
+- worktree_path: .mash/worktrees/defect-<id>
+- All source code exploration must use this path (e.g., .mash/worktrees/defect-<id>/src/ instead of src/)
+- All source code creation and modification must write to this path
+- The defect file (.mash/dev/defect-<id>.md) and .mash/plan/ files remain in the main project directory — access them there as normal
+- Do NOT read or modify src/ in the main project directory
+</If branching: worktree>"
 )
 ```
 After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/defect-<id>.md`. Go back to step 3.
@@ -487,7 +526,19 @@ Existing tests in `tests/` must still be run for regression — do not move or m
 Read these files before starting:
 - .mash/plan/architecture.md
 - .mash/plan/project.md
-- .mash/dev/defect-<id>.md"
+- .mash/dev/defect-<id>.md
+
+<If branching: worktree — append this block:>
+---
+WORKTREE CONTEXT:
+This defect fix was implemented in an isolated git worktree.
+- worktree_path: .mash/worktrees/defect-<id>
+- All source code inspection and test execution must use this path (e.g., .mash/worktrees/defect-<id>/src/)
+- Write defect tests to .mash/worktrees/defect-<id>/tests/defects/defect-<id>/ (within the worktree)
+- Run regression tests from within the worktree as well
+- The defect file (.mash/dev/defect-<id>.md) and .mash/plan/ files remain in the main project directory — access them there as normal
+- Do NOT read or test src/ in the main project directory
+</If branching: worktree>"
 )
 ```
 After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/defect-<id>.md`. Go back to step 3.
@@ -496,7 +547,9 @@ After the agent returns, read the `---MASH_STATUS---` block in the agent output 
    1. Run INVOKE ARCHITECT (post-qa) for this defect.
    2. If ARCH_FAIL, present gaps to the user via AskUserQuestion (same three options as in INVOKE ARCHITECT (post-qa) section).
    3. Present QA outcome to the user. Use AskUserQuestion to confirm the fix is resolved.
-   4. If `git: none` in settings.md, skip git operations. Otherwise commit per settings.md (use `git commit` with a descriptive message referencing the defect).
+   4. If `git: none` in settings.md, skip git operations. Otherwise:
+      - Commit with a descriptive message referencing the defect (use `git commit` from within the worktree if `branching: worktree`, or from the project root if `branching: current_branch`).
+      - If `commit: auto` and `branching: worktree`: merge the defect branch (`mash/defect-<id>`) back into the original branch. If the merge produces conflicts, stop and inform the user with the conflicting files listed — do NOT run WORKTREE CLEANUP. Ask the user to resolve conflicts, then confirm to proceed with cleanup.
    5. Run WORKTREE CLEANUP if applicable.
    6. Stop.
 
@@ -517,10 +570,11 @@ Read `git`, `commit`, and `branching` from `.mash/plan/settings.md` and act acco
 - Mark feature as DONE in progress.md. Inform the user that feature <id> passed QA and changes are ready (no git in use).
 
 **If `commit: auto`:**
-- Commit the changes for this feature with a descriptive message.
+- Commit the changes for this feature with a descriptive message (run `git commit` from within the worktree if `branching: worktree`, or from the project root if `branching: current_branch`).
 - If `branching: worktree`:
   - Merge the feature branch (`mash/feature-<id>`) back into the original branch.
-  - Run WORKTREE CLEANUP for this feature.
+  - If the merge produces conflicts: stop and inform the user with the conflicting files listed — do NOT run WORKTREE CLEANUP. Ask the user to resolve conflicts on the original branch, then confirm to proceed with cleanup.
+  - On successful merge: run WORKTREE CLEANUP for this feature.
 
 **If `commit: manual`:**
 - Do NOT commit or merge. Inform the user that feature <id> passed QA and changes are ready.
@@ -529,11 +583,13 @@ Read `git`, `commit`, and `branching` from `.mash/plan/settings.md` and act acco
 ### WORKTREE CLEANUP
 Skip entirely if `git: none` in settings.md.
 
-If `branching: worktree` in settings.md and a worktree exists for the feature:
-1. `git worktree remove .mash/worktrees/feature-<id>` (use `--force` if needed).
-2. `git branch -d mash/feature-<id>` (only if the branch has been merged; use `-D` if FAILED status and user confirms).
+Called with context of which item to clean up — `<type>` is `feature` or `defect`, `<id>` is its numeric ID.
 
-This is called from POST-FEATURE (after merge) and from step 6 (when attempt > 3 / FAILED).
+If `branching: worktree` in settings.md and a worktree exists for the item:
+1. `git worktree remove .mash/worktrees/<type>-<id>` (use `--force` if needed).
+2. `git branch -d mash/<type>-<id>` (only if the branch has been merged; use `-D` if FAILED status and user confirms).
+
+This is called from POST-FEATURE (after merge), post-fix completion (step 7), and from the attempt > 3 / FAILED paths in both loops.
 
 ---
 
