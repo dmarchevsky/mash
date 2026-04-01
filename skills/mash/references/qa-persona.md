@@ -68,7 +68,7 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
 
 ### Phase 4 — Report
 
-18. Append a `## QA outcome` section to the feature file with:
+18. Append a `## QA outcome (attempt <N>)` section to the feature file (where `<N>` is the current `attempt` value from the frontmatter) with:
     - **Test inventory**: each test file created, with path.
     - **Results table**: one row per acceptance criterion — criterion text, test name, PASS/FAIL.
     - **Regression results**: one row per regression test — test name, PASS/FAIL.

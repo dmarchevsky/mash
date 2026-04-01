@@ -1,8 +1,6 @@
 ---
 id: <feature-id>
 title: <short title>
-status: CREATED
-attempt: 0
 ---
 
 # <title>
@@ -29,8 +27,8 @@ attempt: 0
 ## Technical Notes
 <!-- Implementation hints, constraints, references -->
 
-## Dev outcome
-<!-- Filled by dev-persona after implementation attempt -->
+## Dev outcome (attempt 1)
+<!-- Filled by dev-persona after implementation attempt. On retry, a new numbered section is appended. -->
 
-## QA outcome
-<!-- Filled by qa-persona after verification -->
+## QA outcome (attempt 1)
+<!-- Filled by qa-persona after verification. On retry, a new numbered section is appended. -->

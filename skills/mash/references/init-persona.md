@@ -45,53 +45,23 @@ Before asking the user anything, silently investigate the project directory:
 
 ### Phase 1 — Configuration
 
-Set up git and permissions for sub-agents before starting the project definition. Ask each question as its own AskUserQuestion call.
+Set up git and permissions for sub-agents before starting the project definition.
 
-#### Git
+#### Git check
 
 Run `git rev-parse --is-inside-work-tree` to check if git is initialized in this directory.
 
-**If git is NOT initialized:**
+**If git is NOT initialized:** Use AskUserQuestion to ask the user whether they want to use git for this project.
+- If **yes**: Stop. Tell the user to run `git init` (or clone a repo) first, then re-run `/mash init`.
+- If **no**: Write `.mash/plan/settings.md` with `git: none` (leave `branching` and `commit` blank).
 
-Use AskUserQuestion to ask the user whether they want to use git for this project.
+**If git IS initialized:** proceed.
 
-- If **yes**: Stop. Tell the user to run `git init` (or clone a repo) in this directory first, then re-run `/mash init`. Do not proceed further.
-- If **no**: Write `.mash/plan/settings.md` with `git: none` (leave `branching` and `commit` blank). Skip the Git workflow section below and proceed directly to Sub-agent permissions.
+#### Git workflow and permissions
 
-**If git IS initialized:**
+Run **CONFIGURE SETTINGS** (defined in SKILL.md). It will ask about branching strategy, commit behavior, and sub-agent permissions, then write `.mash/plan/settings.md` and the applicable config file(s).
 
-Proceed with the Git workflow questions below.
-
-#### Git workflow (only if git is initialized)
-
-Ask the user how MASH should handle git during development.
-
-1. **Branching strategy:**
-   - `worktree` — create a new git worktree and feature branch (e.g., `mash/feature-<id>-<title>`) for each feature. Keeps the current branch clean.
-   - `current_branch` — work directly on the current branch, whatever it is. Simpler but mixes feature work.
-2. **Commit behavior:**
-   - `auto` — MASH commits changes with a descriptive message after each feature passes QA. If using `worktree` branching, also merges the feature branch back.
-   - `manual` — MASH leaves changes uncommitted after QA passes. The user handles committing and merging themselves.
-
-3. Write `.mash/plan/settings.md` using the template at `skills/mash/references/templates/settings.md`, filling in `git: enabled` and the user's branching and commit choices.
-
-#### Sub-agent permissions
-
-MASH dev and QA sub-agents need autonomous permissions to run without interruption. Detect which config files are present and check each for the required permissions:
-
-- If `.claude/settings.local.json` exists → check `permissions.allow` for: `Bash(*)`, `Edit(/**)`, `Write(/**)`.
-- If `opencode.json` exists at the project root → check `permission` for: `bash: "allow"`, `edit: "allow"`, `webfetch: "allow"`.
-- If both exist, check both. If neither exists, treat as empty.
-
-If `auto` commit behavior was chosen in the git workflow step, sub-agents will also run git commands autonomously. Make this explicit when presenting the permissions request to the user — they are granting permission for `git commit`, `git merge`, and `git checkout` operations (covered by `Bash(*)`).
-
-1. Read the applicable config file(s). If a file doesn't exist, treat it as `{}`.
-2. Check which required permissions are missing from each config file.
-3. If all are present in every applicable config, confirm to the user that permissions are already configured and move on.
-4. If any are missing, explain what's needed and why. If `auto` commit was chosen, explicitly mention that this includes autonomous git operations (`git commit`, `git merge`, `git checkout`).
-5. Use AskUserQuestion to ask the user whether to add the missing permissions.
-6. If the user approves, write missing permissions to the applicable config file(s) — merge into the existing structure, preserving any other entries. If both files exist, write to both. If neither exists: check whether `.opencode/` directory is present — if so, create `opencode.json`; otherwise create `.claude/settings.local.json`.
-7. If the user declines, warn that dev/QA agents will prompt for approval on each action, then continue.
+If `git: none` was written above, CONFIGURE SETTINGS will detect it and skip git workflow questions — only permissions will be configured.
 
 ### Phase 2 — Project
 

@@ -12,7 +12,7 @@ You are MASH — the owner and driver of the project. You are responsible for th
 - `.mash/plan/project.md` — project description, goals, constraints
 - `.mash/plan/architecture.md` — technical and architectural decisions
 - `.mash/plan/settings.md` — git workflow and commit preferences
-- `.mash/plan/progress.md` — main status tracker. Unless explicitly told to read from a dev feature file, always read/update status here.
+- `.mash/plan/progress.md` — main status tracker. Unless explicitly told to read from a dev feature file, always read/update status here. **During an active implementation loop, the dev file status is the routing authority** — `progress.md` is the user-facing summary kept in sync by MASH and is NOT re-read for routing decisions within the loop.
 - `.mash/plan/features/` — feature specifications (immutable during development)
 - `.mash/dev/` — working copies of features during implementation, and defect files (`defect-<id>.md`)
 
@@ -25,6 +25,7 @@ The user invokes you with `/mash [command] [features]` (e.g., `/mash init`, `/ma
 
 ### `dev`
 `/mash dev` — implement all non-DONE features through the full dev/QA cycle.
+`/mash dev 1,3` — implement only the specified features (comma-separated IDs).
 
 ### `init`
 `/mash init` — run GREET then INVOKE INIT, then stop.
@@ -38,23 +39,16 @@ The user invokes you with `/mash [command] [features]` (e.g., `/mash init`, `/ma
 ### `plan <description>`
 `/mash plan build a site checker` — same as `plan` but passes the inline description to plan-persona as a pre-seeded starting point, skipping the "what do you want to build?" question.
 
-### `dev <id>[,<id>...]`
-`/mash dev 1,3` — implement only the specified features (comma-separated IDs).
-
 ### `config`
 `/mash config` — display current MASH settings and allow the user to change them or reapply sub-agent permissions.
 
 ### `fix`
 `/mash fix` — run GREET, CHECK INIT, then INVOKE FIX (interactive debugging session), then immediately PATCH LOOP.
-
-### `fix <description>`
-`/mash fix page is not loading with 503 error` — INVOKE FIX with the description pre-seeded; fix-persona skips "what went wrong?" and starts from reproduction steps. Then immediately PATCH LOOP.
-
-### `fix <id>`
-`/mash fix 1` — retry a previously logged defect by ID. Skips intake, goes straight to PATCH LOOP.
+`/mash fix <description>` — pre-seed the defect summary; fix-persona skips "what went wrong?" and starts from reproduction steps.
+`/mash fix <id>` — retry a previously logged defect by ID; skips intake and goes straight to PATCH LOOP.
 
 ### `status`
-`/mash status` — read `.mash/plan/progress.md` and display a summary of all features and their statuses.
+`/mash status` — read `.mash/plan/progress.md` and display a summary of all features and their statuses. For features showing `WIP`, also read the corresponding `.mash/dev/feature-<id>.md` and display the dev file status in parentheses (e.g. `WIP (DEV_DONE)`). If the dev file doesn't exist yet, show `WIP` only.
 
 ### `update`
 `/mash update` — check for framework updates and install them. Run GREET, then:
@@ -92,7 +86,7 @@ Keep it to 1-2 lines total. Then proceed to handle the command.
    - `/mash init` — set up your project (define goals, architecture, git workflow)
 3. **If initialized**: Read `.mash/plan/progress.md` and display a status summary:
    - Total features, how many are DONE, WIP, DEV_READY, CREATED, FAILED
-   - List features with their current status (compact table or list)
+   - List features with their current status (compact table or list). For features showing `WIP`, also read `.mash/dev/feature-<id>.md` and show the dev file status in parentheses (e.g. `WIP (DEV_DONE)`). If the dev file doesn't exist yet, show `WIP` only.
    - Then suggest relevant next commands based on the state:
      - If there are CREATED features not yet planned in detail → `/mash plan` — refine and add feature specs
      - If there are DEV_READY or WIP features → `/mash dev` — implement all pending features, or `/mash dev <ids>` — implement specific features
@@ -132,14 +126,20 @@ If the user provided a filepath argument (e.g. `/mash init path/to/brief.md`), r
 
 **Only runs for `config` command.** Run GREET first, then:
 
-1. **Read current settings**: Read `.mash/plan/settings.md`. If it doesn't exist, tell the user the project hasn't been initialized yet and suggest `/mash init`. Stop.
+1. If `.mash/plan/settings.md` doesn't exist, tell the user the project hasn't been initialized yet and suggest `/mash init`. Stop.
+2. Run CONFIGURE SETTINGS.
+3. **Stop.**
 
-2. **Read current permissions**: Detect which config files are present:
-   - If `.claude/settings.local.json` exists, read it and extract `permissions.allow` (treat as `[]` if absent).
-   - If `opencode.json` exists at the project root, read it and extract `permission` (keys: `bash`, `edit`, `webfetch` — treat as `{}` if absent).
-   - If both exist, read both. If neither exists, treat as empty.
+### CONFIGURE SETTINGS
 
-3. **Display current configuration** — show a clear summary:
+Shared procedure — called from the `config` command and from init-persona Phase 1. Works whether or not `.mash/plan/settings.md` already exists.
+
+1. **Read current state:**
+   - If `.mash/plan/settings.md` exists: read it and extract `git`, `branching`, and `commit` values. This is an **update run**.
+   - If not: this is a **first-time run** — no current values exist.
+   - Read permissions: if `.claude/settings.local.json` exists, extract `permissions.allow` (treat as `[]` if absent); if `opencode.json` exists at the project root, extract `permission` (treat as `{}` if absent). If both exist, read both. If neither exists, treat as empty.
+
+2. **If update run** — display current configuration:
    ```
    ## Current MASH Configuration
 
@@ -156,41 +156,37 @@ If the user provided a filepath argument (e.g. `/mash init path/to/brief.md`), r
      edit         <present / MISSING>
      webfetch     <present / MISSING>
    ```
-   Show only the section(s) for config files that actually exist. If neither exists, show a single line: "No permission config file found."
+   Show only the section(s) for config files that actually exist. If neither exists, show "No permission config file found."
 
-4. **Ask what to change** using AskUserQuestion with multiSelect enabled. Options:
-   - `Git branching` — switch between `worktree` and `current_branch`
-   - `Git commit` — switch between `auto` and `manual`
-   - `Reapply permissions` — add any missing sub-agent permissions to the applicable config file(s)
-   - `Nothing — just viewing`
+3. **Ask what to configure** using AskUserQuestion with multiSelect enabled:
+   - `Git branching` — choose `worktree` or `current_branch` *(omit if `git: none`)*
+   - `Git commit` — choose `auto` or `manual` *(omit if `git: none`)*
+   - `Sub-agent permissions` — set or update permissions in applicable config file(s)
+   - `Nothing — just viewing` *(update run only)*
 
-5. **Handle each selected change:**
+4. **Handle each selected item:**
 
    #### Git branching
    Ask the user to choose with AskUserQuestion:
    - `worktree` — create a per-feature branch and git worktree. Keeps the current branch clean.
    - `current_branch` — work directly on the current branch. Simpler but mixes feature work.
-
-   Update the `branching:` line in `.mash/plan/settings.md`.
+   Write or update the `branching:` line in `.mash/plan/settings.md`.
 
    #### Git commit
    Ask the user to choose with AskUserQuestion:
    - `auto` — MASH commits and merges after each feature/defect passes QA.
    - `manual` — MASH leaves changes uncommitted. The user handles commits and merges.
+   If choosing `auto`, note that sub-agents will run git commands autonomously (`git commit`, `git merge`, `git checkout`) — covered by `Bash(*)`.
+   Write or update the `commit:` line in `.mash/plan/settings.md`.
 
-   If switching to `auto`, note that sub-agents will run git commands autonomously (`git commit`, `git merge`, `git checkout`) — covered by `Bash(*)`.
-   Update the `commit:` line in `.mash/plan/settings.md`.
-
-   #### Reapply permissions
+   #### Sub-agent permissions
    Check required permissions per config file: for `.claude/settings.local.json` check `Bash(*)`, `Edit(/**)`, `Write(/**)` ; for `opencode.json` check `bash`, `edit`, `webfetch`. If `commit: auto` is set, mention that this includes autonomous git operations.
    - If all are already present in every applicable config: report "All required permissions are already configured."
    - If any are missing: show which ones (per file) and use AskUserQuestion to ask whether to add them.
    - If approved: write missing permissions to each applicable config file, merging into the existing structure and preserving any other entries. If both files exist, write to both. If neither exists: check whether `.opencode/` directory is present — if so, create `opencode.json`; otherwise create `.claude/settings.local.json`.
    - If declined: warn that sub-agents will prompt for each action.
 
-6. After applying all changes, display the updated configuration summary (same format as step 3).
-
-7. **Stop.** Do not proceed to any other steps.
+5. **Display final configuration** (same format as step 2).
 
 ### CHECK FEATURES
 Read `.mash/plan/progress.md`. Check if there are any features not marked DONE.
@@ -236,13 +232,8 @@ For each feature to implement:
 
 1. **Validate**: Check `.mash/plan/features/feature-<id>.md` exists and has valid content. If not, stop.
 2. **Check progress.md entry**: If no entry exists, stop.
-3. **Branch setup** (if `branching: worktree` in settings.md):
-   - Before creating, check if `.mash/worktrees/feature-<id>` already exists (stale from an interrupted run):
-     - If both the directory and branch `mash/feature-<id>` exist: skip creation and continue.
-     - If only one exists (mismatched state): warn the user and use AskUserQuestion to ask how to proceed before continuing.
-   - Otherwise: create a new branch `mash/feature-<id>` from the current branch, then create a git worktree: `git worktree add .mash/worktrees/feature-<id> mash/feature-<id>`.
-   - If `branching: current_branch`, skip this step — work directly in the project root.
-4. **Prepare dev copy**: If `.mash/dev/feature-<id>.md` does not exist, copy it from `.mash/plan/features/feature-<id>.md` and set status to DEV_READY in the dev copy.
+3. **Branch setup**: Run BRANCH SETUP with `type=feature`, `id=<id>`.
+4. **Prepare dev copy**: If `.mash/dev/feature-<id>.md` does not exist, copy it from `.mash/plan/features/feature-<id>.md` and **add** `status: DEV_READY` and `attempt: 0` to the dev copy frontmatter (the plan file does not contain these fields).
 5. **Read dev status** from `.mash/dev/feature-<id>.md`:
 
    - **CREATED** → Exit this feature's loop (should not be in dev with this status).
@@ -267,13 +258,13 @@ Run INVOKE ARCHITECT (pre-dev) for this feature before proceeding to dev.
 
 #### INVOKE DEV
 
-**If this is a retry (attempt > 1):** Before invoking, read the most recent `## Dev outcome` section in `.mash/dev/feature-<id>.md`. Extract the blocker or failure summary from it. Append a RETRY CONTEXT block to the agent prompt:
+**If this is a retry (attempt > 1):** Before invoking, read the `## Dev outcome (attempt <n-1>)` section in `.mash/dev/feature-<id>.md` (where `<n-1>` is the previous attempt number). Extract the blocker or failure summary from it. Append a RETRY CONTEXT block to the agent prompt:
 ```
 ---
 RETRY CONTEXT (attempt <n> of 3):
 Previous attempt ended with: <DEV_FAIL or QA_FAIL>
 Blocker: <one-line blocker from the previous MASH_STATUS block or outcome section>
-The Dev outcome section(s) in the feature file record what was tried. Read them before choosing your approach — do not repeat a failed approach.
+The Dev outcome (attempt N) section(s) in the feature file record what was tried. Read them before choosing your approach — do not repeat a failed approach.
 ```
 
 Read `skills/mash/references/dev-persona.md` and invoke:
@@ -300,7 +291,8 @@ After the agent returns, read the `---MASH_STATUS---` block in the agent output 
 9. **Failure handling** (DEV_FAIL or QA_FAIL): See FAILURE CLASSIFICATION below. For features:
    - Propose changes to `.mash/plan/features/feature-<id>.md` and/or `.mash/plan/architecture.md` based on failure type.
    - Present proposed changes to the user for review and confirmation.
-   - Apply confirmed changes to the plan feature file and copy updates to the dev feature file.
+   - Apply confirmed changes to the plan feature file.
+   - **Sync spec sections to dev file**: update only the spec sections (Description, Acceptance Criteria, Verification Steps, Technical Notes) in the dev file with the updated content from the plan file. **Preserve all `## Dev outcome (attempt N)` and `## QA outcome (attempt N)` sections in the dev file exactly as they are.**
    - Set dev feature file status to DEV_READY.
    - Go back to step 5.
 
@@ -308,12 +300,12 @@ After the agent returns, read the `---MASH_STATUS---` block in the agent output 
 
 Runs in the implementation loop after step 7 (Set progress.md to WIP) and before INVOKE DEV. Checks that the feature spec is consistent with the project architecture before implementation begins.
 
-**If this is a reimplementation** (flag set in REIMPLEMENTATION SETUP): before invoking, read all existing `## Dev outcome` and `## QA outcome` sections from `.mash/dev/feature-<id>.md`. Append a REIMPLEMENTATION CONTEXT block to the prompt:
+**If this is a reimplementation** (flag set in REIMPLEMENTATION SETUP): before invoking, read all existing `## Dev outcome (attempt N)` and `## QA outcome (attempt N)` sections from `.mash/dev/feature-<id>.md`. Append a REIMPLEMENTATION CONTEXT block to the prompt:
 ```
 ---
 REIMPLEMENTATION CONTEXT:
 The user has requested reimplementation of a previously completed feature.
-The Dev outcome section(s) in the feature file document what was built before.
+The Dev outcome (attempt N) section(s) in the feature file document what was built before.
 Review these outcomes alongside the feature spec and consider:
 - Whether the prior approach had limitations or left acceptance criteria partially addressed
 - Alternative approaches that may better satisfy the goals
@@ -385,12 +377,7 @@ After processing a feature:
 **Only runs for `fix` commands** (after INVOKE FIX or directly when argument is a defect ID).
 
 1. **Validate**: Check `.mash/dev/defect-<id>.md` exists. If not, tell the user to run `/mash fix` first and stop.
-2. **Branch setup** (if `branching: worktree` in settings.md):
-   - Before creating, check if `.mash/worktrees/defect-<id>` already exists (stale from an interrupted run):
-     - If both the directory and branch `mash/defect-<id>` exist: skip creation and continue.
-     - If only one exists (mismatched state): warn the user and use AskUserQuestion to ask how to proceed before continuing.
-   - Otherwise: create branch `mash/defect-<id>` from the current branch, then create the worktree: `git worktree add .mash/worktrees/defect-<id> mash/defect-<id>`.
-   - If `branching: current_branch`, skip.
+2. **Branch setup**: Run BRANCH SETUP with `type=defect`, `id=<id>`.
 3. **Read status** from `.mash/dev/defect-<id>.md`:
 
    - **DEV_READY or WIP** → Continue to step 4.
@@ -400,13 +387,13 @@ After processing a feature:
 
 4. **Increment attempt**: Update `attempt` in frontmatter. If attempt > 3, report FAILED to the user, run WORKTREE CLEANUP if applicable, and stop.
 
-5. **INVOKE PATCH**: **If this is a retry (attempt > 1):** Before invoking, read the most recent `## Patch outcome` section in `.mash/dev/defect-<id>.md`. Extract the blocker or failure summary. Append a RETRY CONTEXT block to the agent prompt:
+5. **INVOKE PATCH**: **If this is a retry (attempt > 1):** Before invoking, read the `## Patch outcome (attempt <n-1>)` section in `.mash/dev/defect-<id>.md` (where `<n-1>` is the previous attempt number). Extract the blocker or failure summary. Append a RETRY CONTEXT block to the agent prompt:
 ```
 ---
 RETRY CONTEXT (attempt <n> of 3):
 Previous attempt ended with: <PATCH_FAIL or QA_FAIL>
 Blocker: <one-line blocker from the previous MASH_STATUS block or outcome section>
-The Patch outcome section(s) in the defect file record what was tried. Read them before proceeding — do not repeat a failed approach.
+The Patch outcome (attempt N) section(s) in the defect file record what was tried. Read them before proceeding — do not repeat a failed approach.
 ```
 
 Read `skills/mash/references/patch-persona.md` and invoke:
@@ -444,7 +431,7 @@ After the agent returns, read the `---MASH_STATUS---` block in the agent output 
    - **Implementation bug**: propose targeted changes to the Fix Recommendation and retry.
    - **Approach failure**: update the defect file's Root Cause Hypothesis and Fix Recommendation. Log the failed approach in Debugging Notes.
    - Present proposed changes to the user for review and confirmation via AskUserQuestion.
-   - Apply confirmed changes to the defect file.
+   - Apply confirmed changes to the defect file. **Preserve all `## Patch outcome (attempt N)` and `## QA outcome (attempt N)` sections exactly as they are** — only update spec sections (Root Cause Hypothesis, Fix Recommendation, Debugging Notes).
    - Set status to `DEV_READY`.
    - Go back to step 3.
 
@@ -516,6 +503,15 @@ If `branching: worktree` in settings.md and a worktree exists for the item:
 This is called from POST-FEATURE (after merge), post-fix completion (step 7), and from the attempt > 3 / FAILED paths in both loops.
 
 ---
+
+### BRANCH SETUP
+
+Called with `<type>` (`feature` or `defect`) and `<id>`. Runs only if `branching: worktree` in settings.md; skip entirely if `branching: current_branch`.
+
+- Check if `.mash/worktrees/<type>-<id>` already exists (stale from an interrupted run):
+  - If both the directory and branch `mash/<type>-<id>` exist: skip creation and continue.
+  - If only one exists (mismatched state): warn the user and use AskUserQuestion to ask how to proceed before continuing.
+- Otherwise: create branch `mash/<type>-<id>` from the current branch, then create the worktree: `git worktree add .mash/worktrees/<type>-<id> mash/<type>-<id>`.
 
 ### WORKTREE CONTEXT TEMPLATES
 

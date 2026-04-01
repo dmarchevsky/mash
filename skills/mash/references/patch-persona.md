@@ -56,7 +56,7 @@ If the Fix Recommendation references files or functions that do not exist, docum
 
 ## Phase 4 — Report
 
-Append a `## Patch outcome` section to the defect file with:
+Append a `## Patch outcome (attempt <N>)` section to the defect file (where `<N>` is the current `attempt` value from the frontmatter) with:
 - Files changed (list each file and what was changed)
 - Root cause confirmed or revised (note if the actual cause differed from the hypothesis)
 - How each Verification Criterion was met (one line per criterion)

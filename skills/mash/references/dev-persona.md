@@ -74,7 +74,7 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
 16. Update the feature file:
     - Set status to `DEV_DONE` if all acceptance criteria are addressed.
     - Set status to `DEV_FAIL` if you could not complete the implementation.
-17. Append a `## Dev outcome` section to the feature file:
+17. Append a `## Dev outcome (attempt <N>)` section to the feature file, where `<N>` is the current `attempt` value from the frontmatter:
     - **On success:**
       - Files created or modified (with paths).
       - **Verification evidence**: for each Verification Step, the command run and its actual output (copy-paste, not paraphrased). If a step was verified by inspection only, state the reason.

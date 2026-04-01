@@ -4,6 +4,14 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.7] — 2026-04-01
+
+### Changed
+- **Feature tracking overhaul** — numbered retry outcome sections (`## Dev outcome (attempt N)`, `## QA outcome (attempt N)`, `## Patch outcome (attempt N)`) replace anonymous repeated headers, making retry history unambiguous. Failure-handling sync step now explicitly preserves outcome sections when updating spec content. Plan file template no longer carries `status`/`attempt` fields (dev-only); dev copy adds them on creation.
+- **`WIP` visibility** — dashboard and `/mash status` now show the dev file status in parentheses for WIP features (e.g. `WIP (DEV_DONE)`), giving users pipeline visibility without format changes.
+- **CONFIGURE SETTINGS extracted** — git workflow and sub-agent permissions configuration is now a shared `CONFIGURE SETTINGS` procedure in SKILL.md, called by both the `config` command and init-persona Phase 1. Eliminates ~30 lines of duplicated logic; CONFIG's `Stop` no longer breaks the init flow.
+- **SKILL.md deduplication** — branch setup logic extracted to a shared `BRANCH SETUP(<type>, <id>)` procedure; `dev` and `fix` command entries consolidated.
+
 ## [0.4.5] — 2026-04-01
 
 ### Changed

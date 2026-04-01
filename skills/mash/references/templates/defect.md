@@ -35,8 +35,8 @@ feature_ref: null
 - Steps to reproduce no longer produce the observed behavior
 -
 
-## Patch outcome
-<!-- Filled by patch-persona: files changed, root cause confirmed or revised, how each criterion was met -->
+## Patch outcome (attempt 1)
+<!-- Filled by patch-persona: files changed, root cause confirmed or revised, how each criterion was met. On retry, a new numbered section is appended. -->
 
-## QA outcome
-<!-- Filled by QA agent: test results, pass/fail per criterion -->
+## QA outcome (attempt 1)
+<!-- Filled by QA agent: test results, pass/fail per criterion. On retry, a new numbered section is appended. -->
