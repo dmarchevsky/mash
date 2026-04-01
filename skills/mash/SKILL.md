@@ -71,31 +71,12 @@ The user invokes you with `/mash [command] [features]` (e.g., `/mash init`, `/ma
 
 **If command is `update`, skip all other steps.**
 
-### Dispatch Summary
-
-| Command | Flow |
-|---------|------|
-| *(none)* | GREET → DASHBOARD |
-| `init` | GREET → INVOKE INIT |
-| `init <filepath>` | GREET → INVOKE INIT (with pre-seeded file content) |
-| `plan` | GREET → CHECK INIT → INVOKE PLAN |
-| `plan <description>` | GREET → CHECK INIT → INVOKE PLAN (with pre-seeded description) |
-| `dev` | GREET → CHECK INIT → CHECK FEATURES → PREPARE → IMPLEMENTATION LOOP → POST-FEATURE |
-| `dev <ids>` | GREET → CHECK INIT → PREPARE (filtered) → IMPLEMENTATION LOOP → POST-FEATURE |
-| `fix` | GREET → CHECK INIT → INVOKE FIX → PATCH LOOP |
-| `fix <id>` | GREET → CHECK INIT → PATCH LOOP (retry) |
-| `config` | GREET → CONFIG |
-| `status` | Read progress.md → display |
-| `update` | GREET → update flow (above) |
-
 ---
 
 ## Execution Flow
 
 ### GREET
-Before anything else, greet the user with a short, friendly welcome. Include a **made-up humorous backronym** for MASH — a different one every time. The backronym should be 4 words (M-A-S-H), funny but loosely relevant to software development or the command being run. Examples (do not repeat, come up with your own):
-- "**M**anaging **A**gents **S**o **H**umans don't have to"
-- "**M**arkdown **A**ll the **S**pecifications, **H**onestly"
+Before anything else, greet the user with a short, friendly welcome. Include a **made-up humorous backronym** for MASH — a different one every time. The backronym should be 4 words (M-A-S-H), funny but loosely relevant to software development or the command being run.
 
 Format: one line greeting, then the backronym. Bold only the first letter of each word using `**M**` syntax — do NOT wrap the entire phrase in bold. Example output:
 
@@ -298,7 +279,6 @@ The Dev outcome section(s) in the feature file record what was tried. Read them 
 Read `skills/mash/references/dev-persona.md` and invoke:
 ```
 Agent(
-
   prompt="<dev-persona.md contents>
 
 ---
@@ -310,58 +290,15 @@ Read these files before starting:
 - .mash/plan/project.md
 - .mash/dev/feature-<id>.md
 
-<If branching: worktree — append this block:>
----
-WORKTREE CONTEXT:
-This feature is being developed in an isolated git worktree.
-- worktree_path: .mash/worktrees/feature-<id>
-- All source code exploration must use this path (e.g., .mash/worktrees/feature-<id>/src/ instead of src/)
-- All source code creation and modification must write to this path
-- The feature file (.mash/dev/feature-<id>.md) and .mash/plan/ files remain in the main project directory — access them there as normal
-- Do NOT read or modify src/ in the main project directory
-</If branching: worktree>"
+<If branching: worktree — append WORKTREE CONTEXT (impl), substituting type=feature, id=<id>>"
 )
 ```
 After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/feature-<id>.md`. **If status is DEV_DONE, validate verification evidence:** check `verified_steps` in the MASH_STATUS block — if not all steps have evidence, or if the block is absent and the Dev outcome section lacks command + actual output for each Verification Step, set status back to DEV_READY and re-invoke dev with a note that verification evidence is required for each step. Go back to step 5.
 
-8. **QA phase**:
+8. **QA phase**: Run INVOKE QA with `type=feature`, `id=<id>`. After it returns, go back to step 5.
 
-#### INVOKE QA
-Read `skills/mash/references/qa-persona.md` and invoke:
-```
-Agent(
-
-  prompt="<qa-persona.md contents>
-
----
-PARAMETERS:
-- feature_file: .mash/dev/feature-<id>.md
-
-Read these files before starting:
-- .mash/plan/architecture.md
-- .mash/plan/project.md
-- .mash/dev/feature-<id>.md
-
-<If branching: worktree — append this block:>
----
-WORKTREE CONTEXT:
-This feature was implemented in an isolated git worktree.
-- worktree_path: .mash/worktrees/feature-<id>
-- All source code inspection and test execution must use this path (e.g., .mash/worktrees/feature-<id>/src/)
-- Write tests to the test directory within the worktree (e.g., .mash/worktrees/feature-<id>/tests/)
-- The feature file (.mash/dev/feature-<id>.md) and .mash/plan/ files remain in the main project directory — access them there as normal
-- Do NOT read or test src/ in the main project directory
-</If branching: worktree>"
-)
-```
-After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/feature-<id>.md`. Go back to step 5.
-
-9. **Failure handling** (DEV_FAIL or QA_FAIL):
-   - Read the Dev outcome / QA outcome sections in `.mash/dev/feature-<id>.md`.
-   - **Classify the failure type:**
-     - **Implementation bug**: the approach is sound but the code has specific, fixable errors (wrong logic, missing import, off-by-one, etc.). → Propose targeted spec/code changes and retry.
-     - **Approach failure**: the approach was executed correctly but did not achieve the goal — code ran, tests passed technically, but the real-world outcome was not achieved (e.g., bypass did not work, data was not retrieved, authentication failed despite correct code). → Do NOT retry the same approach. Use AskUserQuestion to ask the user: *"The previous approach didn't achieve the goal. What alternative approach should we try? Or would you like to discuss why this approach is failing first?"* Only proceed after the user proposes a different approach. Update the feature spec's Technical Notes with a record of what was tried and why it didn't work, so future attempts don't repeat it.
-   - Propose changes to `.mash/plan/features/feature-<id>.md` and/or `.mash/plan/architecture.md` based on the failure classification.
+9. **Failure handling** (DEV_FAIL or QA_FAIL): See FAILURE CLASSIFICATION below. For features:
+   - Propose changes to `.mash/plan/features/feature-<id>.md` and/or `.mash/plan/architecture.md` based on failure type.
    - Present proposed changes to the user for review and confirmation.
    - Apply confirmed changes to the plan feature file and copy updates to the dev feature file.
    - Set dev feature file status to DEV_READY.
@@ -387,7 +324,6 @@ Include a concrete approach direction in your report for the dev agent to follow
 Read `skills/mash/references/architect-persona.md` and invoke:
 ```
 Agent(
-
   prompt="<architect-persona.md contents>
 
 ---
@@ -416,7 +352,6 @@ Runs after QA_PASS for both features and defects. Invoked by MASH — not a sub-
 Read `skills/mash/references/architect-persona.md` and invoke:
 ```
 Agent(
-
   prompt="<architect-persona.md contents>
 
 ---
@@ -477,7 +412,6 @@ The Patch outcome section(s) in the defect file record what was tried. Read them
 Read `skills/mash/references/patch-persona.md` and invoke:
 ```
 Agent(
-
   prompt="<patch-persona.md contents>
 
 ---
@@ -489,59 +423,12 @@ Read these files before starting:
 - .mash/plan/project.md
 - .mash/dev/defect-<id>.md
 
-<If branching: worktree — append this block:>
----
-WORKTREE CONTEXT:
-This defect fix is being developed in an isolated git worktree.
-- worktree_path: .mash/worktrees/defect-<id>
-- All source code exploration must use this path (e.g., .mash/worktrees/defect-<id>/src/ instead of src/)
-- All source code creation and modification must write to this path
-- The defect file (.mash/dev/defect-<id>.md) and .mash/plan/ files remain in the main project directory — access them there as normal
-- Do NOT read or modify src/ in the main project directory
-</If branching: worktree>"
+<If branching: worktree — append WORKTREE CONTEXT (impl), substituting type=defect, id=<id>>"
 )
 ```
 After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/defect-<id>.md`. Go back to step 3.
 
-6. **QA phase**:
-
-#### INVOKE QA (for defect)
-Before invoking QA, ensure the defect file status is `DEV_DONE` (patch-persona sets PATCH_DONE; SKILL.md translates this to DEV_DONE so qa-persona proceeds correctly).
-
-Read `skills/mash/references/qa-persona.md` and invoke:
-```
-Agent(
-
-  prompt="<qa-persona.md contents>
-
----
-PARAMETERS:
-- feature_file: .mash/dev/defect-<id>.md
-
-IMPORTANT — test location for defects:
-Write all new tests for this defect under `tests/defects/defect-<id>/` (not alongside feature tests).
-This namespaces defect tests so they can be reviewed and cleaned up after the fix is confirmed.
-Existing tests in `tests/` must still be run for regression — do not move or modify them.
-
-Read these files before starting:
-- .mash/plan/architecture.md
-- .mash/plan/project.md
-- .mash/dev/defect-<id>.md
-
-<If branching: worktree — append this block:>
----
-WORKTREE CONTEXT:
-This defect fix was implemented in an isolated git worktree.
-- worktree_path: .mash/worktrees/defect-<id>
-- All source code inspection and test execution must use this path (e.g., .mash/worktrees/defect-<id>/src/)
-- Write defect tests to .mash/worktrees/defect-<id>/tests/defects/defect-<id>/ (within the worktree)
-- Run regression tests from within the worktree as well
-- The defect file (.mash/dev/defect-<id>.md) and .mash/plan/ files remain in the main project directory — access them there as normal
-- Do NOT read or test src/ in the main project directory
-</If branching: worktree>"
-)
-```
-After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/defect-<id>.md`. Go back to step 3.
+6. **QA phase**: Run INVOKE QA with `type=defect`, `id=<id>`. After it returns, go back to step 3.
 
 7. **Post-fix completion** (QA_PASS):
    1. Run INVOKE ARCHITECT (post-qa) for this defect.
@@ -553,15 +440,52 @@ After the agent returns, read the `---MASH_STATUS---` block in the agent output 
    5. Run WORKTREE CLEANUP if applicable.
    6. Stop.
 
-8. **Failure handling** (PATCH_FAIL or QA_FAIL):
-   - Read the Patch outcome / QA outcome sections.
-   - **Classify the failure type:**
-     - **Implementation bug**: the fix approach is sound but the patch code has specific fixable errors. → Propose targeted changes to the Fix Recommendation and retry.
-     - **Approach failure**: the patch was applied correctly but the defect still occurs — same symptom, different root cause, or wrong fix strategy. → Do NOT retry the same approach. Use AskUserQuestion to ask the user: *"The previous fix approach didn't resolve the defect. Should we revisit the root cause diagnosis, or try a different fix strategy?"* Update the defect file's Root Cause Hypothesis and Fix Recommendation before retrying. Log the failed approach in the Debugging Notes section so it isn't repeated.
+8. **Failure handling** (PATCH_FAIL or QA_FAIL): See FAILURE CLASSIFICATION below. For defects:
+   - **Implementation bug**: propose targeted changes to the Fix Recommendation and retry.
+   - **Approach failure**: update the defect file's Root Cause Hypothesis and Fix Recommendation. Log the failed approach in Debugging Notes.
    - Present proposed changes to the user for review and confirmation via AskUserQuestion.
    - Apply confirmed changes to the defect file.
    - Set status to `DEV_READY`.
    - Go back to step 3.
+
+### INVOKE QA
+
+Used by both IMPLEMENTATION LOOP (step 8) and PATCH LOOP (step 6). Called with `type` (`feature` or `defect`) and `id`.
+
+Before invoking for a defect, ensure the defect file status is `DEV_DONE` (patch-persona sets PATCH_DONE; translate this to DEV_DONE so qa-persona proceeds correctly).
+
+Read `skills/mash/references/qa-persona.md` and invoke:
+```
+Agent(
+  prompt="<qa-persona.md contents>
+
+---
+PARAMETERS:
+- feature_file: .mash/dev/<type>-<id>.md
+
+<If type=defect — append:>
+IMPORTANT — test location for defects:
+Write all new tests for this defect under `tests/defects/defect-<id>/` (not alongside feature tests).
+This namespaces defect tests so they can be reviewed and cleaned up after the fix is confirmed.
+Existing tests in `tests/` must still be run for regression — do not move or modify them.
+</If>
+
+Read these files before starting:
+- .mash/plan/architecture.md
+- .mash/plan/project.md
+- .mash/dev/<type>-<id>.md
+
+<If branching: worktree — append WORKTREE CONTEXT (qa), substituting type=<type>, id=<id>>"
+)
+```
+After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/<type>-<id>.md`.
+
+### FAILURE CLASSIFICATION
+
+Used by failure handling in both IMPLEMENTATION LOOP (step 9) and PATCH LOOP (step 8).
+
+- **Implementation bug**: the approach is sound but the code has specific, fixable errors (wrong logic, missing import, off-by-one, etc.). → Propose targeted changes and retry.
+- **Approach failure**: the approach was executed correctly but did not achieve the goal — code ran, tests passed technically, but the real-world outcome was not achieved. → Do NOT retry the same approach. Use AskUserQuestion to ask the user what alternative approach to try, or whether to discuss why this approach is failing. Only proceed after the user proposes a different approach. Record what was tried and why it didn't work in the spec's Technical Notes (features) or Debugging Notes (defects) so future attempts don't repeat it.
 
 ### POST-FEATURE (after QA_PASS)
 Read `git`, `commit`, and `branching` from `.mash/plan/settings.md` and act accordingly:
@@ -593,55 +517,61 @@ This is called from POST-FEATURE (after merge), post-fix completion (step 7), an
 
 ---
 
+### WORKTREE CONTEXT TEMPLATES
+
+Define the worktree context block to append when `branching: worktree`. Substitute `<type>` (feature/defect) and `<id>` at invocation time.
+
+**WORKTREE CONTEXT (impl)** — used by dev-persona and patch-persona:
+```
+---
+WORKTREE CONTEXT:
+This <type> is being developed in an isolated git worktree.
+- worktree_path: .mash/worktrees/<type>-<id>
+- All source code exploration and modification must use this path (e.g., .mash/worktrees/<type>-<id>/src/ instead of src/)
+- The <type> file (.mash/dev/<type>-<id>.md) and .mash/plan/ files remain in the main project directory — access them there as normal
+- Do NOT read or modify src/ in the main project directory
+```
+
+**WORKTREE CONTEXT (qa)** — used by qa-persona:
+```
+---
+WORKTREE CONTEXT:
+This <type> was implemented in an isolated git worktree.
+- worktree_path: .mash/worktrees/<type>-<id>
+- All source code inspection and test execution must use this path (e.g., .mash/worktrees/<type>-<id>/src/)
+- Write tests to the test directory within the worktree (e.g., .mash/worktrees/<type>-<id>/tests/) [for defects: to tests/defects/defect-<id>/ within the worktree]
+- The <type> file (.mash/dev/<type>-<id>.md) and .mash/plan/ files remain in the main project directory — access them there as normal
+- Do NOT read or test src/ in the main project directory
+```
+
+---
+
 ## Status Reference
 
-### progress.md statuses
-| Status | Meaning |
-|--------|---------|
-| CREATED | Feature spec exists, not yet reviewed |
-| DEV_READY | Reviewed and ready for implementation |
-| WIP | Currently in dev/QA cycle |
-| DONE | QA passed, feature complete |
-| FAILED | Max attempts (3) reached without success |
+**progress.md:** CREATED → DEV_READY → WIP → DONE | FAILED
 
-### dev/feature-<id>.md statuses
-| Status | Meaning |
-|--------|---------|
-| DEV_READY | Ready for dev-persona to implement |
-| WIP | Dev-persona is currently implementing |
-| DEV_DONE | Dev-persona completed successfully |
-| DEV_FAIL | Dev-persona could not complete |
-| QA_PASS | QA-persona verified successfully |
-| QA_FAIL | QA-persona found critical defects |
+**dev/feature-\<id\>.md:** DEV_READY → WIP → DEV_DONE → QA_PASS → *(ARCH_VERIFIED = DONE)* | DEV_FAIL | QA_FAIL
 
-### Status sync rules
-| Dev file status | progress.md status |
-|----------------|-------------------|
-| DEV_READY | WIP |
-| WIP | WIP |
-| DEV_DONE | WIP |
-| DEV_FAIL | WIP (retry) |
+**defect-\<id\>.md:** DEV_READY → WIP → PATCH_DONE → DEV_DONE → QA_PASS | PATCH_FAIL | QA_FAIL
+
+**Architect codes:** ARCH_APPROVED (pre-dev: spec OK, proceed) | ARCH_FAIL (conflicts/gaps, user decides) | ARCH_VERIFIED (post-qa: coverage confirmed, set DONE)
+
+**Status sync (dev → progress.md):**
+| Dev status | progress.md |
+|-----------|-------------|
+| DEV_READY / WIP / DEV_DONE / DEV_FAIL / QA_FAIL | WIP |
 | QA_PASS | WIP (awaiting architect) |
-| QA_FAIL | WIP (retry) |
 | ARCH_VERIFIED | DONE |
-| (attempt > 3) | FAILED |
+| attempt > 3 | FAILED |
 
-### Architect output codes
-| Code | Meaning |
-|------|---------|
-| ARCH_APPROVED | Feature spec consistent with architecture — proceed to dev |
-| ARCH_FAIL | Conflicts or coverage gaps found — user decision required |
-| ARCH_VERIFIED | QA evidence covers all goals and acceptance criteria — proceed to DONE |
-
-### defect file statuses (`.mash/dev/defect-<id>.md`)
-| Status | Meaning |
-|--------|---------|
-| DEV_READY | Ready for patch-persona to implement |
-| WIP | Patch-persona is currently working |
-| PATCH_DONE | Patch-persona completed (SKILL.md translates to DEV_DONE before QA) |
-| PATCH_FAIL | Patch-persona could not implement the fix |
-| QA_PASS | QA verified the fix; awaiting user confirmation |
-| QA_FAIL | QA found the defect persists or a regression was introduced |
+**MASH_STATUS block fields by persona:**
+| Persona | Key field | Values |
+|---------|-----------|--------|
+| dev-persona | `status`, `blocker`, `verified_steps` | DEV_DONE / DEV_FAIL |
+| qa-persona | `status`, `blocker`, `tests_passed` | QA_PASS / QA_FAIL |
+| architect-persona (pre-dev) | `result`, `conflicts` | ARCH_APPROVED / ARCH_FAIL |
+| architect-persona (post-qa) | `result`, `gaps` | ARCH_VERIFIED / ARCH_FAIL |
+| patch-persona | `status`, `blocker` | PATCH_DONE / PATCH_FAIL |
 
 ---
 
@@ -655,17 +585,3 @@ This is called from POST-FEATURE (after merge), post-fix completion (step 7), an
 - **Ask before large plans.** If a `plan` command would create more than 5 features, show the plan and ask for confirmation before creating files.
 - **Always use AskUserQuestion.** When you need user input — choices, confirmations, or clarifications — use the AskUserQuestion tool. Never just print a question as text.
 - **Defect files are the contract for patching.** Never invoke patch-persona without a defect file that includes a Fix Recommendation confirmed by the user.
-
----
-
-## MASH_STATUS Block Reference
-
-Each sub-agent outputs a `---MASH_STATUS---` block as the last thing in its response. SKILL reads the appropriate field to route next steps.
-
-| Persona | Fields | Key field read by SKILL |
-|---------|--------|------------------------|
-| dev-persona | `status`, `blocker`, `verified_steps` | `status` (DEV_DONE / DEV_FAIL) |
-| qa-persona | `status`, `blocker`, `tests_passed` | `status` (QA_PASS / QA_FAIL) |
-| architect-persona (pre-dev) | `result`, `conflicts` | `result` (ARCH_APPROVED / ARCH_FAIL) |
-| architect-persona (post-qa) | `result`, `gaps` | `result` (ARCH_VERIFIED / ARCH_FAIL) |
-| patch-persona | `status`, `blocker` | `status` (PATCH_DONE / PATCH_FAIL) |
