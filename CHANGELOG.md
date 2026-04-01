@@ -4,6 +4,13 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.5] — 2026-04-01
+
+### Changed
+- **opencode skill loading** — `opencode-commands/mash.md` now references `skills/mash/SKILL.md` directly (was `.opencode/skills/mash/SKILL.md`), cutting one indirection hop. Both opencode files now use explicit "Use the Read tool on ... directly" phrasing to prevent weaker models from globbing before reading.
+- **Installer scaffolding** — removed `src/` and `tests/` from scaffolded directories; these are project-specific and should not be imposed by the installer.
+- **Installer `.gitignore`** — added `skills/mash/` to the gitignore entries written on install, treating it as a managed dependency (like `node_modules/`).
+
 ## [0.4.3] — 2026-04-01
 
 ### Fixed

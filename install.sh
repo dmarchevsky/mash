@@ -174,7 +174,7 @@ fi
 
 created_scaffolding=false
 
-for dir in .mash .mash/plan .mash/plan/features .mash/dev src tests; do
+for dir in .mash .mash/plan .mash/plan/features .mash/dev; do
   if [ ! -d "$TARGET_DIR/$dir" ]; then
     mkdir -p "$TARGET_DIR/$dir"
     ok "Created $dir/"
@@ -183,7 +183,7 @@ for dir in .mash .mash/plan .mash/plan/features .mash/dev src tests; do
 done
 
 # Add .gitkeep to empty dirs
-for dir in .mash/plan/features .mash/dev src tests; do
+for dir in .mash/plan/features .mash/dev; do
   if ! find "$TARGET_DIR/$dir" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null | grep -q .; then
     touch "$TARGET_DIR/$dir/.gitkeep"
   fi
@@ -258,6 +258,7 @@ mash_gitignore_entries=(
   ".mash/dev/"
   ".mash/worktrees/"
   ".claude/settings.local.json"
+  "skills/mash/"
 )
 
 if [ ! -f "$GITIGNORE" ]; then
