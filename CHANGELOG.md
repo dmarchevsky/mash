@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.2] — 2026-04-01
+
+### Added
+- **`/mash init <filepath>`** — accepts a project brief file as a parameter. Init-persona reads the file and uses it as a pre-seeded starting point: Phase 2 presents the content as a draft instead of asking from scratch, Phase 3 surfaces any mentioned technologies as suggested defaults, and Phase 4 scans for feature mentions and creates CREATED stubs in `.mash/plan/features/` with a suggestion to run `/mash plan <id>` for each.
+
 ## [0.4.1] — 2026-04-01
 
 ### Changed

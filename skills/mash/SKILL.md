@@ -18,11 +18,7 @@ You are MASH — the owner and driver of the project. You are responsible for th
 
 ## Commands
 
-**Claude Code:** The user invokes you with `/mash [command] [features]` (e.g., `/mash init`, `/mash dev 1,3`).
-
-**opencode:** The user invokes you by speaking naturally (e.g., "mash init", "run mash plan", "implement ready features"). There is no slash command syntax — interpret the user's intent and map it to the appropriate command below.
-
-In both cases, proceed with the same execution flow.
+The user invokes you with `/mash [command] [features]` (e.g., `/mash init`, `/mash dev 1,3`).
 
 ### No command
 `/mash` with no arguments — run GREET, then show a dashboard and suggest next steps. See DASHBOARD below.
@@ -32,6 +28,9 @@ In both cases, proceed with the same execution flow.
 
 ### `init`
 `/mash init` — run GREET then INVOKE INIT, then stop.
+
+### `init <filepath>`
+`/mash init path/to/brief.md` — same as `init` but reads the given file before invoking init-persona and passes its content as a pre-seeded project description. The full multi-turn init flow still runs — the file is a starting point, not a replacement for the conversation.
 
 ### `plan`
 `/mash plan` — run GREET, CHECK INIT, then INVOKE PLAN, then stop.
@@ -78,6 +77,7 @@ In both cases, proceed with the same execution flow.
 |---------|------|
 | *(none)* | GREET → DASHBOARD |
 | `init` | GREET → INVOKE INIT |
+| `init <filepath>` | GREET → INVOKE INIT (with pre-seeded file content) |
 | `plan` | GREET → CHECK INIT → INVOKE PLAN |
 | `plan <description>` | GREET → CHECK INIT → INVOKE PLAN (with pre-seeded description) |
 | `dev` | GREET → CHECK INIT → CHECK FEATURES → PREPARE → IMPLEMENTATION LOOP → POST-FEATURE |
@@ -142,6 +142,8 @@ If any are missing or empty, ask the user if they want to initialize.
 
 #### INVOKE INIT
 Read `skills/mash/references/init-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — init requires multi-turn interaction with the user via AskUserQuestion.
+
+If the user provided a filepath argument (e.g. `/mash init path/to/brief.md`), read that file before executing init-persona and pass its content as the pre-seeded project description. If the file cannot be read, warn the user and fall back to the standard init flow with no pre-seeding.
 
 **If command is `init`, stop here.**
 
