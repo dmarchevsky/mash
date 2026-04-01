@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.1] — 2026-04-01
+
+### Changed
+- **init-persona sub-agent permissions** — added `webfetch: "allow"` to the required opencode permission set (was missing). Updated fallback config creation: when neither `.claude/settings.local.json` nor `opencode.json` exists, detect `.opencode/` directory and create `opencode.json` for opencode users instead of always defaulting to `.claude/settings.local.json`.
+
 ## [0.4.0] — 2026-03-31
 
 ### Added

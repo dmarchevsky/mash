@@ -71,7 +71,7 @@ Ask the user how MASH should handle git during development.
 MASH dev and QA sub-agents need autonomous permissions to run without interruption. Detect which config files are present and check each for the required permissions:
 
 - If `.claude/settings.local.json` exists → check `permissions.allow` for: `Bash(*)`, `Edit(/**)`, `Write(/**)`.
-- If `opencode.json` exists at the project root → check `permission` for: `bash: "allow"`, `edit: "allow"`.
+- If `opencode.json` exists at the project root → check `permission` for: `bash: "allow"`, `edit: "allow"`, `webfetch: "allow"`.
 - If both exist, check both. If neither exists, treat as empty.
 
 If `auto` commit behavior was chosen in the git workflow step, sub-agents will also run git commands autonomously. Make this explicit when presenting the permissions request to the user — they are granting permission for `git commit`, `git merge`, and `git checkout` operations (covered by `Bash(*)`).
@@ -81,7 +81,7 @@ If `auto` commit behavior was chosen in the git workflow step, sub-agents will a
 3. If all are present in every applicable config, confirm to the user that permissions are already configured and move on.
 4. If any are missing, explain what's needed and why. If `auto` commit was chosen, explicitly mention that this includes autonomous git operations (`git commit`, `git merge`, `git checkout`).
 5. Use AskUserQuestion to ask the user whether to add the missing permissions.
-6. If the user approves, write missing permissions to the applicable config file(s) — merge into the existing structure, preserving any other entries. Create `.claude/settings.local.json` if no config file exists. If both files exist, write to both.
+6. If the user approves, write missing permissions to the applicable config file(s) — merge into the existing structure, preserving any other entries. If both files exist, write to both. If neither exists: check whether `.opencode/` directory is present — if so, create `opencode.json`; otherwise create `.claude/settings.local.json`.
 7. If the user declines, warn that dev/QA agents will prompt for approval on each action, then continue.
 
 ### Phase 2 — Project
