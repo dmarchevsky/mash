@@ -7,16 +7,17 @@ MASH is a framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-
 MASH uses seven specialized personas:
 
 ```
-  You ──► /mash init ──► Init Agent      → defines project scope & architecture
-       ──► /mash plan ──► Plan Agent     → turns ideas into detailed feature specs
-       ──► /mash dev  ──► Dev Agent(s)   → implements features autonomously
+  You ──► /mash init ──► Init Agent       → defines project scope & architecture
+       ──► /mash plan ──► Plan Agent      → turns ideas into detailed feature specs
+       ──► /mash dev  ──► Architect Agent → checks spec against architecture (pre-dev)
+                       ──► Dev Agent(s)   → implements features autonomously
                        ──► QA Agent(s)    → writes and runs tests to verify
-                       ──► Review Agent   → maintains test suite after changes
-       ──► /mash fix  ──► Fix Agent      → collaborative debugging with the user
+                       ──► Architect Agent→ verifies QA evidence covers stated goals (post-qa)
+       ──► /mash fix  ──► Fix Agent       → collaborative debugging with the user
                        ──► Patch Agent    → minimal-change fix implementation
 ```
 
-**Init**, **Plan**, and **Fix** run interactively in your conversation, asking clarifying questions. **Dev**, **QA**, **Patch**, and **Review** are spawned as isolated sub-agents that work autonomously within defined boundaries.
+**Init**, **Plan**, and **Fix** run interactively in your conversation, asking clarifying questions. **Dev**, **QA**, **Patch**, and **Architect** are spawned as isolated sub-agents that work autonomously within defined boundaries.
 
 ## Installation
 
@@ -73,7 +74,7 @@ The same `.mash/plan/` directory, feature specs, and full workflow apply in both
 | `/mash init` | Interactively define project scope, architecture, and settings |
 | `/mash plan` | Create new feature specifications through guided conversation |
 | `/mash dev` | Implement and test all DEV_READY features |
-| `/mash dev 1,3` | Implement only specific features by ID |
+| `/mash dev 1,3` | Implement specific features by ID; if a feature is already DONE, offers reimplementation |
 | `/mash fix` | Debug a defect collaboratively, then patch and verify |
 | `/mash fix <id>` | Retry a previously logged defect by ID |
 | `/mash fix <desc>` | Debug with a pre-seeded description |
@@ -91,22 +92,24 @@ Each persona has a defined role and strict file access boundaries:
 |---------|------|-------|--------|
 | **Init** | Define project scope and technical decisions | Filesystem scan | `.mash/plan/project.md`, `architecture.md`, `settings.md`, `progress.md` |
 | **Plan** | Turn ideas into detailed, testable feature specs | All plan files, `src/` | `.mash/plan/features/feature-<id>.md`, `progress.md` |
+| **Architect** | Verify spec-architecture alignment (pre-dev) and QA goal coverage (post-qa) | Plan files, dev/defect file | Nothing — read and report only |
 | **Dev** | Implement a single feature according to spec | Plan files (read-only) | `src/`, `.mash/dev/feature-<id>.md` |
 | **QA** | Verify implementation through tests | Plan files, `src/` (read-only) | `tests/`, `.mash/dev/feature-<id>.md` |
 | **Fix** | Collaborative debugging with the user | Project context, `src/` | `.mash/dev/defect-<id>.md` |
 | **Patch** | Minimal-change fix implementation | Everything (read-only except defect file) | `src/`, `.mash/dev/defect-<id>.md` |
-| **Review** | Test maintenance after dev/QA cycles | Implementation history, test suite | Existing test files (fixes only) |
 
 ### Feature Lifecycle
 
 ```
-CREATED ──► DEV_READY ──► WIP ──► DEV_DONE ──► QA_PASS ──► DONE
-                           │         │            │
-                           └─────────┴────────────┘
-                              retry (up to 3x)
-                                     │
-                                  FAILED
+CREATED ──► DEV_READY ──► WIP ──► DEV_DONE ──► QA_PASS ──► ARCH_VERIFIED ──► DONE
+                           │         │            │               │
+                           └─────────┴────────────┴───────────────┘
+                                        retry (up to 3x)
+                                               │
+                                            FAILED
 ```
+
+Each feature passes through two architect gates: a **pre-dev** check (spec vs. architecture) before implementation starts, and a **post-qa** check (QA evidence vs. stated goals) before the feature is marked DONE.
 
 Features are tracked in `.mash/plan/progress.md` and defined as individual spec files in `.mash/plan/features/` with YAML frontmatter:
 
@@ -130,7 +133,7 @@ Configured during `/mash init` via `.mash/plan/settings.md`:
 - `current_branch` — all work happens directly on the current branch
 
 **Commits:**
-- `auto` — MASH commits after QA passes and merges worktree branches
+- `auto` — MASH commits after the architect verifies QA coverage and merges worktree branches
 - `manual` — you handle all git operations yourself
 
 ### Project Structure
@@ -155,7 +158,7 @@ your-project/
 │           ├── qa-persona.md
 │           ├── fix-persona.md
 │           ├── patch-persona.md
-│           ├── review-persona.md
+│           ├── architect-persona.md
 │           └── templates/             #   Spec templates
 ├── .mash/
 │   ├── plan/                          # Source of truth (specs, architecture)

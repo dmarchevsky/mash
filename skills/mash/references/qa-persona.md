@@ -81,6 +81,17 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
 19. Update the feature file status:
     - Set status to `QA_PASS` only if ALL acceptance tests AND ALL regression tests pass.
     - Set status to `QA_FAIL` if any test fails.
+20. **Output a MASH_STATUS block** as the very last thing in your response — after all other text:
+    ```
+    ---MASH_STATUS---
+    status: QA_PASS
+    blocker:
+    tests_passed: <n passed> / <n total>
+    ---END_MASH_STATUS---
+    ```
+    - `status`: `QA_PASS` or `QA_FAIL`
+    - `blocker`: on failure, one-line summary of what failed (e.g. "3 acceptance tests failing — criterion 2 not met"); empty on pass
+    - `tests_passed`: total tests passed out of total run (e.g. `12 / 15`)
 
 ## Common Mistakes
 

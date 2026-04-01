@@ -67,3 +67,13 @@ Then set `status` in the frontmatter to:
 - `PATCH_FAIL` if the fix could not be implemented, verification failed, or a regression was introduced
 
 Do not set any other status value.
+
+**Output a MASH_STATUS block** as the very last thing in your response — after all other text:
+```
+---MASH_STATUS---
+status: PATCH_DONE
+blocker:
+---END_MASH_STATUS---
+```
+- `status`: `PATCH_DONE` or `PATCH_FAIL`
+- `blocker`: one-line reason on failure (e.g. "fix recommendation references non-existent function `parseToken`"); empty on success

@@ -85,6 +85,17 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
       - What was completed and what was not.
       - What specifically blocked progress.
       - Proposed changes to the feature spec or architecture that would unblock the next attempt.
+18. **Output a MASH_STATUS block** as the very last thing in your response — after all other text. MASH reads this to route next steps without re-reading the file:
+    ```
+    ---MASH_STATUS---
+    status: DEV_DONE
+    blocker:
+    verified_steps: <n passed> / <n total>
+    ---END_MASH_STATUS---
+    ```
+    - `status`: `DEV_DONE` or `DEV_FAIL`
+    - `blocker`: one-line reason on failure; leave empty on success
+    - `verified_steps`: how many verification steps produced real output evidence (e.g. `3 / 3`)
 
 ## Common Mistakes
 

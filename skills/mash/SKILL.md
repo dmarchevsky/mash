@@ -258,16 +258,36 @@ For each feature to implement:
 5. **Read dev status** from `.mash/dev/feature-<id>.md`:
 
    - **CREATED** → Exit this feature's loop (should not be in dev with this status).
-   - **DONE** → Exit this feature's loop (already complete).
+   - **DONE** → This feature is already complete. Use AskUserQuestion to ask the user: *"Feature <id> is already done. Do you want to reimplement it from scratch?"* If no → exit this feature's loop. If yes → go to REIMPLEMENTATION SETUP.
    - **DEV_READY or WIP** → Continue to step 6.
    - **DEV_DONE** → Skip to step 8 (QA phase).
    - **DEV_FAIL or QA_FAIL** → Go to step 9 (failure handling).
-   - **QA_PASS** → Mark as DONE in progress.md, then proceed to INVOKE REVIEW.
+   - **QA_PASS** → Proceed to INVOKE ARCHITECT (post-qa). Do not update progress.md yet — DONE is set only after ARCH_VERIFIED.
+
+#### REIMPLEMENTATION SETUP
+When the user confirms reimplementation of a DONE feature:
+1. Set status to `DEV_READY` in `.mash/dev/feature-<id>.md`.
+2. Set `attempt` to `0` in the frontmatter (step 6 will increment it to 1).
+3. Set progress.md status to `WIP`.
+4. Set a `reimplementation: true` flag (in memory, not in the file) so INVOKE ARCHITECT (pre-dev) receives the REIMPLEMENTATION CONTEXT block.
+5. Continue to step 6.
 
 6. **Increment attempt**: Update the `attempt` field in `.mash/dev/feature-<id>.md` frontmatter. If attempt > 3, set progress.md status to FAILED, **clean up worktree** (see WORKTREE CLEANUP below), and stop this feature.
 7. **Set progress.md to WIP.**
 
+Run INVOKE ARCHITECT (pre-dev) for this feature before proceeding to dev.
+
 #### INVOKE DEV
+
+**If this is a retry (attempt > 1):** Before invoking, read the most recent `## Dev outcome` section in `.mash/dev/feature-<id>.md`. Extract the blocker or failure summary from it. Append a RETRY CONTEXT block to the agent prompt:
+```
+---
+RETRY CONTEXT (attempt <n> of 3):
+Previous attempt ended with: <DEV_FAIL or QA_FAIL>
+Blocker: <one-line blocker from the previous MASH_STATUS block or outcome section>
+The Dev outcome section(s) in the feature file record what was tried. Read them before choosing your approach — do not repeat a failed approach.
+```
+
 Read `skills/mash/references/dev-persona.md` and invoke:
 ```
 Agent(
@@ -284,7 +304,7 @@ Read these files before starting:
 - .mash/dev/feature-<id>.md"
 )
 ```
-After the agent returns, read `.mash/dev/feature-<id>.md` to check the status. **If status is DEV_DONE, validate verification evidence:** read the Verification Steps from the feature spec and check the Dev outcome section for corresponding command + actual output entries. If any verification step has no evidence (and no documented reason for inspection-only verification), set status back to DEV_READY and re-invoke dev with a note that verification evidence is required for each step. Go back to step 5.
+After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/feature-<id>.md`. **If status is DEV_DONE, validate verification evidence:** check `verified_steps` in the MASH_STATUS block — if not all steps have evidence, or if the block is absent and the Dev outcome section lacks command + actual output for each Verification Step, set status back to DEV_READY and re-invoke dev with a note that verification evidence is required for each step. Go back to step 5.
 
 8. **QA phase**:
 
@@ -305,7 +325,7 @@ Read these files before starting:
 - .mash/dev/feature-<id>.md"
 )
 ```
-After the agent returns, read `.mash/dev/feature-<id>.md` to check the status. Go back to step 5.
+After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/feature-<id>.md`. Go back to step 5.
 
 9. **Failure handling** (DEV_FAIL or QA_FAIL):
    - Read the Dev outcome / QA outcome sections in `.mash/dev/feature-<id>.md`.
@@ -318,29 +338,76 @@ After the agent returns, read `.mash/dev/feature-<id>.md` to check the status. G
    - Set dev feature file status to DEV_READY.
    - Go back to step 5.
 
-### INVOKE REVIEW
+### INVOKE ARCHITECT (pre-dev)
 
-Runs after QA_PASS for both features and defects. Invoked by MASH — not a sub-agent of QA.
+Runs in the implementation loop after step 7 (Set progress.md to WIP) and before INVOKE DEV. Checks that the feature spec is consistent with the project architecture before implementation begins.
 
-Read `skills/mash/references/review-persona.md` and invoke:
+**If this is a reimplementation** (flag set in REIMPLEMENTATION SETUP): before invoking, read all existing `## Dev outcome` and `## QA outcome` sections from `.mash/dev/feature-<id>.md`. Append a REIMPLEMENTATION CONTEXT block to the prompt:
+```
+---
+REIMPLEMENTATION CONTEXT:
+The user has requested reimplementation of a previously completed feature.
+The Dev outcome section(s) in the feature file document what was built before.
+Review these outcomes alongside the feature spec and consider:
+- Whether the prior approach had limitations or left acceptance criteria partially addressed
+- Alternative approaches that may better satisfy the goals
+- What, if anything, should be preserved from the prior implementation
+Include a concrete approach direction in your report for the dev agent to follow.
+```
+
+Read `skills/mash/references/architect-persona.md` and invoke:
 ```
 Agent(
 
-  prompt="<review-persona.md contents>
+  prompt="<architect-persona.md contents>
 
 ---
-CONTEXT:
+PARAMETERS:
+- mode: pre-dev
+- trigger_file: .mash/dev/feature-<id>.md
+
+Read these files before starting:
+- .mash/plan/architecture.md
+- .mash/plan/project.md
+- .mash/dev/feature-<id>.md"
+)
+```
+
+After the agent returns, read the `---MASH_STATUS---` block in the agent output (`result` field). If the block is absent, scan the report text for `ARCH_APPROVED` or `ARCH_FAIL`.
+- **If ARCH_APPROVED**: proceed to INVOKE DEV immediately.
+- **If ARCH_FAIL**: present the specific CONFLICT items to the user via AskUserQuestion with three options:
+  - *Proceed to dev anyway* — implement as spec'd; architect concerns noted but not blocking.
+  - *Update feature spec now* — pause the loop, allow the user to direct changes to `.mash/plan/features/feature-<id>.md`, copy updates to `.mash/dev/feature-<id>.md`, then re-run INVOKE ARCHITECT (pre-dev) before proceeding.
+  - *Skip this feature* — set status to FAILED in progress.md and move to the next feature.
+
+### INVOKE ARCHITECT (post-qa)
+
+Runs after QA_PASS for both features and defects. Invoked by MASH — not a sub-agent of QA. Verifies that QA evidence covers all stated goals and acceptance criteria, not just that tests passed.
+
+Read `skills/mash/references/architect-persona.md` and invoke:
+```
+Agent(
+
+  prompt="<architect-persona.md contents>
+
+---
+PARAMETERS:
+- mode: post-qa
 - trigger_file: <the feature or defect file that just passed QA, e.g. .mash/dev/feature-1.md or .mash/dev/defect-1.md>
 
 Read these files before starting:
 - .mash/plan/architecture.md
-- .mash/plan/project.md"
+- .mash/plan/project.md
+- <trigger_file path>"
 )
 ```
 
-After the agent returns, check its report:
-- **If regressions were found**: present the regression details to the user via AskUserQuestion — ask whether to fix the regression (return to IMPLEMENTATION LOOP / PATCH LOOP for another dev cycle) or accept and proceed.
-- **If only stale tests were fixed, or suite is clean**: proceed normally (POST-FEATURE for features, user confirmation for defects).
+After the agent returns, read the `---MASH_STATUS---` block in the agent output (`result` field). If the block is absent, scan the report text for `ARCH_VERIFIED` or `ARCH_FAIL`.
+- **If ARCH_VERIFIED**: mark the feature or defect as DONE in progress.md, then proceed normally (POST-FEATURE for features; user confirmation step for defects).
+- **If ARCH_FAIL**: present the specific coverage gaps to the user via AskUserQuestion with three options:
+  - *Send back to QA with architect notes* — set file status to DEV_DONE, append the architect's gap list as a `## Architect notes` section in the dev/defect file, then re-invoke QA with the note: *"IMPORTANT: The architect identified coverage gaps (see Architect notes section). QA must address each gap before setting QA_PASS."* Then go back to the QA phase.
+  - *Accept and proceed* — note the gaps in the progress report and proceed to POST-FEATURE / user confirmation.
+  - *Return to dev* — if the gaps reveal an implementation problem rather than a QA gap, set file status to DEV_READY and return to step 5 of the implementation loop / step 3 of the patch loop.
 
 ### LOOP COMPLETION
 
@@ -364,7 +431,16 @@ After processing a feature:
 
 4. **Increment attempt**: Update `attempt` in frontmatter. If attempt > 3, report FAILED to the user, run WORKTREE CLEANUP if applicable, and stop.
 
-5. **INVOKE PATCH**: Read `skills/mash/references/patch-persona.md` and invoke:
+5. **INVOKE PATCH**: **If this is a retry (attempt > 1):** Before invoking, read the most recent `## Patch outcome` section in `.mash/dev/defect-<id>.md`. Extract the blocker or failure summary. Append a RETRY CONTEXT block to the agent prompt:
+```
+---
+RETRY CONTEXT (attempt <n> of 3):
+Previous attempt ended with: <PATCH_FAIL or QA_FAIL>
+Blocker: <one-line blocker from the previous MASH_STATUS block or outcome section>
+The Patch outcome section(s) in the defect file record what was tried. Read them before proceeding — do not repeat a failed approach.
+```
+
+Read `skills/mash/references/patch-persona.md` and invoke:
 ```
 Agent(
 
@@ -380,7 +456,7 @@ Read these files before starting:
 - .mash/dev/defect-<id>.md"
 )
 ```
-After the agent returns, read `.mash/dev/defect-<id>.md` to check the status. Go back to step 3.
+After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/defect-<id>.md`. Go back to step 3.
 
 6. **QA phase**:
 
@@ -408,11 +484,11 @@ Read these files before starting:
 - .mash/dev/defect-<id>.md"
 )
 ```
-After the agent returns, read `.mash/dev/defect-<id>.md` to check the status. Go back to step 3.
+After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/defect-<id>.md`. Go back to step 3.
 
 7. **Post-fix completion** (QA_PASS):
-   1. Run INVOKE REVIEW for this defect.
-   2. If review finds regressions, present them to the user via AskUserQuestion — ask whether to fix the regression (return to step 3 for another patch cycle) or accept and proceed.
+   1. Run INVOKE ARCHITECT (post-qa) for this defect.
+   2. If ARCH_FAIL, present gaps to the user via AskUserQuestion (same three options as in INVOKE ARCHITECT (post-qa) section).
    3. Present QA outcome to the user. Use AskUserQuestion to confirm the fix is resolved.
    4. If `git: none` in settings.md, skip git operations. Otherwise commit per settings.md (use `git commit` with a descriptive message referencing the defect).
    5. Run WORKTREE CLEANUP if applicable.
@@ -483,9 +559,17 @@ This is called from POST-FEATURE (after merge) and from step 6 (when attempt > 3
 | WIP | WIP |
 | DEV_DONE | WIP |
 | DEV_FAIL | WIP (retry) |
-| QA_PASS | DONE |
+| QA_PASS | WIP (awaiting architect) |
 | QA_FAIL | WIP (retry) |
+| ARCH_VERIFIED | DONE |
 | (attempt > 3) | FAILED |
+
+### Architect output codes
+| Code | Meaning |
+|------|---------|
+| ARCH_APPROVED | Feature spec consistent with architecture — proceed to dev |
+| ARCH_FAIL | Conflicts or coverage gaps found — user decision required |
+| ARCH_VERIFIED | QA evidence covers all goals and acceptance criteria — proceed to DONE |
 
 ### defect file statuses (`.mash/dev/defect-<id>.md`)
 | Status | Meaning |
@@ -505,7 +589,21 @@ This is called from POST-FEATURE (after merge) and from step 6 (when attempt > 3
 - **Halt at 3 failed attempts.** Set progress.md to FAILED and report to the user.
 - **Feature files are the contract.** Dev and QA agents read them; you manage and update them.
 - **Always update status** in both progress.md and dev feature files after state changes.
-- **Commit after QA_PASS.** Create a git commit for each successfully completed feature.
+- **Commit after ARCH_VERIFIED.** Create a git commit for each successfully completed feature — only after the architect confirms goal coverage.
 - **Ask before large plans.** If a `plan` command would create more than 5 features, show the plan and ask for confirmation before creating files.
 - **Always use AskUserQuestion.** When you need user input — choices, confirmations, or clarifications — use the AskUserQuestion tool. Never just print a question as text.
 - **Defect files are the contract for patching.** Never invoke patch-persona without a defect file that includes a Fix Recommendation confirmed by the user.
+
+---
+
+## MASH_STATUS Block Reference
+
+Each sub-agent outputs a `---MASH_STATUS---` block as the last thing in its response. SKILL reads the appropriate field to route next steps.
+
+| Persona | Fields | Key field read by SKILL |
+|---------|--------|------------------------|
+| dev-persona | `status`, `blocker`, `verified_steps` | `status` (DEV_DONE / DEV_FAIL) |
+| qa-persona | `status`, `blocker`, `tests_passed` | `status` (QA_PASS / QA_FAIL) |
+| architect-persona (pre-dev) | `result`, `conflicts` | `result` (ARCH_APPROVED / ARCH_FAIL) |
+| architect-persona (post-qa) | `result`, `gaps` | `result` (ARCH_VERIFIED / ARCH_FAIL) |
+| patch-persona | `status`, `blocker` | `status` (PATCH_DONE / PATCH_FAIL) |

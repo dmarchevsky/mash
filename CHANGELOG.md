@@ -4,6 +4,31 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.0] — 2026-03-31
+
+### Added
+- **Architect persona** — dual-mode architectural review agent. `pre-dev` mode checks the feature spec against `architecture.md` before implementation begins; `post-qa` mode verifies that QA evidence actually covers the stated goals and acceptance criteria (not just that tests passed). Replaces the Review persona.
+- **`/mash dev <id>` reimplementation flow** — when a feature is already DONE, MASH asks whether to reimplement it. If confirmed, the architect runs pre-dev mode with a `REIMPLEMENTATION CONTEXT` block that reviews prior Dev outcomes and suggests an alternative approach before dev begins.
+- **`/mash plan <description>`** — inline description passed to plan-persona as a pre-seeded starting point, skipping the opening question.
+- **MASH_STATUS block reference table** in SKILL.md — documents the field schema output by each persona (`status`/`blocker`/`verified_steps` for dev, `result`/`gaps` for architect, etc.).
+- **Architect output codes** added to the Status Reference section (`ARCH_APPROVED`, `ARCH_FAIL`, `ARCH_VERIFIED`).
+
+### Changed
+- **Outcome verification hardened** — dev-persona and qa-persona now require actual command output as evidence for every verification step. Prose claims ("it works") are explicitly rejected; only recorded command output counts.
+- **Approach failure classification** — SKILL.md now distinguishes implementation bugs (retry with fix) from approach failures (the approach was correct but the goal wasn't achieved). Approach failures require user input before retrying and record what was tried in Technical Notes.
+- **Fix/Patch flow hardened** with the same outcome classification: patch failures are now classified as implementation bugs vs. wrong fix strategy, with user input required before retrying the latter.
+- **DONE marking moved to after ARCH_VERIFIED** — previously, progress.md was marked DONE immediately after QA_PASS, before the post-qa architect ran. If the architect returned ARCH_FAIL and the user chose to return to dev, progress.md would falsely show DONE. DONE is now set only when ARCH_VERIFIED.
+- **Status sync table updated** — `QA_PASS` now maps to `WIP (awaiting architect)`; `ARCH_VERIFIED` maps to `DONE`.
+- **Post-qa architect invocation** now lists `trigger_file` in "Read these files before starting", consistent with the pre-dev invocation.
+- **Commit safety rule** updated from "Commit after QA_PASS" to "Commit after ARCH_VERIFIED".
+
+### Fixed
+- opencode compatibility: removed `subagent_type` from all `Agent()` calls (not supported in opencode).
+- Premature `DONE` in progress.md when post-qa architect check failed and the feature was sent back to dev.
+
+### Removed
+- **Review persona** — replaced by the more capable Architect persona, which covers both pre-dev alignment and post-qa goal verification in a single dual-mode agent.
+
 ## [0.3.0] — 2026-03-27
 
 ### Added
