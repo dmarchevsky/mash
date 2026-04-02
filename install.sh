@@ -68,6 +68,8 @@ fi
 INSTALLED_VERSION=""
 if [ -f "$TARGET_DIR/skills/mash/VERSION" ]; then
   INSTALLED_VERSION="$(tr -d '[:space:]' < "$TARGET_DIR/skills/mash/VERSION")"
+elif [ -f "$TARGET_DIR/.opencode/skills/mash/VERSION" ]; then
+  INSTALLED_VERSION="$(tr -d '[:space:]' < "$TARGET_DIR/.opencode/skills/mash/VERSION")"
 fi
 
 if [ -n "$INSTALLED_VERSION" ]; then
@@ -136,22 +138,36 @@ fi
 
 info "Installing framework files..."
 
-mkdir -p "$TARGET_DIR/skills/mash"
-cp -r "$MASH_SRC/skills/mash/." "$TARGET_DIR/skills/mash/"
-ok "skills/mash/"
-
 if [ "$INSTALL_CLAUDE" = true ]; then
+  mkdir -p "$TARGET_DIR/skills/mash"
+  cp -r "$MASH_SRC/skills/mash/." "$TARGET_DIR/skills/mash/"
+  ok "skills/mash/"
+
   mkdir -p "$TARGET_DIR/.claude/commands"
   cp "$MASH_SRC/commands/mash.md" "$TARGET_DIR/.claude/commands/mash.md"
   ok ".claude/commands/mash.md"
+
+  if [ -f "$MASH_SRC/VERSION" ]; then
+    cp "$MASH_SRC/VERSION" "$TARGET_DIR/skills/mash/VERSION"
+    ok "VERSION (v$NEW_VERSION)"
+  fi
 fi
 
 if [ "$INSTALL_OPENCODE" = true ]; then
+  # Inline full skill content: opencode frontmatter + main SKILL.md body with rewritten paths
   mkdir -p "$TARGET_DIR/.opencode/skills/mash"
-  # Inline full skill content: opencode frontmatter + main SKILL.md body (no redirect)
   head -4 "$MASH_SRC/opencode-skills/mash/SKILL.md" > "$TARGET_DIR/.opencode/skills/mash/SKILL.md"
-  tail -n +5 "$MASH_SRC/skills/mash/SKILL.md" >> "$TARGET_DIR/.opencode/skills/mash/SKILL.md"
+  tail -n +5 "$MASH_SRC/skills/mash/SKILL.md" \
+    | sed 's|skills/mash/references/|.opencode/skills/mash/references/|g' \
+    >> "$TARGET_DIR/.opencode/skills/mash/SKILL.md"
   ok ".opencode/skills/mash/SKILL.md"
+
+  # Copy references and rewrite internal paths
+  cp -r "$MASH_SRC/skills/mash/references" "$TARGET_DIR/.opencode/skills/mash/"
+  for f in "$TARGET_DIR/.opencode/skills/mash/references/"*.md; do
+    sed -i 's|skills/mash/references/|.opencode/skills/mash/references/|g' "$f"
+  done
+  ok ".opencode/skills/mash/references/"
 
   mkdir -p "$TARGET_DIR/.opencode/commands"
   cp "$MASH_SRC/opencode-commands/mash.md" "$TARGET_DIR/.opencode/commands/mash.md"
@@ -164,12 +180,11 @@ if [ "$INSTALL_OPENCODE" = true ]; then
   else
     ok "opencode.json already exists — skipped"
   fi
-fi
 
-# Copy version file into skills/mash/ for installed-version tracking
-if [ -f "$MASH_SRC/VERSION" ]; then
-  cp "$MASH_SRC/VERSION" "$TARGET_DIR/skills/mash/VERSION"
-  ok "VERSION (v$NEW_VERSION)"
+  if [ -f "$MASH_SRC/VERSION" ]; then
+    cp "$MASH_SRC/VERSION" "$TARGET_DIR/.opencode/skills/mash/VERSION"
+    ok "VERSION (v$NEW_VERSION)"
+  fi
 fi
 
 # --- Step 5: Create scaffolding (only if missing) ---
@@ -256,12 +271,9 @@ fi
 
 GITIGNORE="$TARGET_DIR/.gitignore"
 
-mash_gitignore_entries=(
-  ".mash/dev/"
-  ".mash/worktrees/"
-  ".claude/settings.local.json"
-  "skills/mash/"
-)
+mash_gitignore_entries=(".mash/dev/" ".mash/worktrees/")
+[ "$INSTALL_CLAUDE"   = true ] && mash_gitignore_entries+=(".claude/" "skills/mash/")
+[ "$INSTALL_OPENCODE" = true ] && mash_gitignore_entries+=(".opencode/")
 
 if [ ! -f "$GITIGNORE" ]; then
   touch "$GITIGNORE"
