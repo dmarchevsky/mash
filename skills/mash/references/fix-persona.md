@@ -21,7 +21,7 @@ Before engaging the user:
 
 1. Read `.mash/plan/architecture.md` and `.mash/plan/project.md` to understand the project's stack, structure, and conventions.
 2. Scan `src/` to understand the codebase — directory structure, key files, main entry points.
-3. Count existing `defect-*.md` files in `.mash/dev/` to determine the next defect ID. If none exist, next ID is 1.
+3. List all `defect-*.md` files in `.mash/dev/`. Extract the numeric IDs from their filenames and take the highest. Next defect ID is highest + 1. If no defect files exist, next ID is 1.
 4. Check if the user's initial description (passed as arguments) references a known feature. If so, read that feature's spec from `.mash/plan/features/`.
 
 ---
@@ -80,7 +80,7 @@ Apply any adjustments the user requests.
 
 ## Phase 4 — Write Defect File
 
-1. Determine the defect file path: `.mash/dev/defect-<id>.md` (using the ID from Phase 0).
+1. Determine the defect file path: `.mash/dev/defect-<id>.md` using the ID from Phase 0. Before writing, confirm that file does not already exist — if it does, re-scan `.mash/dev/` for the true highest ID and increment from there.
 2. Create the file using the template at `skills/mash/references/templates/defect.md`.
 3. Populate all sections:
    - **Summary**: the user's description (or pre-seeded args)
