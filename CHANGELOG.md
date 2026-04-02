@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.8] — 2026-04-02
+
+### Fixed
+- **opencode skill redirect** — installer now inlines the full `skills/mash/SKILL.md` content into `.opencode/skills/mash/SKILL.md` (using opencode frontmatter + main body) instead of a redirect. Non-Anthropic models in opencode no longer need to follow a "Use the Read tool" instruction to load the skill.
+
 ## [0.4.7] — 2026-04-01
 
 ### Changed

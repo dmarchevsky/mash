@@ -148,7 +148,9 @@ fi
 
 if [ "$INSTALL_OPENCODE" = true ]; then
   mkdir -p "$TARGET_DIR/.opencode/skills/mash"
-  cp "$MASH_SRC/opencode-skills/mash/SKILL.md" "$TARGET_DIR/.opencode/skills/mash/SKILL.md"
+  # Inline full skill content: opencode frontmatter + main SKILL.md body (no redirect)
+  head -4 "$MASH_SRC/opencode-skills/mash/SKILL.md" > "$TARGET_DIR/.opencode/skills/mash/SKILL.md"
+  tail -n +5 "$MASH_SRC/skills/mash/SKILL.md" >> "$TARGET_DIR/.opencode/skills/mash/SKILL.md"
   ok ".opencode/skills/mash/SKILL.md"
 
   mkdir -p "$TARGET_DIR/.opencode/commands"
