@@ -370,7 +370,22 @@ After the agent returns, read the `---MASH_STATUS---` block in the agent output 
 After processing a feature:
 - Check progress.md for remaining incomplete features.
 - If more remain → proceed to next feature in the loop.
-- If none remain → create a summary report for the user and stop.
+- If none remain → run **MILESTONE SMOKE TEST**, then create a summary report for the user and stop.
+
+### MILESTONE SMOKE TEST
+
+Run after all features in the current milestone are marked `DONE`, before reporting completion to the user.
+
+1. Collect all Verification Steps from all completed feature files in `.mash/dev/`.
+2. **Check architecture.md for how the application is meant to run** (local process, Docker, docker-compose, etc.).
+3. Run each Verification Step in sequence through the application's user-facing entry point — not through internal imports or the test harness. **Run in the application's intended environment** (Docker/docker-compose if applicable).
+4. **After each run, check logs**: `docker compose logs`, `docker logs <container>`, or stdout/stderr. Record errors, panics, or unexpected warnings alongside the command output.
+5. Record pass/fail for each step.
+6. If any step fails or logs contain errors:
+   - Present the failures to the user.
+   - For each failure, offer to file a defect using the standard defect flow.
+   - Do not report the milestone as complete until failures are resolved.
+7. If all steps pass and logs are clean, report the milestone complete with the smoke test output and a log summary as evidence.
 
 ### PATCH LOOP
 

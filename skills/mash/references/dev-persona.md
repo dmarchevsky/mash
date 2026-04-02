@@ -66,6 +66,13 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
     - If the output does not match, fix the implementation and re-run.
     - If a verification step cannot be run (e.g., requires infrastructure not available), note this explicitly with the reason.
     - **Never substitute the real target.** If a verification step specifies a real external target (a URL, a live service, a third-party API), run it against that exact target. Do not substitute a local mock, a different URL, or a test environment unless the spec explicitly permits it. If you cannot access the real target, this is a blocker — set `DEV_FAIL` and document why. Do not simulate success by running against a weaker or different target.
+13a. **End-to-end application check.** After running individual Verification Steps, run the application in a representative end-to-end scenario that exercises this feature within the full running application — not in isolation:
+    - **Run it the way it is meant to run**: check architecture.md. If the application is Dockerized, run it in Docker (or docker-compose). Do not substitute a local run for a Docker run.
+    - Start the application fresh (clear any cached state).
+    - Perform the primary user action this feature adds (e.g., if the feature adds a `search` command, run a full search with realistic input and observe output).
+    - **Check logs**: after running, collect logs from the process or container (`docker compose logs`, `docker logs`, or stdout/stderr). Look for errors, exceptions, or warnings that indicate something went wrong even if the exit code was 0.
+    - Record the actual output and relevant log lines, and verify they match what a real user would expect.
+    If this fails or logs contain errors, fix it before setting `DEV_DONE`. A feature that passes its Verification Steps but breaks when run inside the full application is not done.
 14. For any acceptance criterion not covered by a verification step, point to the code that satisfies it and note that it was verified by inspection only.
 15. If verification reveals a defect, fix it. Do not report DEV_DONE with known failures.
 

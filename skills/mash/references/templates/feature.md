@@ -14,8 +14,14 @@ title: <short title>
 - <criterion 2>
 
 ## Verification Steps
-<!-- Concrete commands that prove the feature works through its user-facing entry point (CLI, API, file output).
-     Each step has an exact command and expected result. Run by dev after implementation, verified by QA. -->
+<!-- Concrete commands that prove the feature works. Requirements:
+     - Must run through the application's user-facing entry point (CLI, API call, file output) — not through internal imports or test harness.
+     - Must check actual output content, not just exit codes.
+     - Must include at least one representative end-to-end user scenario.
+     - Each step must be runnable in a fresh environment with no prior state unless setup is explicitly listed.
+     Bad: `python -c "from app import search; assert search('x') is not None"` (internal import, no output check)
+     Good: `python main.py search "test query"` → output contains at least one result with title and URL
+     Run by dev after implementation (including end-to-end app check); verified again by QA. -->
 1. **Run**: `<command>`
    **Expect**: <exact output, exit code, or observable behavior>
 

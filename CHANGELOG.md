@@ -4,6 +4,21 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.5.0] — 2026-04-02
+
+### Added
+- **Milestone smoke test** — after all features reach DONE, MASH re-runs every Verification Step from every completed feature in sequence through the application's real environment (Docker/docker-compose if applicable). Log output is collected and inspected; any failures are filed as defects before completion is reported.
+- **Application startup check (QA)** — before writing any tests, the QA agent now attempts to start the application through its primary entry point (respecting Docker/docker-compose if specified in architecture.md), collects logs, and sets `QA_FAIL` immediately if the application fails to start or logs errors. Tests are not written against a fundamentally broken application.
+- **End-to-end application check (Dev)** — after running per-feature Verification Steps, the dev agent now runs the full application in a representative end-to-end scenario, checks logs for errors, and must fix any failures before setting `DEV_DONE`. A feature that passes its isolation checks but breaks the running application is not done.
+- **Docker/log awareness** — all verification phases (dev self-check, QA startup check, milestone smoke test) now check architecture.md for the intended run environment and use `docker compose logs` / `docker logs` where applicable. Log errors are treated as failures even when exit codes are 0.
+
+### Changed
+- **Verification Step template hardened** — feature.md template comment now gives explicit quality criteria: steps must use the user-facing entry point (not internal imports), check actual output content (not just exit codes), and include at least one representative end-to-end scenario. Includes a bad/good example.
+- **opencode install is now self-contained under `.opencode/`** — `skills/mash/` is no longer installed for opencode users. opencode gets its own copy of SKILL.md (inlined with path rewriting) and all references under `.opencode/skills/mash/`. This removes the cross-directory indirection that caused weaker models to fail skill loading.
+
+### Fixed
+- **Fix persona defect ID collision** — fix persona now uses the maximum existing defect ID (not count) to generate the next ID, preventing collisions when defects have been deleted or are non-contiguous.
+
 ## [0.4.8] — 2026-04-02
 
 ### Fixed

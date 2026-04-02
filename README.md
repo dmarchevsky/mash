@@ -35,10 +35,16 @@ curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | ba
 The installer detects which AI client(s) are available and sets up support accordingly. If both are installed and no flag is given, it prompts you to choose.
 
 This installs the framework into your project:
+
+**Claude Code:**
 - `skills/mash/` — framework files (personas, templates, orchestrator)
-- `.claude/commands/mash.md` — registers the `/mash` command *(Claude Code)*
-- `.opencode/skills/mash/SKILL.md` — registers MASH as a discoverable skill *(opencode)*
-- `opencode.json` — enables the skill and configures sub-agent permissions *(opencode)*
+- `.claude/commands/mash.md` — registers the `/mash` command
+
+**opencode:**
+- `.opencode/skills/mash/` — self-contained framework copy (SKILL.md + all references)
+- `opencode.json` — enables the skill and configures sub-agent permissions
+
+**Both:**
 - `.mash/plan/` — where specs and feature definitions live
 - `src/` and `tests/` — where agents write code
 
@@ -94,7 +100,7 @@ Each persona has a defined role and strict file access boundaries:
 | **Plan** | Turn ideas into detailed, testable feature specs | All plan files, `src/` | `.mash/plan/features/feature-<id>.md`, `progress.md` |
 | **Architect** | Verify spec-architecture alignment (pre-dev) and QA goal coverage (post-qa) | Plan files, dev/defect file | Nothing — read and report only |
 | **Dev** | Implement a single feature according to spec | Plan files (read-only) | `src/`, `.mash/dev/feature-<id>.md` |
-| **QA** | Verify implementation through tests | Plan files, `src/` (read-only) | `tests/`, `.mash/dev/feature-<id>.md` |
+| **QA** | Verify implementation through tests; checks application starts before writing any tests | Plan files, `src/` (read-only) | `tests/`, `.mash/dev/feature-<id>.md` |
 | **Fix** | Collaborative debugging with the user | Project context, `src/` | `.mash/dev/defect-<id>.md` |
 | **Patch** | Minimal-change fix implementation | Everything (read-only except defect file) | `src/`, `.mash/dev/defect-<id>.md` |
 
@@ -110,6 +116,8 @@ CREATED ──► DEV_READY ──► WIP ──► DEV_DONE ──► QA_PASS �
 ```
 
 Each feature passes through two architect gates: a **pre-dev** check (spec vs. architecture) before implementation starts, and a **post-qa** check (QA evidence vs. stated goals) before the feature is marked DONE.
+
+Once all features reach DONE, MASH runs a **milestone smoke test** — re-running every Verification Step from every feature in the application's real environment (including Docker if applicable), with log inspection. Any failures are filed as defects before completion is reported.
 
 Features are tracked in `.mash/plan/progress.md` and defined as individual spec files in `.mash/plan/features/` with YAML frontmatter:
 
@@ -138,15 +146,12 @@ Configured during `/mash init` via `.mash/plan/settings.md`:
 
 ### Project Structure
 
+**Claude Code install:**
 ```
 your-project/
 ├── .claude/                           # Claude Code integration
 │   ├── commands/mash.md               #   Command registration
 │   └── settings.local.json            #   Sub-agent permissions
-├── .opencode/                         # opencode integration
-│   ├── skills/mash/SKILL.md           #   Skill registration
-│   └── commands/mash.md               #   Command registration
-├── opencode.json                      # opencode config & permissions
 ├── skills/
 │   └── mash/                          # Framework (managed by install/update)
 │       ├── SKILL.md                   #   Orchestrator
@@ -171,6 +176,21 @@ your-project/
 │   └── dev/                           # Working copies (gitignored)
 ├── src/                               # Application code (written by dev agents)
 └── tests/                             # Test code (written by QA agents)
+```
+
+**opencode install:**
+```
+your-project/
+├── .opencode/                         # opencode integration
+│   ├── skills/mash/                   #   Self-contained framework copy
+│   │   ├── SKILL.md                   #     Orchestrator
+│   │   ├── VERSION
+│   │   └── references/                #     All personas and templates
+│   └── commands/mash.md               #   Command registration
+├── opencode.json                      # opencode config & permissions
+├── .mash/                             # Same structure as Claude Code
+├── src/
+└── tests/
 ```
 
 ## Updating
@@ -225,6 +245,7 @@ Superpowers is a composable skills plugin that enforces mandatory process guardr
 - **Interactive planning** — init and plan personas ask multiple rounds of questions before writing specs
 - **Autonomous execution** — dev and QA agents work independently within their boundaries
 - **Retry with context** — failed features are retried up to 3 times with failure analysis fed back to the next attempt
+- **Application-level verification** — dev must run the full application end-to-end before marking a feature done; QA checks the app starts before writing tests; a milestone smoke test confirms the whole application works after all features land
 - **Framework, not boilerplate** — MASH manages the process; your project's code, structure, and tools are entirely up to you
 
 ## License
