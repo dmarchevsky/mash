@@ -36,7 +36,10 @@ Before asking the user anything, silently investigate the project directory:
 1. Glob for project manifests: `package.json`, `Cargo.toml`, `go.mod`, `pyproject.toml`, `setup.py`, `pom.xml`, `build.gradle`, `Makefile`, `CMakeLists.txt`, `*.sln`, `Gemfile`.
 2. Glob for lock files: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `Cargo.lock`, `go.sum`, `poetry.lock`, `Gemfile.lock`.
 3. Scan for existing source directories (`src/`, `lib/`, `app/`, `cmd/`, `pkg/`), config files (`tsconfig.json`, `.eslintrc*`, `rustfmt.toml`, `.prettierrc*`), and test directories (`tests/`, `test/`, `spec/`, `__tests__/`).
-4. Check for partial `.mash/plan/` files — if `architecture.md` or `project.md` already have content beyond templates, this is a recovery case. Read them and resume from where they left off.
+4. Check for partial `.mash/plan/` files — if `architecture.md` or `project.md` already have content beyond templates, this is a recovery case. Read them and determine where to resume:
+   - `project.md` has content, `architecture.md` is empty or template → resume from **Phase 3** (architecture decisions).
+   - Both have content, `progress.md` is empty or template → resume from **Phase 4** (scaffolding).
+   - All three have content → present a summary of what's already set up and ask the user: *"Your project already appears initialized. Would you like to review or update any section — Project definition, Architecture, or Settings?"* Proceed only into the section(s) they select.
 5. Read any found manifests to extract: language, runtime, dependencies, scripts, description.
 6. Classify the project:
    - **Greenfield**: No manifest files, no meaningful source code.

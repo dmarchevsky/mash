@@ -62,6 +62,7 @@ mash dev           # Implement all ready features (dev + QA agents)
 | `mash init` | Interactively define project scope, architecture, and settings |
 | `mash init <filename>` | Same, but seeds the conversation from an existing project description file |
 | `mash plan` / `mash plan <desc>` | Create new feature specifications through guided conversation |
+| `mash plan <id>` | Redefine an existing feature spec interactively, then reimplement it |
 | `mash dev` | Implement and test all DEV_READY features |
 | `mash dev 1,3` | Implement specific features by ID; if a feature is already DONE, offers reimplementation |
 | `mash fix` | Debug a defect collaboratively, then patch and verify |
@@ -81,7 +82,7 @@ Each persona has a defined role and strict file access boundaries:
 |---------|------|-------|--------|
 | **Init** | Define project scope and technical decisions | Filesystem scan | `.mash/plan/project.md`, `architecture.md`, `settings.md`, `progress.md` |
 | **Plan** | Turn ideas into detailed, testable feature specs | All plan files, `src/` | `.mash/plan/features/feature-<id>.md`, `progress.md` |
-| **Architect** | Verify spec-architecture alignment (pre-dev) and QA goal coverage (post-qa) | Plan files, dev/defect file | Nothing — read and report only |
+| **Architect** | Verify spec-architecture alignment (pre-dev) and QA goal coverage (post-qa) | Plan files, dev/defect file | `.mash/dev/feature-<id>.md` (dev brief, pre-dev mode), `.mash/plan/architecture.md` (EXTENSION decisions, pre-dev mode) |
 | **Dev** | Implement a single feature according to spec | Plan files (read-only) | `src/`, `.mash/dev/feature-<id>.md` |
 | **QA** | Verify implementation through tests; checks application starts before writing any tests | Plan files, `src/` (read-only) | `tests/`, `.mash/dev/feature-<id>.md` |
 | **Fix** | Collaborative debugging with the user | Project context, `src/` | `.mash/dev/defect-<id>.md` |
@@ -111,7 +112,7 @@ title: User Authentication
 ---
 ```
 
-Each spec includes a description, acceptance criteria, regression tests, and technical notes.
+Each spec includes a description, acceptance criteria, verification steps (exact commands proving the feature works through its user-facing entry point), regression tests, and technical notes.
 
 ### Git Workflow Options
 
@@ -190,7 +191,7 @@ GSD is a context-engineering framework focused on preventing context window degr
 
 **Where MASH differs:**
 
-- **Simplicity over configuration.** MASH has 6 commands. GSD has 40+. MASH's workflow is clear from day one — you don't need to learn modes, profiles, granularity settings, or branching templates.
+- **Simplicity over configuration.** MASH has 8 commands. GSD has 40+. MASH's workflow is clear from day one — you don't need to learn modes, profiles, granularity settings, or branching templates.
 - **Interactive planning, not automated research.** GSD spawns 4 parallel research agents to investigate your stack before planning. MASH's plan persona talks *to you* — asking clarifying questions across multiple rounds to capture intent that no amount of automated research can surface.
 - **Clean separation of concerns.** MASH personas have strict read/write boundaries enforced by the framework. Dev agents can't touch specs. QA agents can't touch source code. GSD's agents are role-typed but share broader access.
 - **Minimal file footprint.** GSD generates `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md`, research directories, context files, summaries, todos, threads, and seeds. MASH keeps everything in `.mash/plan/` — a handful of markdown files.

@@ -27,7 +27,7 @@ Read these before doing anything:
 2. **QA passing is not goal verification.** Tests proving code runs are not the same as evidence that the user's stated goals were achieved.
 3. **Flag, don't silently pass.** When in doubt, surface the concern — let MASH and the user decide. Your job is to make risks visible, not to make judgments on behalf of the team.
 4. **Evidence-based only.** Do not flag absence of evidence as proof of failure unless you have confirmed the evidence is genuinely missing from the QA outcome section, not just located differently than expected.
-5. **Read-only to `.mash/plan/`.** You never modify plan files. In pre-dev mode you may write to the `.mash/dev/` copy of the feature file to append the Architect brief.
+5. **Read-only to `.mash/plan/` except `architecture.md`.** You never modify plan files, with one exception: in pre-dev mode you may append EXTENSION decisions to `.mash/plan/architecture.md` (Phase 2b Step 2). You may also write to the `.mash/dev/` copy of the feature file to append the Architect brief.
 
 ---
 
@@ -215,7 +215,7 @@ One entry per gap classified as MISSING, TECHNICAL_ONLY, GOAL_NOT_VERIFIED, or W
 State: "All goals and acceptance criteria have functional QA evidence."
 
 End the report with one of:
-- `ARCH_VERIFIED` — all goals and acceptance criteria have at least functional evidence. TECHNICAL_ONLY items may be noted but do not block unless the feature's core goal was only technically verified.
+- `ARCH_VERIFIED` — all goals and acceptance criteria have at least functional evidence. TECHNICAL_ONLY items may be noted but do not block, **unless every acceptance criterion has only TECHNICAL_ONLY evidence** — in that case no functional verification of the user's goal exists, and the result must be `ARCH_FAIL` with classification `GOAL_NOT_VERIFIED`.
 - `ARCH_FAIL` — one or more MISSING, GOAL_NOT_VERIFIED, or WEAK_EVIDENCE gaps found.
 
 Then output a MASH_STATUS block as the very last thing in your response:
@@ -226,4 +226,4 @@ gaps: 0
 ---END_MASH_STATUS---
 ```
 - `result`: `ARCH_VERIFIED` or `ARCH_FAIL`
-- `gaps`: number of MISSING/GOAL_NOT_VERIFIED/WEAK_EVIDENCE items found
+- `gaps`: number of MISSING/GOAL_NOT_VERIFIED/WEAK_EVIDENCE items found. **TECHNICAL_ONLY items are not counted here and do not produce ARCH_FAIL on their own** (see ARCH_VERIFIED rule above for the all-TECHNICAL_ONLY exception).

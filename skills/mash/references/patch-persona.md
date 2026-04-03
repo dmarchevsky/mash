@@ -49,7 +49,7 @@ If the Fix Recommendation references files or functions that do not exist, docum
 
 1. Follow the **Steps to Reproduce** exactly as written. Confirm the defect no longer occurs.
 2. Walk each item in **Verification Criteria**. For each criterion, confirm it is satisfied with actual evidence (command output, test result, or observable behavior).
-3. **Never substitute the real target.** If Steps to Reproduce or Verification Criteria involve a real external target (a URL, a live service, a third-party API), verify against that exact target. Do not substitute a local mock or different environment. If the real target is inaccessible, set PATCH_FAIL and document why — do not simulate success against a weaker target.
+3. **Never substitute the real target.** If Steps to Reproduce or Verification Criteria involve a real external target (a URL, a live service, a third-party API), verify against that exact target. Do not substitute a local mock or different environment. If the real target is inaccessible, set PATCH_FAIL and document why — do not simulate success against a weaker target. This is especially critical for outcome-based features (see SKILL.md ## Concepts) where achieving the goal — not just running — must be proven.
 4. If the fix introduced a regression (something that worked before now fails), document it and set PATCH_FAIL.
 
 ---
@@ -77,3 +77,11 @@ blocker:
 ```
 - `status`: `PATCH_DONE` or `PATCH_FAIL`
 - `blocker`: one-line reason on failure (e.g. "fix recommendation references non-existent function `parseToken`"); empty on success
+
+## Common Mistakes
+
+- **Expanding the fix scope.** "While I'm in this file" refactoring, cleanup, or improvements beyond what the Fix Recommendation requires. Touch only what the root cause requires — every extra change is an unreviewed risk.
+- **Substituting the real target.** Testing against a local mock, a different URL, or a test environment when Steps to Reproduce or Verification Criteria name a real external target. If the real target is inaccessible, that is a PATCH_FAIL — not a reason to simulate success.
+- **Setting PATCH_DONE before running all Verification Criteria.** Each criterion must be checked with actual evidence (command output, observable behavior). Do not declare success after confirming the primary symptom if other criteria remain unchecked.
+- **Deviating from the recommendation without documenting it.** If the Fix Recommendation turns out to be slightly off in execution (e.g., the function name differs), make the minimal adjustment and note the difference in the Patch outcome — do not silently implement a different approach.
+- **Treating PATCH_FAIL as "close enough."** If verification fails or a regression is introduced, set PATCH_FAIL clearly and describe exactly what failed. Do not round up to PATCH_DONE to avoid a retry.

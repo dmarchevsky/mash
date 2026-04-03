@@ -32,9 +32,3 @@ title: <short title>
 
 ## Technical Notes
 <!-- Implementation hints, constraints, references -->
-
-## Dev outcome (attempt 1)
-<!-- Filled by dev-persona after implementation attempt. On retry, a new numbered section is appended. -->
-
-## QA outcome (attempt 1)
-<!-- Filled by qa-persona after verification. On retry, a new numbered section is appended. -->

@@ -27,6 +27,9 @@ The user invokes you with `mash [command] [features]` (e.g., `mash init`, `mash 
 `mash dev` — implement all non-DONE features through the full dev/QA cycle.
 `mash dev 1,3` — implement only the specified features (comma-separated IDs).
 
+### `plan <id>`
+`mash plan <id>` — redefine an existing feature spec, then reimplement it. Runs the plan persona in refinement mode for the specified feature (interactive, multi-turn), then immediately proceeds to the implementation loop. Does NOT stop between planning and implementation.
+
 ### `init`
 `mash init` — run GREET then INVOKE INIT, then stop.
 
@@ -38,6 +41,8 @@ The user invokes you with `mash [command] [features]` (e.g., `mash init`, `mash 
 
 ### `plan <description>`
 `mash plan build a site checker` — same as `plan` but passes the inline description to plan-persona as a pre-seeded starting point, skipping the "what do you want to build?" question.
+
+> **Note:** if the argument is a single integer (e.g. `mash plan 2`), it is treated as a feature ID — see `plan <id>` above. Otherwise it is interpreted as a text description.
 
 ### `config`
 `mash config` — display current MASH settings and allow the user to change them or reapply sub-agent permissions.
@@ -205,6 +210,31 @@ Read `skills/mash/references/plan-persona.md` and **execute its instructions dir
 If the user provided an inline description (e.g. `mash plan build a site checker`), pass it to plan-persona as the pre-seeded feature description. Plan-persona should skip asking "what do you want to build?" and begin Phase 1 with this description already in hand — treating it as the user's initial answer and proceeding directly to follow-up clarifying questions.
 
 **If command is `plan`, stop here.**
+
+### DEV PLAN FLOW
+
+**Only runs for `plan <id>` command** (where the argument is a single integer). Do NOT stop between planning and implementation.
+
+**Command routing**: When parsing the `plan` command, check if the argument is a single integer (e.g. `mash plan 2`). If so, run this flow instead of INVOKE PLAN.
+
+1. **GREET** and **CHECK INIT** as normal.
+2. **Validate**: Check `.mash/plan/features/feature-<id>.md` exists. If not, report error and stop.
+3. **Check progress.md**: feature `<id>` must have an entry. If missing, add it with status `CREATED`.
+4. Read `.mash/plan/features/feature-<id>.md`.
+5. **Run INVOKE PLAN (replan mode)**:
+   - Read `skills/mash/references/plan-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — plan requires multi-turn interaction with the user via AskUserQuestion.
+   - Before running, provide plan-persona with the following PARAMETERS in addition to standard context:
+     - `replan_mode: true`
+     - `feature_file: .mash/plan/features/feature-<id>.md`
+   - Plan-persona will update the existing feature file in place (not create a new one).
+6. **Sync dev file** after plan-persona completes:
+   - If `.mash/dev/feature-<id>.md` exists:
+     - Overwrite only the spec sections (Description, Acceptance Criteria, Verification Steps, Regression Tests, Technical Notes) with the updated content from the plan file.
+     - Preserve all `## Dev outcome (attempt N)` and `## QA outcome (attempt N)` sections exactly as they are.
+     - Set `status: DEV_READY` and `attempt: 0` in the frontmatter.
+   - If the dev file does not exist: do nothing — the IMPLEMENTATION LOOP will create it.
+7. **Set progress.md status to `WIP`**.
+8. **Proceed directly to IMPLEMENTATION LOOP** for feature `<id>`. Set the `reimplementation: true` flag (in memory, not in any file) so INVOKE ARCHITECT (pre-dev) receives the REIMPLEMENTATION CONTEXT block.
 
 ### INVOKE FIX
 
@@ -473,6 +503,13 @@ PARAMETERS:
 - feature_file: .mash/dev/<type>-<id>.md
 
 <If type=defect — append:>
+IMPORTANT — defect file structure:
+This is a defect file, not a feature file. When the qa-persona instructions reference feature sections, substitute as follows:
+- "Acceptance Criteria" → read "## Verification Criteria"
+- "Verification Steps" → read "## Steps to Reproduce" (the steps that trigger the defect, used to confirm it no longer occurs)
+- "Description" / feature goals → read "## Expected Behavior"
+The QA outcome section format and reporting rules are the same.
+
 IMPORTANT — test location for defects:
 Write all new tests for this defect under `tests/defects/defect-<id>/` (not alongside feature tests).
 This namespaces defect tests so they can be reviewed and cleaned up after the fix is confirmed.
@@ -532,7 +569,10 @@ Called with `<type>` (`feature` or `defect`) and `<id>`. Runs only if `branching
 
 - Check if `.mash/worktrees/<type>-<id>` already exists (stale from an interrupted run):
   - If both the directory and branch `mash/<type>-<id>` exist: skip creation and continue.
-  - If only one exists (mismatched state): warn the user and use AskUserQuestion to ask how to proceed before continuing.
+  - If only one exists (mismatched state): warn the user and use AskUserQuestion to ask how to proceed, offering:
+    - *Recreate the missing element* — create the missing worktree or branch to restore consistent state, then continue.
+    - *Proceed without the worktree* — treat this feature as `current_branch` for this run only.
+    - *Abort* — stop so the user can manually resolve the inconsistency.
 - Otherwise: create branch `mash/<type>-<id>` from the current branch, then create the worktree: `git worktree add .mash/worktrees/<type>-<id> mash/<type>-<id>`.
 
 ### WORKTREE CONTEXT TEMPLATES
@@ -557,10 +597,19 @@ WORKTREE CONTEXT:
 This <type> was implemented in an isolated git worktree.
 - worktree_path: .mash/worktrees/<type>-<id>
 - All source code inspection and test execution must use this path (e.g., .mash/worktrees/<type>-<id>/src/)
-- Write tests to the test directory within the worktree (e.g., .mash/worktrees/<type>-<id>/tests/) [for defects: to tests/defects/defect-<id>/ within the worktree]
+- Write tests to the test directory within the worktree, using the path defined in architecture.md (e.g. if architecture.md specifies `tests/`, write to `.mash/worktrees/<type>-<id>/tests/`) [for defects: to `tests/defects/defect-<id>/` within the worktree]
 - The <type> file (.mash/dev/<type>-<id>.md) and .mash/plan/ files remain in the main project directory — access them there as normal
 - Do NOT read or test src/ in the main project directory
 ```
+
+---
+
+## Concepts
+
+### Outcome-based feature
+A feature whose goal is a verifiable real-world result — not that the code runs, but that a specific observable outcome was achieved. Examples: data was retrieved from a live external API, a user successfully authenticated, a connection to a live service was established. For these features, "tool ran and returned output" is **not** success — the content of the result must prove the goal was actually achieved. A Cloudflare challenge page is not a bypass. An empty dataset is not a successful retrieval. Always ask: does the output prove the goal, or merely that the goal was attempted?
+
+This concept is referenced by plan-persona (outcome-proof gate), qa-persona (live outcome check), and patch-persona (real-target verification).
 
 ---
 

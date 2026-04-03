@@ -34,9 +34,3 @@ feature_ref: null
 <!-- 1-3 observable checks to confirm the fix -->
 - Steps to reproduce no longer produce the observed behavior
 -
-
-## Patch outcome (attempt 1)
-<!-- Filled by patch-persona: files changed, root cause confirmed or revised, how each criterion was met. On retry, a new numbered section is appended. -->
-
-## QA outcome (attempt 1)
-<!-- Filled by QA agent: test results, pass/fail per criterion. On retry, a new numbered section is appended. -->
