@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.4] — 2026-04-03
+
+### Fixed
+- **opencode `@mash` collision** — references and VERSION moved from `~/.config/opencode/agents/mash/` to `~/.config/opencode/mash/`. Having a directory named `mash/` alongside `agents/mash.md` caused opencode to resolve `@mash` to the directory file list instead of the agent.
+
 ## [0.6.3] — 2026-04-03
 
 ### Changed

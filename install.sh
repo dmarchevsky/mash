@@ -70,6 +70,8 @@ fi
 INSTALLED_VERSION=""
 if [ -f "$CLAUDE_HOME/skills/mash/VERSION" ]; then
   INSTALLED_VERSION="$(tr -d '[:space:]' < "$CLAUDE_HOME/skills/mash/VERSION")"
+elif [ -f "$OPENCODE_HOME/mash/VERSION" ]; then
+  INSTALLED_VERSION="$(tr -d '[:space:]' < "$OPENCODE_HOME/mash/VERSION")"
 elif [ -f "$OPENCODE_HOME/agents/mash/VERSION" ]; then
   INSTALLED_VERSION="$(tr -d '[:space:]' < "$OPENCODE_HOME/agents/mash/VERSION")"
 elif [ -f "$OPENCODE_HOME/skills/mash/VERSION" ]; then
@@ -203,9 +205,13 @@ if [ "$INSTALL_CLAUDE" = true ]; then
 fi
 
 if [ "$INSTALL_OPENCODE" = true ]; then
-  mkdir -p "$OPENCODE_HOME/agents/mash"
+  mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/mash"
 
-  # Migrate: remove legacy skills-based install if present
+  # Migrate: remove legacy installs if present
+  if [ -d "$OPENCODE_HOME/agents/mash" ]; then
+    rm -rf "$OPENCODE_HOME/agents/mash"
+    ok "Removed legacy $OPENCODE_HOME/agents/mash/"
+  fi
   if [ -d "$OPENCODE_HOME/skills/mash" ]; then
     rm -rf "$OPENCODE_HOME/skills/mash"
     ok "Removed legacy $OPENCODE_HOME/skills/mash/"
@@ -214,19 +220,19 @@ if [ "$INSTALL_OPENCODE" = true ]; then
   # Assemble agent file: agent frontmatter + main SKILL.md body with rewritten paths
   head -6 "$MASH_SRC/opencode-agents/mash/AGENT.md" > "$OPENCODE_HOME/agents/mash.md"
   tail -n +5 "$MASH_SRC/skills/mash/SKILL.md" \
-    | sed "s|skills/mash/references/|$OPENCODE_HOME/agents/mash/references/|g; s|skills/mash/VERSION|$OPENCODE_HOME/agents/mash/VERSION|g" \
+    | sed "s|skills/mash/references/|$OPENCODE_HOME/mash/references/|g; s|skills/mash/VERSION|$OPENCODE_HOME/mash/VERSION|g" \
     >> "$OPENCODE_HOME/agents/mash.md"
   ok "$OPENCODE_HOME/agents/mash.md"
 
-  # Install references with rewritten paths
-  cp -r "$MASH_SRC/skills/mash/references" "$OPENCODE_HOME/agents/mash/"
-  for f in "$OPENCODE_HOME/agents/mash/references/"*.md; do
-    sed -i "s|skills/mash/references/|$OPENCODE_HOME/agents/mash/references/|g" "$f"
+  # Install references with rewritten paths (in $OPENCODE_HOME/mash/ to avoid @mash collision)
+  cp -r "$MASH_SRC/skills/mash/references" "$OPENCODE_HOME/mash/"
+  for f in "$OPENCODE_HOME/mash/references/"*.md; do
+    sed -i "s|skills/mash/references/|$OPENCODE_HOME/mash/references/|g" "$f"
   done
-  ok "$OPENCODE_HOME/agents/mash/references/"
+  ok "$OPENCODE_HOME/mash/references/"
 
   if [ -f "$MASH_SRC/VERSION" ]; then
-    cp "$MASH_SRC/VERSION" "$OPENCODE_HOME/agents/mash/VERSION"
+    cp "$MASH_SRC/VERSION" "$OPENCODE_HOME/mash/VERSION"
     ok "VERSION (v$NEW_VERSION)"
   fi
 fi
