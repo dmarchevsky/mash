@@ -7,14 +7,14 @@ MASH is a framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-
 MASH uses seven specialized personas:
 
 ```
-  You ──► /mash init ──► Init Agent       → defines project scope & architecture
-       ──► /mash plan ──► Plan Agent      → turns ideas into detailed feature specs
-       ──► /mash dev  ──► Architect Agent → checks spec against architecture (pre-dev)
-                       ──► Dev Agent(s)   → implements features autonomously
-                       ──► QA Agent(s)    → writes and runs tests to verify
-                       ──► Architect Agent→ verifies QA evidence covers stated goals (post-qa)
-       ──► /mash fix  ──► Fix Agent       → collaborative debugging with the user
-                       ──► Patch Agent    → minimal-change fix implementation
+  You ──► mash init ──► Init Agent       → defines project scope & architecture
+       ──► mash plan ──► Plan Agent      → turns ideas into detailed feature specs
+       ──► mash dev  ──► Architect Agent → checks spec against architecture (pre-dev)
+                      ──► Dev Agent(s)   → implements features autonomously
+                      ──► QA Agent(s)    → writes and runs tests to verify
+                      ──► Architect Agent→ verifies QA evidence covers stated goals (post-qa)
+       ──► mash fix  ──► Fix Agent       → collaborative debugging with the user
+                      ──► Patch Agent    → minimal-change fix implementation
 ```
 
 **Init**, **Plan**, and **Fix** run interactively in your conversation, asking clarifying questions. **Dev**, **QA**, **Patch**, and **Architect** are spawned as isolated sub-agents that work autonomously within defined boundaries.
@@ -38,8 +38,6 @@ The installer detects which AI client(s) are available and installs MASH globall
 
 **Claude Code (global):**
 - `~/.claude/skills/mash/` — framework files (personas, templates, orchestrator)
-- `~/.claude/commands/mash.md` — registers `/mash` in every project
-
 **opencode (global):**
 - `~/.config/opencode/skills/mash/` — self-contained framework copy, auto-discovered
 
@@ -52,27 +50,27 @@ Existing files are preserved. The installer only adds scaffolding for directorie
 ## Quick Start
 
 ```
-/mash init          # Define your project, tech stack, and git workflow
-/mash plan          # Describe features — MASH asks questions, writes specs
-/mash dev           # Implement all ready features (dev + QA agents)
+mash init          # Define your project, tech stack, and git workflow
+mash plan          # Describe features — MASH asks questions, writes specs
+mash dev           # Implement all ready features (dev + QA agents)
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `/mash` | Show dashboard with feature status and next steps |
-| `/mash init` | Interactively define project scope, architecture, and settings |
-| `/mash init <filename>` | Interactively define project scope, architecture, and settings from existing project definition|
-| `/mash plan` or `/mash plan <desc>`| Create new feature specifications through guided conversation |
-| `/mash dev` | Implement and test all DEV_READY features |
-| `/mash dev 1,3` | Implement specific features by ID; if a feature is already DONE, offers reimplementation |
-| `/mash fix` | Debug a defect collaboratively, then patch and verify |
-| `/mash fix <id>` | Retry a previously logged defect by ID |
-| `/mash fix <desc>` | Debug with a pre-seeded description |
-| `/mash config` | View or change git settings and sub-agent permissions |
-| `/mash status` | Show current progress table |
-| `/mash update` | Check for and install framework updates |
+| `mash` | Show dashboard with feature status and next steps |
+| `mash init` | Interactively define project scope, architecture, and settings |
+| `mash init <filename>` | Same, but seeds the conversation from an existing project description file |
+| `mash plan` / `mash plan <desc>` | Create new feature specifications through guided conversation |
+| `mash dev` | Implement and test all DEV_READY features |
+| `mash dev 1,3` | Implement specific features by ID; if a feature is already DONE, offers reimplementation |
+| `mash fix` | Debug a defect collaboratively, then patch and verify |
+| `mash fix <id>` | Retry a previously logged defect by ID |
+| `mash fix <desc>` | Debug with a pre-seeded description |
+| `mash config` | View or change git settings and sub-agent permissions |
+| `mash status` | Show current progress table |
+| `mash update` | Check for and install framework updates |
 
 ## Architecture
 
@@ -120,7 +118,7 @@ Each spec includes a description, acceptance criteria, regression tests, and tec
 
 ### Git Workflow Options
 
-Configured during `/mash init` via `.mash/plan/settings.md`:
+Configured during `mash init` (saved to `.mash/plan/settings.md`):
 
 **Branching:**
 - `worktree` — each feature gets a `mash/feature-<id>` branch in a git worktree, merged on completion
@@ -132,25 +130,28 @@ Configured during `/mash init` via `.mash/plan/settings.md`:
 
 ### Project Structure
 
-**Claude Code install:**
+**Global (installed once, shared across all projects):**
+```
+~/.claude/
+└── skills/mash/                       # Claude Code skill
+    ├── SKILL.md                       #   Orchestrator
+    ├── VERSION
+    └── references/                    #   All personas and templates
+
+~/.config/opencode/
+└── skills/mash/                       # opencode skill (auto-discovered)
+    ├── SKILL.md
+    ├── VERSION
+    └── references/
+```
+
+**Per project:**
 ```
 your-project/
-├── .claude/                           # Claude Code integration
-│   ├── commands/mash.md               #   Command registration
-│   └── settings.local.json            #   Sub-agent permissions
-├── skills/
-│   └── mash/                          # Framework (managed by install/update)
-│       ├── SKILL.md                   #   Orchestrator
-│       ├── VERSION
-│       └── references/
-│           ├── init-persona.md
-│           ├── plan-persona.md
-│           ├── dev-persona.md
-│           ├── qa-persona.md
-│           ├── fix-persona.md
-│           ├── patch-persona.md
-│           ├── architect-persona.md
-│           └── templates/             #   Spec templates
+├── .claude/
+│   └── settings.local.json            # Sub-agent permissions (Claude Code)
+├── opencode.json                      # Sub-agent permissions (opencode)
+├── CLAUDE.md                          # MASH invocation instructions (injected)
 ├── .mash/
 │   ├── plan/                          # Source of truth (specs, architecture)
 │   │   ├── project.md
@@ -164,25 +165,10 @@ your-project/
 └── tests/                             # Test code (written by QA agents)
 ```
 
-**opencode install:**
-```
-your-project/
-├── .opencode/                         # opencode integration
-│   ├── skills/mash/                   #   Self-contained framework copy
-│   │   ├── SKILL.md                   #     Orchestrator
-│   │   ├── VERSION
-│   │   └── references/                #     All personas and templates
-│   └── commands/mash.md               #   Command registration
-├── opencode.json                      # opencode config & permissions
-├── .mash/                             # Same structure as Claude Code
-├── src/
-└── tests/
-```
-
 ## Updating
 
 ```
-/mash update
+mash update
 ```
 
 Or manually:

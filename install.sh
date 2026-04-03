@@ -150,6 +150,9 @@ if [ -d "$OLD_CLAUDE_SKILL" ] || [ -d "$OLD_OPENCODE_SKILL" ]; then
   [ -d "$TARGET_DIR/.opencode/commands" ] && rm -rf "$TARGET_DIR/.opencode/commands" && ok "Removed .opencode/commands/"
   [ -f "$TARGET_DIR/.claude/commands/mash.md" ] && rm -f "$TARGET_DIR/.claude/commands/mash.md" && ok "Removed .claude/commands/mash.md"
 
+  # Remove global command if installed by a previous version
+  [ -f "$CLAUDE_HOME/commands/mash.md" ] && rm -f "$CLAUDE_HOME/commands/mash.md" && ok "Removed ~/.claude/commands/mash.md"
+
   # Remove old gitignore entries
   GITIGNORE="$TARGET_DIR/.gitignore"
   if [ -f "$GITIGNORE" ]; then
@@ -190,11 +193,6 @@ if [ "$INSTALL_CLAUDE" = true ]; then
     sed -i "s|skills/mash/references/|$CLAUDE_HOME/skills/mash/references/|g" "$f"
   done
   ok "$CLAUDE_HOME/skills/mash/references/"
-
-  # Install global command (reads from global SKILL.md path)
-  mkdir -p "$CLAUDE_HOME/commands"
-  cp "$MASH_SRC/commands/mash.md" "$CLAUDE_HOME/commands/mash.md"
-  ok "$CLAUDE_HOME/commands/mash.md"
 
   if [ -f "$MASH_SRC/VERSION" ]; then
     cp "$MASH_SRC/VERSION" "$CLAUDE_HOME/skills/mash/VERSION"
@@ -267,6 +265,10 @@ This project uses the MASH framework for planning and implementation.
 - Working copies for implementation live in `.mash/dev/`.
 - `.mash/plan/progress.md` is the main status tracker.
 - The MASH skill (`~/.claude/skills/mash/SKILL.md`) manages planning and delegates implementation to isolated sub-agents via the Agent tool.
+
+## Invocation
+
+When the user says `mash [command]` (e.g. `mash init`, `mash dev 1,3`), read `~/.claude/skills/mash/SKILL.md` and follow its instructions exactly, passing through any arguments.
 
 ## Workflow
 
@@ -348,10 +350,10 @@ if [ -n "$INSTALLED_VERSION" ] && [ "$INSTALLED_VERSION" != "$NEW_VERSION" ]; th
 else
   printf '\n\033[1;32mMASH v%s installed successfully.\033[0m\n' "$NEW_VERSION"
   if [ "$INSTALL_CLAUDE" = true ] && [ "$INSTALL_OPENCODE" = true ]; then
-    printf 'Run \033[1m/mash init\033[0m in Claude Code or ask MASH to initialize your project in opencode.\n\n'
+    printf 'Run \033[1mmash init\033[0m in Claude Code or ask MASH to initialize your project in opencode.\n\n'
   elif [ "$INSTALL_OPENCODE" = true ]; then
     printf 'Ask MASH to initialize your project in opencode (e.g. "mash init").\n\n'
   else
-    printf 'Run \033[1m/mash init\033[0m in Claude Code to get started.\n\n'
+    printf 'Run \033[1mmash init\033[0m in Claude Code to get started.\n\n'
   fi
 fi

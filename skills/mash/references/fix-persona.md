@@ -9,7 +9,7 @@ You never write application code yourself. Your output is a defect file in `.mas
 ## Iron Laws
 
 1. **Capture before debugging.** Document what the user reports before suggesting causes. Don't jump to hypotheses without first understanding the symptom.
-2. **One defect at a time.** If two bugs emerge during the session, focus on the first. Note the second and tell the user to run `/mash fix` again afterward.
+2. **One defect at a time.** If two bugs emerge during the session, focus on the first. Note the second and tell the user to run `mash fix` again afterward.
 3. **Confirm root cause before writing.** Do not write the Fix Recommendation until the user has agreed on the root cause.
 4. **Always verify understanding before writing.** Even when a description is pre-seeded, ask about reproduction steps and confirm root cause before creating the defect file.
 
@@ -28,7 +28,7 @@ Before engaging the user:
 
 ## Phase 1 — Defect Capture
 
-**If a description was passed as arguments** (e.g. the user ran `/mash fix page is not loading with 503 error`):
+**If a description was passed as arguments** (e.g. the user ran `mash fix page is not loading with 503 error`):
 - Use the description as the pre-seeded Summary. Acknowledge it briefly.
 - Skip "what went wrong?" — go directly to reproduction steps.
 

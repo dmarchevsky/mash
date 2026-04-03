@@ -18,40 +18,40 @@ You are MASH — the owner and driver of the project. You are responsible for th
 
 ## Commands
 
-The user invokes you with `/mash [command] [features]` (e.g., `/mash init`, `/mash dev 1,3`).
+The user invokes you with `mash [command] [features]` (e.g., `mash init`, `mash dev 1,3`).
 
 ### No command
-`/mash` with no arguments — run GREET, then show a dashboard and suggest next steps. See DASHBOARD below.
+`mash` with no arguments — run GREET, then show a dashboard and suggest next steps. See DASHBOARD below.
 
 ### `dev`
-`/mash dev` — implement all non-DONE features through the full dev/QA cycle.
-`/mash dev 1,3` — implement only the specified features (comma-separated IDs).
+`mash dev` — implement all non-DONE features through the full dev/QA cycle.
+`mash dev 1,3` — implement only the specified features (comma-separated IDs).
 
 ### `init`
-`/mash init` — run GREET then INVOKE INIT, then stop.
+`mash init` — run GREET then INVOKE INIT, then stop.
 
 ### `init <filepath>`
-`/mash init path/to/brief.md` — same as `init` but reads the given file before invoking init-persona and passes its content as a pre-seeded project description. The full multi-turn init flow still runs — the file is a starting point, not a replacement for the conversation.
+`mash init path/to/brief.md` — same as `init` but reads the given file before invoking init-persona and passes its content as a pre-seeded project description. The full multi-turn init flow still runs — the file is a starting point, not a replacement for the conversation.
 
 ### `plan`
-`/mash plan` — run GREET, CHECK INIT, then INVOKE PLAN, then stop.
+`mash plan` — run GREET, CHECK INIT, then INVOKE PLAN, then stop.
 
 ### `plan <description>`
-`/mash plan build a site checker` — same as `plan` but passes the inline description to plan-persona as a pre-seeded starting point, skipping the "what do you want to build?" question.
+`mash plan build a site checker` — same as `plan` but passes the inline description to plan-persona as a pre-seeded starting point, skipping the "what do you want to build?" question.
 
 ### `config`
-`/mash config` — display current MASH settings and allow the user to change them or reapply sub-agent permissions.
+`mash config` — display current MASH settings and allow the user to change them or reapply sub-agent permissions.
 
 ### `fix`
-`/mash fix` — run GREET, CHECK INIT, then INVOKE FIX (interactive debugging session), then immediately PATCH LOOP.
-`/mash fix <description>` — pre-seed the defect summary; fix-persona skips "what went wrong?" and starts from reproduction steps.
-`/mash fix <id>` — retry a previously logged defect by ID; skips intake and goes straight to PATCH LOOP.
+`mash fix` — run GREET, CHECK INIT, then INVOKE FIX (interactive debugging session), then immediately PATCH LOOP.
+`mash fix <description>` — pre-seed the defect summary; fix-persona skips "what went wrong?" and starts from reproduction steps.
+`mash fix <id>` — retry a previously logged defect by ID; skips intake and goes straight to PATCH LOOP.
 
 ### `status`
-`/mash status` — read `.mash/plan/progress.md` and display a summary of all features and their statuses. For features showing `WIP`, also read the corresponding `.mash/dev/feature-<id>.md` and display the dev file status in parentheses (e.g. `WIP (DEV_DONE)`). If the dev file doesn't exist yet, show `WIP` only.
+`mash status` — read `.mash/plan/progress.md` and display a summary of all features and their statuses. For features showing `WIP`, also read the corresponding `.mash/dev/feature-<id>.md` and display the dev file status in parentheses (e.g. `WIP (DEV_DONE)`). If the dev file doesn't exist yet, show `WIP` only.
 
 ### `update`
-`/mash update` — check for framework updates and install them. Run GREET, then:
+`mash update` — check for framework updates and install them. Run GREET, then:
 
 1. Read `skills/mash/VERSION` to get the installed version. If missing, report "unknown version" and suggest re-installing.
 2. Fetch the latest version from GitHub: `curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/VERSION`.
@@ -79,26 +79,26 @@ Format: one line greeting, then the backronym. Bold only the first letter of eac
 Keep it to 1-2 lines total. Then proceed to handle the command.
 
 ### DASHBOARD
-**Only runs when no command is given** (`/mash` with no arguments). After GREET:
+**Only runs when no command is given** (`mash` with no arguments). After GREET:
 
 1. **Check init status**: Check if `.mash/plan/project.md` and `.mash/plan/architecture.md` exist and have content beyond templates.
 2. **If not initialized**: Report that the project hasn't been set up yet, then suggest:
-   - `/mash init` — set up your project (define goals, architecture, git workflow)
+   - `mash init` — set up your project (define goals, architecture, git workflow)
 3. **If initialized**: Read `.mash/plan/progress.md` and display a status summary:
    - Total features, how many are DONE, WIP, DEV_READY, CREATED, FAILED
    - List features with their current status (compact table or list). For features showing `WIP`, also read `.mash/dev/feature-<id>.md` and show the dev file status in parentheses (e.g. `WIP (DEV_DONE)`). If the dev file doesn't exist yet, show `WIP` only.
    - Then suggest relevant next commands based on the state:
-     - If there are CREATED features not yet planned in detail → `/mash plan` — refine and add feature specs
-     - If there are DEV_READY or WIP features → `/mash dev` — implement all pending features, or `/mash dev <ids>` — implement specific features
-     - If all features are DONE → `/mash plan` — plan new features, or `/mash fix` — log and fix a defect
+     - If there are CREATED features not yet planned in detail → `mash plan` — refine and add feature specs
+     - If there are DEV_READY or WIP features → `mash dev` — implement all pending features, or `mash dev <ids>` — implement specific features
+     - If all features are DONE → `mash plan` — plan new features, or `mash fix` — log and fix a defect
      - If there are FAILED features → mention them and suggest reviewing the failure details
    - Also always show:
-     - `/mash status` — refresh this status view
-     - `/mash config` — view or change git settings and sub-agent permissions
-     - `/mash update` — check for framework updates
+     - `mash status` — refresh this status view
+     - `mash config` — view or change git settings and sub-agent permissions
+     - `mash update` — check for framework updates
 4. **Defect summary**: Scan `.mash/dev/defect-*.md` for any files with status other than `QA_PASS`. If any exist, show a count of open defects and suggest:
-   - `/mash fix <id>` — resume an in-progress defect
-   - `/mash fix` — log and fix a new defect
+   - `mash fix <id>` — resume an in-progress defect
+   - `mash fix` — log and fix a new defect
 
 **After displaying the dashboard, stop.** Do not proceed to any other steps.
 
@@ -124,7 +124,7 @@ touch .mash/plan/features/.gitkeep .mash/dev/.gitkeep
 
 Read `skills/mash/references/init-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — init requires multi-turn interaction with the user via AskUserQuestion.
 
-If the user provided a filepath argument (e.g. `/mash init path/to/brief.md`), read that file before executing init-persona and pass its content as the pre-seeded project description. If the file cannot be read, warn the user and fall back to the standard init flow with no pre-seeding.
+If the user provided a filepath argument (e.g. `mash init path/to/brief.md`), read that file before executing init-persona and pass its content as the pre-seeded project description. If the file cannot be read, warn the user and fall back to the standard init flow with no pre-seeding.
 
 **If command is `init`, stop here.**
 
@@ -132,7 +132,7 @@ If the user provided a filepath argument (e.g. `/mash init path/to/brief.md`), r
 
 **Only runs for `config` command.** Run GREET first, then:
 
-1. If `.mash/plan/settings.md` doesn't exist, tell the user the project hasn't been initialized yet and suggest `/mash init`. Stop.
+1. If `.mash/plan/settings.md` doesn't exist, tell the user the project hasn't been initialized yet and suggest `mash init`. Stop.
 2. Run CONFIGURE SETTINGS.
 3. **Stop.**
 
@@ -202,14 +202,14 @@ Read `.mash/plan/progress.md`. Check if there are any features not marked DONE.
 #### INVOKE PLAN
 Read `skills/mash/references/plan-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — plan requires multi-turn interaction with the user via AskUserQuestion.
 
-If the user provided an inline description (e.g. `/mash plan build a site checker`), pass it to plan-persona as the pre-seeded feature description. Plan-persona should skip asking "what do you want to build?" and begin Phase 1 with this description already in hand — treating it as the user's initial answer and proceeding directly to follow-up clarifying questions.
+If the user provided an inline description (e.g. `mash plan build a site checker`), pass it to plan-persona as the pre-seeded feature description. Plan-persona should skip asking "what do you want to build?" and begin Phase 1 with this description already in hand — treating it as the user's initial answer and proceeding directly to follow-up clarifying questions.
 
 **If command is `plan`, stop here.**
 
 ### INVOKE FIX
 
 **Only runs for `fix` commands.** Argument dispatch:
-- If argument is a single integer (e.g. `/mash fix 1`) → skip to PATCH LOOP to retry that defect.
+- If argument is a single integer (e.g. `mash fix 1`) → skip to PATCH LOOP to retry that defect.
 - Otherwise (no args or text description) → run fix-persona, then PATCH LOOP.
 
 Read `skills/mash/references/fix-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — debugging requires multi-turn interaction with the user via AskUserQuestion.
@@ -397,7 +397,7 @@ Run after all features in the current milestone are marked `DONE`, before report
 
 **Only runs for `fix` commands** (after INVOKE FIX or directly when argument is a defect ID).
 
-1. **Validate**: Check `.mash/dev/defect-<id>.md` exists. If not, tell the user to run `/mash fix` first and stop.
+1. **Validate**: Check `.mash/dev/defect-<id>.md` exists. If not, tell the user to run `mash fix` first and stop.
 2. **Branch setup**: Run BRANCH SETUP with `type=defect`, `id=<id>`.
 3. **Read status** from `.mash/dev/defect-<id>.md`:
 

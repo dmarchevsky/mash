@@ -24,7 +24,7 @@ When MASH passes a pre-seeded project description (read from the user's filepath
 
 - **Phase 2 — Project**: Do not ask the user to describe the project from scratch. Present the file content as a draft: *"I've read `<filename>` — here's my understanding of what you're building: [brief summary]. Does this capture it, or should I adjust anything?"* Then continue with all standard Phase 2 questions (goals, non-goals, users, success criteria) — the file seeds the starting point, it does not replace the conversation.
 - **Phase 3 — Architecture**: If the file mentions technologies, frameworks, platforms, or constraints, surface those as suggested defaults alongside auto-detected stack information. Present them as *"Your brief mentioned X — shall we go with that?"* and require explicit confirmation before adopting. Do not silently inherit technical decisions from the file.
-- **Phase 4 — Scaffolding**: After creating the standard scaffolding files, scan the brief file for feature mentions — any list of features, user stories, "Features" section, or itemized capabilities. For each detected feature, create a skeleton file in `.mash/plan/features/` using the feature template, filling in the title and Description from the brief excerpt. Add a CREATED entry for each to `progress.md`. Tell the user: *"I found N features in your brief and created draft specs for each. Run `/mash plan <id>` to flesh them out."* If no features are detected, skip this step.
+- **Phase 4 — Scaffolding**: After creating the standard scaffolding files, scan the brief file for feature mentions — any list of features, user stories, "Features" section, or itemized capabilities. For each detected feature, create a skeleton file in `.mash/plan/features/` using the feature template, filling in the title and Description from the brief excerpt. Add a CREATED entry for each to `progress.md`. Tell the user: *"I found N features in your brief and created draft specs for each. Run `mash plan <id>` to flesh them out."* If no features are detected, skip this step.
 - **The file is a draft, not a spec.** Even if the file is detailed, treat every claim as a starting point for discussion. Nothing from the file is final until the user confirms it.
 
 ## Init Flow
@@ -52,7 +52,7 @@ Set up git and permissions for sub-agents before starting the project definition
 Run `git rev-parse --is-inside-work-tree` to check if git is initialized in this directory.
 
 **If git is NOT initialized:** Use AskUserQuestion to ask the user whether they want to use git for this project.
-- If **yes**: Stop. Tell the user to run `git init` (or clone a repo) first, then re-run `/mash init`.
+- If **yes**: Stop. Tell the user to run `git init` (or clone a repo) first, then re-run `mash init`.
 - If **no**: Write `.mash/plan/settings.md` with `git: none` (leave `branching` and `commit` blank).
 
 **If git IS initialized:** proceed.
@@ -116,7 +116,7 @@ Now that the project is defined, make technical decisions informed by its goals 
    - Assign a sequential ID (1, 2, 3, …).
    - Create `.mash/plan/features/<id>-<slug>.md` using the feature template, filling in `id`, `title`, and `Description` from the brief excerpt. Leave all other sections as template placeholders.
    - Add a CREATED row for it in `progress.md`.
-   After creating all stubs, tell the user how many were created and suggest: *"Run `/mash plan <id>` to flesh out each one."* If no features are detected in the file, skip this step silently.
+   After creating all stubs, tell the user how many were created and suggest: *"Run `mash plan <id>` to flesh out each one."* If no features are detected in the file, skip this step silently.
 6. Confirm initialization is complete.
 
 ## Tone
