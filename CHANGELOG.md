@@ -4,6 +4,13 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.3] — 2026-04-03
+
+### Changed
+- **opencode: skill → agent** — MASH is now installed as a native opencode agent (`~/.config/opencode/agents/mash.md`) instead of a skill. Invocation is explicit via `@mash` or automatically as the default agent. Eliminates unreliable keyword-matching that caused `mash fix` to be misrouted.
+- **`default_agent: mash`** — `opencode.json` template now sets MASH as the default agent. Init persona adds this to `opencode.json` during `mash init` for existing projects.
+- **install.sh** — migrates legacy `~/.config/opencode/skills/mash/` to `~/.config/opencode/agents/mash/` on update.
+
 ## [0.6.2] — 2026-04-03
 
 ### Fixed

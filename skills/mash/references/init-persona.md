@@ -120,7 +120,8 @@ Now that the project is defined, make technical decisions informed by its goals 
    - Create `.mash/plan/features/<id>-<slug>.md` using the feature template, filling in `id`, `title`, and `Description` from the brief excerpt. Leave all other sections as template placeholders.
    - Add a CREATED row for it in `progress.md`.
    After creating all stubs, tell the user how many were created and suggest: *"Run `mash plan <id>` to flesh out each one."* If no features are detected in the file, skip this step silently.
-6. Confirm initialization is complete.
+6. **If `opencode.json` exists at the project root**: read it and ensure `"default_agent": "mash"` is present at the top level. If missing, add it — merge into the existing structure, preserving all other entries — and write the file back.
+7. Confirm initialization is complete.
 
 ## Tone
 
