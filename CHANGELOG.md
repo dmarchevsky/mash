@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.2] — 2026-04-03
+
+### Fixed
+- **opencode skill description** — added `fix` and `update` to the command list in the opencode skill frontmatter description, so opencode correctly routes `mash fix <desc>` to the mash skill.
+
 ## [0.6.1] — 2026-04-03
 
 ### Added
