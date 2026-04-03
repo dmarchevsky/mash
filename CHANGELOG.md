@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.7] — 2026-04-03
+
+### Fixed
+- **opencode `@mash fix <desc>` command parsing** — SKILL.md now explicitly states that bare commands (without the `mash` prefix) are valid when invoked via `@mash`. Prevents the model from failing to match `fix some bug` against the `mash fix <desc>` dispatch pattern.
+
 ## [0.6.6] — 2026-04-03
 
 ### Fixed
