@@ -338,9 +338,10 @@ Read these files before starting:
 
 After the agent returns, read the `---MASH_STATUS---` block in the agent output (`result` field). If the block is absent, scan the report text for `ARCH_APPROVED` or `ARCH_FAIL`.
 - **If ARCH_APPROVED**: proceed to INVOKE DEV immediately.
-- **If ARCH_FAIL**: present the specific CONFLICT items to the user via AskUserQuestion with three options:
+- **If ARCH_FAIL**: present the specific CONFLICT items (including each item's proposed architecture.md edit) to the user via AskUserQuestion with four options:
   - *Proceed to dev anyway* — implement as spec'd; architect concerns noted but not blocking.
   - *Update feature spec now* — pause the loop, allow the user to direct changes to `.mash/plan/features/feature-<id>.md`, copy updates to `.mash/dev/feature-<id>.md`, then re-run INVOKE ARCHITECT (pre-dev) before proceeding.
+  - *Update architecture.md* — apply the architect's proposed edit(s) to `.mash/plan/architecture.md`, then re-run INVOKE ARCHITECT (pre-dev). If the re-run returns ARCH_APPROVED, proceed to dev. If it returns ARCH_FAIL again, present this set of options again for any remaining conflicts.
   - *Skip this feature* — set status to FAILED in progress.md and move to the next feature.
 
 ### INVOKE ARCHITECT (post-qa)

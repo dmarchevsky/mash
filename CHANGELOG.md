@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [0.6.0] — 2026-04-03
 
+### Added
+- **Architect dev brief** — architect (pre-dev) now writes an `## Architect brief` section to the `.mash/dev/` feature file: implementation directives, extension guidance, and gap resolutions. Dev reads this as binding guidance before writing code.
+- **Architect updates architecture.md for extensions** — EXTENSION items (new patterns not yet documented) are written directly to `architecture.md` by the architect before dev starts, so the decision is established and visible to future features.
+- **Architect proposes architecture.md edits for conflicts** — for each CONFLICT, architect produces a proposed `architecture.md` edit alongside the conflict description.
+- **MASH ARCH_FAIL: Update architecture.md option** — ARCH_FAIL user prompt gains a 4th option: apply the architect's proposed edit to `architecture.md` and re-run the pre-dev check.
+
 ### Changed
 - **Global installation** — MASH skill files are now installed globally instead of per-project. Claude Code skill lives in `~/.claude/skills/mash/`; opencode skill in `~/.config/opencode/skills/mash/` (auto-discovered). The `/mash` command is registered globally at `~/.claude/commands/mash.md`. Projects no longer contain `skills/mash/` or `.opencode/` directories.
 - **Migration support** — installer automatically detects and cleans up old local installations (`skills/mash/`, `.opencode/skills/`, `.opencode/commands/`, `.claude/commands/mash.md`) before installing globally.

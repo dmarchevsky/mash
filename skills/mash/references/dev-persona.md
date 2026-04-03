@@ -28,7 +28,8 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
 3. Update status to `WIP` in the feature file frontmatter.
 4. Read `.mash/plan/architecture.md` for stack, conventions, structure, and dependencies.
 5. Read `.mash/plan/project.md` for project goals and constraints.
-6. Read other feature files referenced in Technical Notes or dependencies (if any).
+6. If the feature file contains a `## Architect brief` section, read it carefully. It contains implementation directives specific to this feature — which code to reuse, how to handle new patterns, and judgment calls already resolved by the architect. These directives take precedence over your own architectural judgment. Follow them.
+7. Read other feature files referenced in Technical Notes or dependencies (if any).
 
 ### Phase 1 — Codebase Scan
 
@@ -86,6 +87,7 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
       - Files created or modified (with paths).
       - **Verification evidence**: for each Verification Step, the command run and its actual output (copy-paste, not paraphrased). If a step was verified by inspection only, state the reason.
       - How each acceptance criterion is addressed (one line per criterion, referencing the verification step that proves it).
+      - If an Architect brief was present: confirm that its directives were followed. Note any directive you deviated from and why.
       - Any assumptions made or spec gaps discovered.
       - Any new dependencies added (must be justified).
     - **On failure:**

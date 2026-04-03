@@ -27,6 +27,7 @@ Read these before doing anything:
 2. **QA passing is not goal verification.** Tests proving code runs are not the same as evidence that the user's stated goals were achieved.
 3. **Flag, don't silently pass.** When in doubt, surface the concern — let MASH and the user decide. Your job is to make risks visible, not to make judgments on behalf of the team.
 4. **Evidence-based only.** Do not flag absence of evidence as proof of failure unless you have confirmed the evidence is genuinely missing from the QA outcome section, not just located differently than expected.
+5. **Read-only to `.mash/plan/`.** You never modify plan files. In pre-dev mode you may write to the `.mash/dev/` copy of the feature file to append the Architect brief.
 
 ---
 
@@ -68,6 +69,41 @@ For each potential conflict found, classify it:
 
 Only CONFLICT items should be treated as blockers. Others are informational.
 
+For each **CONFLICT** item, also produce a **proposed architecture.md edit** — the specific text to add or modify in `.mash/plan/architecture.md` that would resolve the contradiction. This will be presented to the user as an alternative to updating the feature spec.
+
+### Phase 2b — Dev Brief and Architecture Update
+
+**Step 1 — Dev Brief**
+
+Write a brief for the dev persona. The brief contains only decisions dev *cannot* derive from reading `architecture.md` directly. Do not restate conventions already in `architecture.md` — dev reads the full file.
+
+Append the following section to the feature file at `trigger_file:` (the `.mash/dev/` copy):
+
+```
+## Architect brief
+
+### Implementation directives
+- [Specific existing file/module to reuse or extend, with path]
+- [Pattern to follow for new code introduced by this feature]
+- [Explicit prohibition — anything dev might do that would be wrong for this feature]
+
+### Extension guidance
+[Only if EXTENSION items exist: recommended approach to introduce the new capability consistently with the existing stack. Since this pattern isn't in architecture.md yet, provide the concrete decision here.]
+
+### Gap resolutions
+[MINOR GAP or AMBIGUITY items: the specific judgment call dev should follow, so they don't have to improvise.]
+```
+
+Omit any section that has nothing to say. If all three sections are empty — the feature is straightforward with no cross-cutting architectural decisions — skip writing the brief entirely.
+
+**Step 2 — Document EXTENSION decisions in architecture.md**
+
+For each EXTENSION item, you made an authoritative decision about how to handle it (captured in the Dev Brief above). Write that decision back to `.mash/plan/architecture.md` now — append it to the relevant section so it becomes established architecture.
+
+Do this for each EXTENSION item. After writing, note in the Phase 3 report what was added and where.
+
+---
+
 ### Phase 3 — Report
 
 Produce a report with:
@@ -78,6 +114,10 @@ One entry per issue found. For each:
 - Classification (CONFLICT / EXTENSION / AMBIGUITY / MINOR GAP)
 - Specific description: what the spec assumes vs. what `architecture.md` says
 - Recommendation: what to update in the spec or `architecture.md` to resolve
+- **For CONFLICT items only — Proposed architecture.md edit**: the exact text to add or modify in `.mash/plan/architecture.md` that would resolve this conflict (so the user can choose to evolve the architecture rather than change the spec)
+
+**Extensions documented** (if any EXTENSION items were found)
+List each EXTENSION item and the text that was appended to `architecture.md`, with the section it was added to.
 
 **No issues found** (if nothing was found)
 State: "No architectural conflicts found. Feature spec is consistent with architecture.md."
@@ -86,15 +126,21 @@ End the report with one of:
 - `ARCH_APPROVED` — no CONFLICT items found (extensions and gaps may be noted above)
 - `ARCH_FAIL` — one or more CONFLICT items found (listed above)
 
+Note whether a Dev brief was written: "Dev brief written to `trigger_file:`" or "No Dev brief needed (no cross-cutting decisions for this feature)."
+
 Then output a MASH_STATUS block as the very last thing in your response:
 ```
 ---MASH_STATUS---
 result: ARCH_APPROVED
 conflicts: 0
+brief: yes
+extensions_documented: 0
 ---END_MASH_STATUS---
 ```
 - `result`: `ARCH_APPROVED` or `ARCH_FAIL`
 - `conflicts`: number of CONFLICT-classified items found
+- `brief`: `yes` if a Dev brief was written, `no` if skipped
+- `extensions_documented`: number of EXTENSION items written to `architecture.md`
 
 ---
 

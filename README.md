@@ -43,7 +43,6 @@ The installer detects which AI client(s) are available and installs MASH globall
 
 **Per project:**
 - `.mash/plan/` — where specs and feature definitions live
-- `opencode.json` — sub-agent permissions (opencode only)
 
 Existing files are preserved. The installer only adds scaffolding for directories that don't exist yet. Running it in subsequent projects skips the global install if already up to date.
 
@@ -109,8 +108,6 @@ Features are tracked in `.mash/plan/progress.md` and defined as individual spec 
 ---
 id: 1
 title: User Authentication
-status: CREATED
-attempt: 0
 ---
 ```
 
