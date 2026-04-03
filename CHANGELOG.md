@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.6] — 2026-04-03
+
+### Fixed
+- **opencode agent `ProviderModelNotFoundError`** — removed `model: inherit` from agent frontmatter; `inherit` did not resolve when opencode spawned sub-agents from within the MASH agent context, causing the fix/dev flows to fail immediately.
+
 ## [0.6.5] — 2026-04-03
 
 ### Fixed
