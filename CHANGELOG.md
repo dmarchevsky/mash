@@ -4,6 +4,14 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.0] — 2026-04-03
+
+### Changed
+- **Global installation** — MASH skill files are now installed globally instead of per-project. Claude Code skill lives in `~/.claude/skills/mash/`; opencode skill in `~/.config/opencode/skills/mash/` (auto-discovered). The `/mash` command is registered globally at `~/.claude/commands/mash.md`. Projects no longer contain `skills/mash/` or `.opencode/` directories.
+- **Migration support** — installer automatically detects and cleans up old local installations (`skills/mash/`, `.opencode/skills/`, `.opencode/commands/`, `.claude/commands/mash.md`) before installing globally.
+- **opencode.json simplified** — now contains permissions only; skills path config removed (opencode auto-discovers from global `~/.config/opencode/skills/`).
+- **Init bootstraps scaffolding** — `/mash init` now creates `.mash/` directory structure if missing, enabling use in fresh projects without running the installer first.
+
 ## [0.5.0] — 2026-04-02
 
 ### Added

@@ -13,6 +13,8 @@ MARKER_START="<!-- MASH -->"
 MARKER_END="<!-- /MASH -->"
 
 TARGET_DIR="$PWD"
+CLAUDE_HOME="${HOME}/.claude"
+OPENCODE_HOME="${HOME}/.config/opencode"
 FORCE=false
 FLAG_CLAUDE=false
 FLAG_OPENCODE=false
@@ -66,10 +68,10 @@ if [ -f "$MASH_SRC/VERSION" ]; then
 fi
 
 INSTALLED_VERSION=""
-if [ -f "$TARGET_DIR/skills/mash/VERSION" ]; then
-  INSTALLED_VERSION="$(tr -d '[:space:]' < "$TARGET_DIR/skills/mash/VERSION")"
-elif [ -f "$TARGET_DIR/.opencode/skills/mash/VERSION" ]; then
-  INSTALLED_VERSION="$(tr -d '[:space:]' < "$TARGET_DIR/.opencode/skills/mash/VERSION")"
+if [ -f "$CLAUDE_HOME/skills/mash/VERSION" ]; then
+  INSTALLED_VERSION="$(tr -d '[:space:]' < "$CLAUDE_HOME/skills/mash/VERSION")"
+elif [ -f "$OPENCODE_HOME/skills/mash/VERSION" ]; then
+  INSTALLED_VERSION="$(tr -d '[:space:]' < "$OPENCODE_HOME/skills/mash/VERSION")"
 fi
 
 if [ -n "$INSTALLED_VERSION" ]; then
@@ -134,55 +136,91 @@ else
   die "Neither 'claude' nor 'opencode' found in PATH. Install one of them first."
 fi
 
-# --- Step 4: Copy framework files (always overwrite) ---
+# --- Step 3c: Migrate from local to global installation ---
+
+OLD_CLAUDE_SKILL="$TARGET_DIR/skills/mash"
+OLD_OPENCODE_SKILL="$TARGET_DIR/.opencode/skills/mash"
+
+if [ -d "$OLD_CLAUDE_SKILL" ] || [ -d "$OLD_OPENCODE_SKILL" ]; then
+  warn "Migrating from local to global installation..."
+
+  # Remove local skill directories
+  [ -d "$TARGET_DIR/skills" ] && rm -rf "$TARGET_DIR/skills" && ok "Removed skills/"
+  [ -d "$TARGET_DIR/.opencode/skills" ] && rm -rf "$TARGET_DIR/.opencode/skills" && ok "Removed .opencode/skills/"
+  [ -d "$TARGET_DIR/.opencode/commands" ] && rm -rf "$TARGET_DIR/.opencode/commands" && ok "Removed .opencode/commands/"
+  [ -f "$TARGET_DIR/.claude/commands/mash.md" ] && rm -f "$TARGET_DIR/.claude/commands/mash.md" && ok "Removed .claude/commands/mash.md"
+
+  # Remove old gitignore entries
+  GITIGNORE="$TARGET_DIR/.gitignore"
+  if [ -f "$GITIGNORE" ]; then
+    sed -i '/^skills\/mash\/$/d; /^\.opencode\/$/d' "$GITIGNORE" 2>/dev/null || true
+    ok "Cleaned .gitignore"
+  fi
+
+  # Remove skills.paths from opencode.json if present
+  if [ -f "$TARGET_DIR/opencode.json" ]; then
+    if command -v node &>/dev/null; then
+      node -e "
+        const f='$TARGET_DIR/opencode.json';
+        const j=JSON.parse(require('fs').readFileSync(f,'utf8'));
+        delete j.skills;
+        require('fs').writeFileSync(f,JSON.stringify(j,null,2)+'\n');
+      " 2>/dev/null && ok "Removed skills path from opencode.json" || true
+    fi
+  fi
+
+  ok "Local install cleaned up — continuing with global install"
+fi
+
+# --- Step 4: Install framework files globally ---
 
 info "Installing framework files..."
 
 if [ "$INSTALL_CLAUDE" = true ]; then
-  mkdir -p "$TARGET_DIR/skills/mash"
-  cp -r "$MASH_SRC/skills/mash/." "$TARGET_DIR/skills/mash/"
-  ok "skills/mash/"
+  mkdir -p "$CLAUDE_HOME/skills/mash"
 
-  mkdir -p "$TARGET_DIR/.claude/commands"
-  cp "$MASH_SRC/commands/mash.md" "$TARGET_DIR/.claude/commands/mash.md"
-  ok ".claude/commands/mash.md"
+  # Install SKILL.md with rewritten paths (skills/mash/references/ → absolute)
+  sed "s|skills/mash/references/|$CLAUDE_HOME/skills/mash/references/|g; s|skills/mash/VERSION|$CLAUDE_HOME/skills/mash/VERSION|g" \
+    "$MASH_SRC/skills/mash/SKILL.md" > "$CLAUDE_HOME/skills/mash/SKILL.md"
+  ok "$CLAUDE_HOME/skills/mash/SKILL.md"
+
+  # Install references with rewritten paths
+  cp -r "$MASH_SRC/skills/mash/references" "$CLAUDE_HOME/skills/mash/"
+  for f in "$CLAUDE_HOME/skills/mash/references/"*.md; do
+    sed -i "s|skills/mash/references/|$CLAUDE_HOME/skills/mash/references/|g" "$f"
+  done
+  ok "$CLAUDE_HOME/skills/mash/references/"
+
+  # Install global command (reads from global SKILL.md path)
+  mkdir -p "$CLAUDE_HOME/commands"
+  cp "$MASH_SRC/commands/mash.md" "$CLAUDE_HOME/commands/mash.md"
+  ok "$CLAUDE_HOME/commands/mash.md"
 
   if [ -f "$MASH_SRC/VERSION" ]; then
-    cp "$MASH_SRC/VERSION" "$TARGET_DIR/skills/mash/VERSION"
+    cp "$MASH_SRC/VERSION" "$CLAUDE_HOME/skills/mash/VERSION"
     ok "VERSION (v$NEW_VERSION)"
   fi
 fi
 
 if [ "$INSTALL_OPENCODE" = true ]; then
+  mkdir -p "$OPENCODE_HOME/skills/mash"
+
   # Inline full skill content: opencode frontmatter + main SKILL.md body with rewritten paths
-  mkdir -p "$TARGET_DIR/.opencode/skills/mash"
-  head -4 "$MASH_SRC/opencode-skills/mash/SKILL.md" > "$TARGET_DIR/.opencode/skills/mash/SKILL.md"
+  head -4 "$MASH_SRC/opencode-skills/mash/SKILL.md" > "$OPENCODE_HOME/skills/mash/SKILL.md"
   tail -n +5 "$MASH_SRC/skills/mash/SKILL.md" \
-    | sed 's|skills/mash/references/|.opencode/skills/mash/references/|g' \
-    >> "$TARGET_DIR/.opencode/skills/mash/SKILL.md"
-  ok ".opencode/skills/mash/SKILL.md"
+    | sed "s|skills/mash/references/|$OPENCODE_HOME/skills/mash/references/|g; s|skills/mash/VERSION|$OPENCODE_HOME/skills/mash/VERSION|g" \
+    >> "$OPENCODE_HOME/skills/mash/SKILL.md"
+  ok "$OPENCODE_HOME/skills/mash/SKILL.md"
 
-  # Copy references and rewrite internal paths
-  cp -r "$MASH_SRC/skills/mash/references" "$TARGET_DIR/.opencode/skills/mash/"
-  for f in "$TARGET_DIR/.opencode/skills/mash/references/"*.md; do
-    sed -i 's|skills/mash/references/|.opencode/skills/mash/references/|g' "$f"
+  # Install references with rewritten paths
+  cp -r "$MASH_SRC/skills/mash/references" "$OPENCODE_HOME/skills/mash/"
+  for f in "$OPENCODE_HOME/skills/mash/references/"*.md; do
+    sed -i "s|skills/mash/references/|$OPENCODE_HOME/skills/mash/references/|g" "$f"
   done
-  ok ".opencode/skills/mash/references/"
-
-  mkdir -p "$TARGET_DIR/.opencode/commands"
-  cp "$MASH_SRC/opencode-commands/mash.md" "$TARGET_DIR/.opencode/commands/mash.md"
-  ok ".opencode/commands/mash.md"
-
-  OPENCODE_JSON="$TARGET_DIR/opencode.json"
-  if [ ! -f "$OPENCODE_JSON" ]; then
-    cp "$MASH_SRC/opencode.json" "$OPENCODE_JSON"
-    ok "opencode.json"
-  else
-    ok "opencode.json already exists — skipped"
-  fi
+  ok "$OPENCODE_HOME/skills/mash/references/"
 
   if [ -f "$MASH_SRC/VERSION" ]; then
-    cp "$MASH_SRC/VERSION" "$TARGET_DIR/.opencode/skills/mash/VERSION"
+    cp "$MASH_SRC/VERSION" "$OPENCODE_HOME/skills/mash/VERSION"
     ok "VERSION (v$NEW_VERSION)"
   fi
 fi
@@ -228,7 +266,7 @@ This project uses the MASH framework for planning and implementation.
 - Feature specs live in `.mash/plan/features/` with YAML frontmatter tracking status.
 - Working copies for implementation live in `.mash/dev/`.
 - `.mash/plan/progress.md` is the main status tracker.
-- The MASH skill (`skills/mash/SKILL.md`) manages planning and delegates implementation to isolated sub-agents via the Agent tool.
+- The MASH skill (`~/.claude/skills/mash/SKILL.md`) manages planning and delegates implementation to isolated sub-agents via the Agent tool.
 
 ## Workflow
 
@@ -271,9 +309,7 @@ fi
 
 GITIGNORE="$TARGET_DIR/.gitignore"
 
-mash_gitignore_entries=(".mash/dev/" ".mash/worktrees/")
-[ "$INSTALL_CLAUDE"   = true ] && mash_gitignore_entries+=(".claude/" "skills/mash/")
-[ "$INSTALL_OPENCODE" = true ] && mash_gitignore_entries+=(".opencode/")
+mash_gitignore_entries=(".mash/dev/" ".mash/worktrees/" ".claude/")
 
 if [ ! -f "$GITIGNORE" ]; then
   touch "$GITIGNORE"
@@ -293,7 +329,19 @@ else
   ok ".gitignore already has MASH entries — skipped"
 fi
 
-# --- Step 8: Done ---
+# --- Step 8: Project-level opencode.json (permissions only) ---
+
+if [ "$INSTALL_OPENCODE" = true ]; then
+  OPENCODE_JSON="$TARGET_DIR/opencode.json"
+  if [ ! -f "$OPENCODE_JSON" ]; then
+    cp "$MASH_SRC/opencode.json" "$OPENCODE_JSON"
+    ok "opencode.json"
+  else
+    ok "opencode.json already exists — skipped"
+  fi
+fi
+
+# --- Step 9: Done ---
 
 if [ -n "$INSTALLED_VERSION" ] && [ "$INSTALLED_VERSION" != "$NEW_VERSION" ]; then
   printf '\n\033[1;32mMASH updated to v%s.\033[0m\n\n' "$NEW_VERSION"

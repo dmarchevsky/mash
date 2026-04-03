@@ -53,7 +53,7 @@ The user invokes you with `/mash [command] [features]` (e.g., `/mash init`, `/ma
 ### `update`
 `/mash update` — check for framework updates and install them. Run GREET, then:
 
-1. Read `VERSION` to get the installed version. If missing, report "unknown version" and suggest re-installing.
+1. Read `skills/mash/VERSION` to get the installed version. If missing, report "unknown version" and suggest re-installing.
 2. Fetch the latest version from GitHub: `curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/VERSION`.
 3. Compare versions:
    - If identical, report "MASH is up to date (vX.Y.Z)" and stop.
@@ -116,6 +116,12 @@ Check that all of these exist and have content beyond templates:
 If any are missing or empty, ask the user if they want to initialize.
 
 #### INVOKE INIT
+**Bootstrap scaffolding if missing**: Before reading init-persona, check whether `.mash/plan/` exists. If not, create the project scaffolding now using Bash:
+```bash
+mkdir -p .mash/plan/features .mash/dev
+touch .mash/plan/features/.gitkeep .mash/dev/.gitkeep
+```
+
 Read `skills/mash/references/init-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — init requires multi-turn interaction with the user via AskUserQuestion.
 
 If the user provided a filepath argument (e.g. `/mash init path/to/brief.md`), read that file before executing init-persona and pass its content as the pre-seeded project description. If the file cannot be read, warn the user and fall back to the standard init flow with no pre-seeding.
