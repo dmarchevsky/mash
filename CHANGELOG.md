@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.5] — 2026-04-03
+
+### Fixed
+- **opencode agent `@` autocomplete** — changed agent `mode` from `primary` to `all` so `@mash` appears in the autocomplete menu alongside built-in agents.
+
 ## [0.6.4] — 2026-04-03
 
 ### Fixed
