@@ -4,6 +4,19 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.1] — 2026-04-03
+
+### Added
+- **`mash plan <id>`** — redefine an existing feature spec interactively, then reimplement it immediately. Runs plan-persona in refinement mode (multi-turn conversation, updates the feature file in place), syncs the dev file preserving prior outcome sections, then proceeds directly to the implementation loop with the reimplementation context block. Mirrors the `fix → patch` flow.
+
+### Changed
+- **Architect ARCH_VERIFIED rule tightened** — if every acceptance criterion has only TECHNICAL_ONLY evidence (no functional verification of the user's goal exists), the result is now `ARCH_FAIL` with `GOAL_NOT_VERIFIED` rather than a passing `ARCH_VERIFIED`.
+- **TECHNICAL_ONLY items excluded from gap count** — `gaps` in the MASH_STATUS block no longer counts TECHNICAL_ONLY items; they are noted but do not produce ARCH_FAIL on their own (except the all-TECHNICAL_ONLY case above).
+- **Init recovery branching** — when `.mash/plan/` files already have content, init-persona now determines precisely where to resume: project.md done → resume at architecture; both done → resume at scaffolding; all done → present a section-select menu instead of re-running the full flow.
+- **Patch persona Common Mistakes section** — documents the five most frequent patch errors: expanding fix scope, substituting the real target, declaring PATCH_DONE before all criteria are checked, deviating from the recommendation silently, and rounding up to PATCH_DONE on partial success.
+- **QA outcome-based feature definition clarified** — references the SKILL.md `## Concepts` definition rather than restating it inline, ensuring consistency.
+- **Template cleanup** — placeholder `## Dev outcome (attempt 1)` and `## QA/Patch outcome (attempt 1)` sections removed from feature.md and defect.md templates; these sections are written by personas, not pre-scaffolded.
+
 ## [0.6.0] — 2026-04-03
 
 ### Added
