@@ -217,8 +217,9 @@ if [ "$INSTALL_OPENCODE" = true ]; then
     ok "Removed legacy $OPENCODE_HOME/skills/mash/"
   fi
 
-  # Assemble agent file: agent frontmatter + main SKILL.md body with rewritten paths
-  head -6 "$MASH_SRC/opencode-agents/mash/AGENT.md" > "$OPENCODE_HOME/agents/mash.md"
+  # Assemble agent file: frontmatter + opencode preamble + main SKILL.md body with rewritten paths
+  head -5 "$MASH_SRC/opencode-agents/mash/AGENT.md" > "$OPENCODE_HOME/agents/mash.md"
+  cat "$MASH_SRC/opencode-agents/mash/PREAMBLE.md" >> "$OPENCODE_HOME/agents/mash.md"
   tail -n +5 "$MASH_SRC/skills/mash/SKILL.md" \
     | sed "s|skills/mash/references/|$OPENCODE_HOME/mash/references/|g; s|skills/mash/VERSION|$OPENCODE_HOME/mash/VERSION|g" \
     >> "$OPENCODE_HOME/agents/mash.md"

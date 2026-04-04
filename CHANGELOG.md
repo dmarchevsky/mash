@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.8] — 2026-04-03
+
+### Fixed
+- **opencode agent identity confusion** — added an opencode-specific preamble (`opencode-agents/mash/PREAMBLE.md`) injected between the agent frontmatter and SKILL.md body. Tells the model it already IS MASH, must not invoke the Skill tool, and must use the Read tool for persona files. Prevents hallucinating external skills like `systematic-debugging`.
+
 ## [0.6.7] — 2026-04-03
 
 ### Fixed
