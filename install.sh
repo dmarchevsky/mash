@@ -219,6 +219,29 @@ description: "MASH — Multi-Agent Software Harness. Commands: init, plan, dev [
 Read \`$CLAUDE_HOME/mash/SKILL.md\` and follow its instructions exactly. Pass through any arguments: \$ARGUMENTS
 EOF
   ok "$CLAUDE_HOME/commands/mash.md"
+
+  # Update global Claude Code settings to pre-approve reads from ~/.claude/mash/
+  GLOBAL_CC_SETTINGS="$CLAUDE_HOME/settings.json"
+  MASH_READ_PATTERN="Read($CLAUDE_HOME/mash/*)"
+  if [ ! -f "$GLOBAL_CC_SETTINGS" ]; then
+    printf '{\n  "permissions": {\n    "allow": [\n      "%s"\n    ]\n  }\n}\n' "$MASH_READ_PATTERN" > "$GLOBAL_CC_SETTINGS"
+    ok "$GLOBAL_CC_SETTINGS"
+  elif command -v node &>/dev/null; then
+    node -e "
+      const fs = require('fs');
+      const f = '$GLOBAL_CC_SETTINGS';
+      const j = JSON.parse(fs.readFileSync(f, 'utf8'));
+      j.permissions = j.permissions || {};
+      j.permissions.allow = j.permissions.allow || [];
+      const pat = '$MASH_READ_PATTERN';
+      if (j.permissions.allow.includes(pat)) { process.exit(1); }
+      j.permissions.allow.push(pat);
+      fs.writeFileSync(f, JSON.stringify(j, null, 2) + '\n');
+      process.exit(0);
+    " 2>/dev/null && ok "$GLOBAL_CC_SETTINGS (Read permission for $CLAUDE_HOME/mash/*)" || ok "$GLOBAL_CC_SETTINGS already has Read permission — skipped"
+  else
+    warn "node not found — skipping $GLOBAL_CC_SETTINGS update. Run /mash and approve once to persist."
+  fi
 fi
 
 if [ "$INSTALL_OPENCODE" = true ]; then
