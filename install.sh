@@ -263,6 +263,28 @@ if [ "$INSTALL_OPENCODE" = true ]; then
     printf '\nRead `%s/mash/SKILL.md` and follow its instructions exactly. $ARGUMENTS\n' "$OPENCODE_HOME"
   } > "$OPENCODE_HOME/commands/mash.md"
   ok "$OPENCODE_HOME/commands/mash.md"
+
+  # Write global opencode config with external_directory permission (pre-approves ~/.config/opencode/mash/ reads)
+  GLOBAL_OC_CONFIG="$OPENCODE_HOME/config.json"
+  if [ ! -f "$GLOBAL_OC_CONFIG" ]; then
+    printf '{\n  "$schema": "https://opencode.ai/config.json",\n  "permission": {\n    "external_directory": "allow"\n  }\n}\n' > "$GLOBAL_OC_CONFIG"
+    ok "$GLOBAL_OC_CONFIG"
+  elif command -v node &>/dev/null; then
+    node -e "
+      const fs = require('fs');
+      const f = '$GLOBAL_OC_CONFIG';
+      const j = JSON.parse(fs.readFileSync(f, 'utf8'));
+      j.permission = j.permission || {};
+      if (j.permission.external_directory !== 'allow') {
+        j.permission.external_directory = 'allow';
+        fs.writeFileSync(f, JSON.stringify(j, null, 2) + '\n');
+        process.exit(0);
+      }
+      process.exit(1);
+    " 2>/dev/null && ok "$GLOBAL_OC_CONFIG (external_directory: allow)" || ok "$GLOBAL_OC_CONFIG already has external_directory — skipped"
+  else
+    warn "node not found — skipping $GLOBAL_OC_CONFIG update (external_directory permission). Run /mash and approve once to persist."
+  fi
 fi
 
 # --- Step 5: Create scaffolding (only if missing) ---
