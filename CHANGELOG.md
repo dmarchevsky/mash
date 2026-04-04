@@ -4,6 +4,14 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.9] — 2026-04-03
+
+### Changed
+- **Switch to `/mash` command** — MASH is now invoked as a global slash command (`/mash init`, `/mash dev 1,3`) in both Claude Code and opencode, replacing the skill/agent registration.
+- **Claude Code**: installs to `~/.claude/mash/` (content) + `~/.claude/commands/mash.md` (command). Removes `~/.claude/skills/mash/` on update.
+- **opencode**: installs to `~/.config/opencode/mash/` (content) + `~/.config/opencode/commands/mash.md` (command). Removes `~/.config/opencode/agents/mash.md` on update.
+- `opencode.json` template no longer sets `default_agent: mash`.
+
 ## [0.6.8] — 2026-04-03
 
 ### Fixed

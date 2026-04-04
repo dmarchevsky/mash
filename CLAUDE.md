@@ -5,5 +5,5 @@
 - `.mash/plan/features/` — feature specs with YAML frontmatter
 - `.mash/dev/` — working copies during implementation
 - `.mash/plan/progress.md` — status tracker
-- Use `/mash` skill for all planning and development commands.
+- Use `/mash` command for all planning and development commands.
 <!-- /MASH -->

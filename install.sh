@@ -68,7 +68,9 @@ if [ -f "$MASH_SRC/VERSION" ]; then
 fi
 
 INSTALLED_VERSION=""
-if [ -f "$CLAUDE_HOME/skills/mash/VERSION" ]; then
+if [ -f "$CLAUDE_HOME/mash/VERSION" ]; then
+  INSTALLED_VERSION="$(tr -d '[:space:]' < "$CLAUDE_HOME/mash/VERSION")"
+elif [ -f "$CLAUDE_HOME/skills/mash/VERSION" ]; then
   INSTALLED_VERSION="$(tr -d '[:space:]' < "$CLAUDE_HOME/skills/mash/VERSION")"
 elif [ -f "$OPENCODE_HOME/mash/VERSION" ]; then
   INSTALLED_VERSION="$(tr -d '[:space:]' < "$OPENCODE_HOME/mash/VERSION")"
@@ -154,9 +156,6 @@ if [ -d "$OLD_CLAUDE_SKILL" ] || [ -d "$OLD_OPENCODE_SKILL" ]; then
   [ -d "$TARGET_DIR/.opencode/commands" ] && rm -rf "$TARGET_DIR/.opencode/commands" && ok "Removed .opencode/commands/"
   [ -f "$TARGET_DIR/.claude/commands/mash.md" ] && rm -f "$TARGET_DIR/.claude/commands/mash.md" && ok "Removed .claude/commands/mash.md"
 
-  # Remove global command if installed by a previous version
-  [ -f "$CLAUDE_HOME/commands/mash.md" ] && rm -f "$CLAUDE_HOME/commands/mash.md" && ok "Removed ~/.claude/commands/mash.md"
-
   # Remove old gitignore entries
   GITIGNORE="$TARGET_DIR/.gitignore"
   if [ -f "$GITIGNORE" ]; then
@@ -184,28 +183,46 @@ fi
 info "Installing framework files..."
 
 if [ "$INSTALL_CLAUDE" = true ]; then
-  mkdir -p "$CLAUDE_HOME/skills/mash"
+  mkdir -p "$CLAUDE_HOME/mash" "$CLAUDE_HOME/commands"
 
-  # Install SKILL.md with rewritten paths (skills/mash/references/ → absolute)
-  sed "s|skills/mash/references/|$CLAUDE_HOME/skills/mash/references/|g; s|skills/mash/VERSION|$CLAUDE_HOME/skills/mash/VERSION|g" \
-    "$MASH_SRC/skills/mash/SKILL.md" > "$CLAUDE_HOME/skills/mash/SKILL.md"
-  ok "$CLAUDE_HOME/skills/mash/SKILL.md"
+  # Migrate: remove legacy skill install if present
+  if [ -d "$CLAUDE_HOME/skills/mash" ]; then
+    rm -rf "$CLAUDE_HOME/skills/mash"
+    ok "Removed legacy $CLAUDE_HOME/skills/mash/"
+  fi
+
+  # Install SKILL.md as content file (no frontmatter) with rewritten paths
+  sed "s|skills/mash/references/|$CLAUDE_HOME/mash/references/|g; s|skills/mash/VERSION|$CLAUDE_HOME/mash/VERSION|g" \
+    "$MASH_SRC/skills/mash/SKILL.md" > "$CLAUDE_HOME/mash/SKILL.md"
+  ok "$CLAUDE_HOME/mash/SKILL.md"
 
   # Install references with rewritten paths
-  cp -r "$MASH_SRC/skills/mash/references" "$CLAUDE_HOME/skills/mash/"
-  for f in "$CLAUDE_HOME/skills/mash/references/"*.md; do
-    sed -i "s|skills/mash/references/|$CLAUDE_HOME/skills/mash/references/|g" "$f"
+  rm -rf "$CLAUDE_HOME/mash/references"
+  cp -r "$MASH_SRC/skills/mash/references" "$CLAUDE_HOME/mash/"
+  for f in "$CLAUDE_HOME/mash/references/"*.md; do
+    sed -i "s|skills/mash/references/|$CLAUDE_HOME/mash/references/|g" "$f"
   done
-  ok "$CLAUDE_HOME/skills/mash/references/"
+  ok "$CLAUDE_HOME/mash/references/"
 
   if [ -f "$MASH_SRC/VERSION" ]; then
-    cp "$MASH_SRC/VERSION" "$CLAUDE_HOME/skills/mash/VERSION"
+    cp "$MASH_SRC/VERSION" "$CLAUDE_HOME/mash/VERSION"
     ok "VERSION (v$NEW_VERSION)"
   fi
+
+  # Install /mash global command
+  cat > "$CLAUDE_HOME/commands/mash.md" <<EOF
+---
+name: mash
+description: "MASH — Multi-Agent Software Harness. Commands: init, plan, dev [ids], fix [id|desc], status, update, config"
+---
+
+Read \`$CLAUDE_HOME/mash/SKILL.md\` and follow its instructions exactly. Pass through any arguments: \$ARGUMENTS
+EOF
+  ok "$CLAUDE_HOME/commands/mash.md"
 fi
 
 if [ "$INSTALL_OPENCODE" = true ]; then
-  mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/mash"
+  mkdir -p "$OPENCODE_HOME/commands" "$OPENCODE_HOME/mash"
 
   # Migrate: remove legacy installs if present
   if [ -d "$OPENCODE_HOME/agents/mash" ]; then
@@ -216,16 +233,18 @@ if [ "$INSTALL_OPENCODE" = true ]; then
     rm -rf "$OPENCODE_HOME/skills/mash"
     ok "Removed legacy $OPENCODE_HOME/skills/mash/"
   fi
+  if [ -f "$OPENCODE_HOME/agents/mash.md" ]; then
+    rm -f "$OPENCODE_HOME/agents/mash.md"
+    ok "Removed legacy $OPENCODE_HOME/agents/mash.md"
+  fi
 
-  # Assemble agent file: frontmatter + opencode preamble + main SKILL.md body with rewritten paths
-  head -5 "$MASH_SRC/opencode-agents/mash/AGENT.md" > "$OPENCODE_HOME/agents/mash.md"
-  cat "$MASH_SRC/opencode-agents/mash/PREAMBLE.md" >> "$OPENCODE_HOME/agents/mash.md"
-  tail -n +5 "$MASH_SRC/skills/mash/SKILL.md" \
-    | sed "s|skills/mash/references/|$OPENCODE_HOME/mash/references/|g; s|skills/mash/VERSION|$OPENCODE_HOME/mash/VERSION|g" \
-    >> "$OPENCODE_HOME/agents/mash.md"
-  ok "$OPENCODE_HOME/agents/mash.md"
+  # Install SKILL.md as content file with rewritten paths
+  sed "s|skills/mash/references/|$OPENCODE_HOME/mash/references/|g; s|skills/mash/VERSION|$OPENCODE_HOME/mash/VERSION|g" \
+    "$MASH_SRC/skills/mash/SKILL.md" > "$OPENCODE_HOME/mash/SKILL.md"
+  ok "$OPENCODE_HOME/mash/SKILL.md"
 
-  # Install references with rewritten paths (in $OPENCODE_HOME/mash/ to avoid @mash collision)
+  # Install references with rewritten paths
+  rm -rf "$OPENCODE_HOME/mash/references"
   cp -r "$MASH_SRC/skills/mash/references" "$OPENCODE_HOME/mash/"
   for f in "$OPENCODE_HOME/mash/references/"*.md; do
     sed -i "s|skills/mash/references/|$OPENCODE_HOME/mash/references/|g" "$f"
@@ -236,6 +255,14 @@ if [ "$INSTALL_OPENCODE" = true ]; then
     cp "$MASH_SRC/VERSION" "$OPENCODE_HOME/mash/VERSION"
     ok "VERSION (v$NEW_VERSION)"
   fi
+
+  # Install /mash global command (preamble + read instruction)
+  {
+    printf -- '---\ndescription: "MASH — Multi-Agent Software Harness. Commands: init, plan, dev [ids], fix [id|desc], status, update, config"\n---\n\n'
+    cat "$MASH_SRC/opencode-agents/mash/PREAMBLE.md"
+    printf '\nRead `%s/mash/SKILL.md` and follow its instructions exactly. $ARGUMENTS\n' "$OPENCODE_HOME"
+  } > "$OPENCODE_HOME/commands/mash.md"
+  ok "$OPENCODE_HOME/commands/mash.md"
 fi
 
 # --- Step 5: Create scaffolding (only if missing) ---
@@ -279,21 +306,21 @@ This project uses the MASH framework for planning and implementation.
 - Feature specs live in `.mash/plan/features/` with YAML frontmatter tracking status.
 - Working copies for implementation live in `.mash/dev/`.
 - `.mash/plan/progress.md` is the main status tracker.
-- The MASH skill (`~/.claude/skills/mash/SKILL.md`) manages planning and delegates implementation to isolated sub-agents via the Agent tool.
+- The MASH command (`/mash`) manages planning and delegates implementation to isolated sub-agents via the Agent tool.
 
 ## Invocation
 
-When the user says `mash [command]` (e.g. `mash init`, `mash dev 1,3`), read `~/.claude/skills/mash/SKILL.md` and follow its instructions exactly, passing through any arguments.
+Use `/mash [command]` (e.g. `/mash init`, `/mash dev 1,3`). The command reads `~/.claude/mash/SKILL.md` and follows its instructions, passing through any arguments.
 
 ## Workflow
 
-1. `mash init` — iteratively define your project (architecture + project).
-2. `mash plan` — interactively create features with clarifying questions.
-3. `mash dev [feature-ids]` — implement and test features via sub-agents (dev-persona then qa-persona).
-4. `mash fix [description|id]` — debug defects collaboratively, then patch and verify.
-5. `mash config` — view or change git settings and sub-agent permissions.
-6. `mash status` — show current progress.
-7. `mash update` — check for and install framework updates.
+1. `/mash init` — iteratively define your project (architecture + project).
+2. `/mash plan` — interactively create features with clarifying questions.
+3. `/mash dev [feature-ids]` — implement and test features via sub-agents (dev-persona then qa-persona).
+4. `/mash fix [description|id]` — debug defects collaboratively, then patch and verify.
+5. `/mash config` — view or change git settings and sub-agent permissions.
+6. `/mash status` — show current progress.
+7. `/mash update` — check for and install framework updates.
 8. MASH never writes code directly — it spawns sub-agents.
 <!-- /MASH -->
 CLAUDE_EOF
@@ -365,10 +392,10 @@ if [ -n "$INSTALLED_VERSION" ] && [ "$INSTALLED_VERSION" != "$NEW_VERSION" ]; th
 else
   printf '\n\033[1;32mMASH v%s installed successfully.\033[0m\n' "$NEW_VERSION"
   if [ "$INSTALL_CLAUDE" = true ] && [ "$INSTALL_OPENCODE" = true ]; then
-    printf 'Run \033[1mmash init\033[0m in Claude Code or ask MASH to initialize your project in opencode.\n\n'
+    printf 'Run \033[1m/mash init\033[0m to get started.\n\n'
   elif [ "$INSTALL_OPENCODE" = true ]; then
-    printf 'Ask MASH to initialize your project in opencode (e.g. "mash init").\n\n'
+    printf 'Run \033[1m/mash init\033[0m to get started.\n\n'
   else
-    printf 'Run \033[1mmash init\033[0m in Claude Code to get started.\n\n'
+    printf 'Run \033[1m/mash init\033[0m to get started.\n\n'
   fi
 fi
