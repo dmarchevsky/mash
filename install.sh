@@ -266,8 +266,9 @@ if [ "$INSTALL_OPENCODE" = true ]; then
 
   # Write global opencode config with external_directory permission (pre-approves ~/.config/opencode/mash/ reads)
   GLOBAL_OC_CONFIG="$OPENCODE_HOME/config.json"
+  MASH_DIR="$OPENCODE_HOME/mash"
   if [ ! -f "$GLOBAL_OC_CONFIG" ]; then
-    printf '{\n  "$schema": "https://opencode.ai/config.json",\n  "permission": {\n    "external_directory": "allow"\n  }\n}\n' > "$GLOBAL_OC_CONFIG"
+    printf '{\n  "$schema": "https://opencode.ai/config.json",\n  "permission": {\n    "external_directory": {\n      "%s/*": "allow"\n    }\n  }\n}\n' "$MASH_DIR" > "$GLOBAL_OC_CONFIG"
     ok "$GLOBAL_OC_CONFIG"
   elif command -v node &>/dev/null; then
     node -e "
@@ -275,13 +276,14 @@ if [ "$INSTALL_OPENCODE" = true ]; then
       const f = '$GLOBAL_OC_CONFIG';
       const j = JSON.parse(fs.readFileSync(f, 'utf8'));
       j.permission = j.permission || {};
-      if (j.permission.external_directory !== 'allow') {
-        j.permission.external_directory = 'allow';
-        fs.writeFileSync(f, JSON.stringify(j, null, 2) + '\n');
-        process.exit(0);
-      }
-      process.exit(1);
-    " 2>/dev/null && ok "$GLOBAL_OC_CONFIG (external_directory: allow)" || ok "$GLOBAL_OC_CONFIG already has external_directory — skipped"
+      const ed = j.permission.external_directory;
+      const key = '$MASH_DIR/*';
+      if (ed === 'allow' || (typeof ed === 'object' && ed[key] === 'allow')) { process.exit(1); }
+      if (typeof ed !== 'object' || ed === null) { j.permission.external_directory = {}; }
+      j.permission.external_directory[key] = 'allow';
+      fs.writeFileSync(f, JSON.stringify(j, null, 2) + '\n');
+      process.exit(0);
+    " 2>/dev/null && ok "$GLOBAL_OC_CONFIG (external_directory: $MASH_DIR/*)" || ok "$GLOBAL_OC_CONFIG already has external_directory — skipped"
   else
     warn "node not found — skipping $GLOBAL_OC_CONFIG update (external_directory permission). Run /mash and approve once to persist."
   fi
