@@ -226,21 +226,20 @@ EOF
   if [ ! -f "$GLOBAL_CC_SETTINGS" ]; then
     printf '{\n  "permissions": {\n    "allow": [\n      "%s"\n    ]\n  }\n}\n' "$MASH_READ_PATTERN" > "$GLOBAL_CC_SETTINGS"
     ok "$GLOBAL_CC_SETTINGS"
-  elif command -v node &>/dev/null; then
-    node -e "
-      const fs = require('fs');
-      const f = '$GLOBAL_CC_SETTINGS';
-      const j = JSON.parse(fs.readFileSync(f, 'utf8'));
-      j.permissions = j.permissions || {};
-      j.permissions.allow = j.permissions.allow || [];
-      const pat = '$MASH_READ_PATTERN';
-      if (j.permissions.allow.includes(pat)) { process.exit(1); }
-      j.permissions.allow.push(pat);
-      fs.writeFileSync(f, JSON.stringify(j, null, 2) + '\n');
-      process.exit(0);
-    " 2>/dev/null && ok "$GLOBAL_CC_SETTINGS (Read permission for $CLAUDE_HOME/mash/*)" || ok "$GLOBAL_CC_SETTINGS already has Read permission — skipped"
+  elif grep -qF "$MASH_READ_PATTERN" "$GLOBAL_CC_SETTINGS" 2>/dev/null; then
+    ok "$GLOBAL_CC_SETTINGS already has Read permission — skipped"
+  elif grep -q '"allow"' "$GLOBAL_CC_SETTINGS" 2>/dev/null; then
+    # Inject into existing allow array
+    sed -i 's|"allow": \[|"allow": [\n      "'"$MASH_READ_PATTERN"'",|' "$GLOBAL_CC_SETTINGS"
+    ok "$GLOBAL_CC_SETTINGS (Read permission for $CLAUDE_HOME/mash/*)"
+  elif grep -q '"permissions"' "$GLOBAL_CC_SETTINGS" 2>/dev/null; then
+    # Inject allow into existing permissions block
+    sed -i 's|"permissions": {|"permissions": {\n    "allow": [\n      "'"$MASH_READ_PATTERN"'"\n    ],|' "$GLOBAL_CC_SETTINGS"
+    ok "$GLOBAL_CC_SETTINGS (Read permission for $CLAUDE_HOME/mash/*)"
   else
-    warn "node not found — skipping $GLOBAL_CC_SETTINGS update. Run /mash and approve once to persist."
+    # No permissions section — insert before last closing brace
+    sed -i '$ s|}|,\n  "permissions": {\n    "allow": [\n      "'"$MASH_READ_PATTERN"'"\n    ]\n  }\n}|' "$GLOBAL_CC_SETTINGS"
+    ok "$GLOBAL_CC_SETTINGS (Read permission for $CLAUDE_HOME/mash/*)"
   fi
 fi
 
@@ -293,22 +292,20 @@ if [ "$INSTALL_OPENCODE" = true ]; then
   if [ ! -f "$GLOBAL_OC_CONFIG" ]; then
     printf '{\n  "$schema": "https://opencode.ai/config.json",\n  "permission": {\n    "external_directory": {\n      "%s/*": "allow"\n    }\n  }\n}\n' "$MASH_DIR" > "$GLOBAL_OC_CONFIG"
     ok "$GLOBAL_OC_CONFIG"
-  elif command -v node &>/dev/null; then
-    node -e "
-      const fs = require('fs');
-      const f = '$GLOBAL_OC_CONFIG';
-      const j = JSON.parse(fs.readFileSync(f, 'utf8'));
-      j.permission = j.permission || {};
-      const ed = j.permission.external_directory;
-      const key = '$MASH_DIR/*';
-      if (ed === 'allow' || (typeof ed === 'object' && ed[key] === 'allow')) { process.exit(1); }
-      if (typeof ed !== 'object' || ed === null) { j.permission.external_directory = {}; }
-      j.permission.external_directory[key] = 'allow';
-      fs.writeFileSync(f, JSON.stringify(j, null, 2) + '\n');
-      process.exit(0);
-    " 2>/dev/null && ok "$GLOBAL_OC_CONFIG (external_directory: $MASH_DIR/*)" || ok "$GLOBAL_OC_CONFIG already has external_directory — skipped"
+  elif grep -qF "$MASH_DIR" "$GLOBAL_OC_CONFIG" 2>/dev/null; then
+    ok "$GLOBAL_OC_CONFIG already has external_directory — skipped"
+  elif grep -q '"external_directory"' "$GLOBAL_OC_CONFIG" 2>/dev/null; then
+    # Inject into existing external_directory object
+    sed -i 's|"external_directory": {|"external_directory": {\n      "'"$MASH_DIR"'/*": "allow",|' "$GLOBAL_OC_CONFIG"
+    ok "$GLOBAL_OC_CONFIG (external_directory: $MASH_DIR/*)"
+  elif grep -q '"permission"' "$GLOBAL_OC_CONFIG" 2>/dev/null; then
+    # Inject external_directory into existing permission block
+    sed -i 's|"permission": {|"permission": {\n    "external_directory": {\n      "'"$MASH_DIR"'/*": "allow"\n    },|' "$GLOBAL_OC_CONFIG"
+    ok "$GLOBAL_OC_CONFIG (external_directory: $MASH_DIR/*)"
   else
-    warn "node not found — skipping $GLOBAL_OC_CONFIG update (external_directory permission). Run /mash and approve once to persist."
+    # No permission section — insert before last closing brace
+    sed -i '$ s|}|,\n  "permission": {\n    "external_directory": {\n      "'"$MASH_DIR"'/*": "allow"\n    }\n  }\n}|' "$GLOBAL_OC_CONFIG"
+    ok "$GLOBAL_OC_CONFIG (external_directory: $MASH_DIR/*)"
   fi
 fi
 
