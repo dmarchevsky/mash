@@ -7,14 +7,14 @@ MASH is a framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-
 MASH uses seven specialized personas:
 
 ```
-  You ──► mash init ──► Init Agent       → defines project scope & architecture
-       ──► mash plan ──► Plan Agent      → turns ideas into detailed feature specs
-       ──► mash dev  ──► Architect Agent → checks spec against architecture (pre-dev)
-                      ──► Dev Agent(s)   → implements features autonomously
-                      ──► QA Agent(s)    → writes and runs tests to verify
-                      ──► Architect Agent→ verifies QA evidence covers stated goals (post-qa)
-       ──► mash fix  ──► Fix Agent       → collaborative debugging with the user
-                      ──► Patch Agent    → minimal-change fix implementation
+  You ──► /mash init ──► Init Agent       → defines project scope & architecture
+       ──► /mash plan ──► Plan Agent      → turns ideas into detailed feature specs
+       ──► /mash dev  ──► Architect Agent → checks spec against architecture (pre-dev)
+                       ──► Dev Agent(s)   → implements features autonomously
+                       ──► QA Agent(s)    → writes and runs tests to verify
+                       ──► Architect Agent→ verifies QA evidence covers stated goals (post-qa)
+       ──► /mash fix  ──► Fix Agent       → collaborative debugging with the user
+                       ──► Patch Agent    → minimal-change fix implementation
 ```
 
 **Init**, **Plan**, and **Fix** run interactively in your conversation, asking clarifying questions. **Dev**, **QA**, **Patch**, and **Architect** are spawned as isolated sub-agents that work autonomously within defined boundaries.
@@ -34,12 +34,15 @@ curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | ba
 curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash -s -- --opencode
 ```
 
-The installer detects which AI client(s) are available and installs MASH globally — no per-project skill copies needed. If both are installed and no flag is given, it prompts you to choose.
+The installer detects which AI client(s) are available and installs MASH globally — no per-project skill copies needed. If both are installed and no flag is given, it prompts you to choose. MASH is registered as a `/mash` slash command in both clients.
 
 **Claude Code (global):**
-- `~/.claude/skills/mash/` — framework files (personas, templates, orchestrator)
+- `~/.claude/mash/` — framework files (orchestrator, personas, templates)
+- `~/.claude/commands/mash.md` — `/mash` slash command entry point
+
 **opencode (global):**
-- `~/.config/opencode/skills/mash/` — self-contained framework copy, auto-discovered
+- `~/.config/opencode/mash/` — framework files
+- `~/.config/opencode/commands/mash.md` — `/mash` slash command entry point
 
 **Per project:**
 - `.mash/plan/` — where specs and feature definitions live
@@ -49,28 +52,28 @@ Existing files are preserved. The installer only adds scaffolding for directorie
 ## Quick Start
 
 ```
-mash init          # Define your project, tech stack, and git workflow
-mash plan          # Describe features — MASH asks questions, writes specs
-mash dev           # Implement all ready features (dev + QA agents)
+/mash init          # Define your project, tech stack, and git workflow
+/mash plan          # Describe features — MASH asks questions, writes specs
+/mash dev           # Implement all ready features (dev + QA agents)
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `mash` | Show dashboard with feature status and next steps |
-| `mash init` | Interactively define project scope, architecture, and settings |
-| `mash init <filename>` | Same, but seeds the conversation from an existing project description file |
-| `mash plan` / `mash plan <desc>` | Create new feature specifications through guided conversation |
-| `mash plan <id>` | Redefine an existing feature spec interactively, then reimplement it |
-| `mash dev` | Implement and test all DEV_READY features |
-| `mash dev 1,3` | Implement specific features by ID; if a feature is already DONE, offers reimplementation |
-| `mash fix` | Debug a defect collaboratively, then patch and verify |
-| `mash fix <id>` | Retry a previously logged defect by ID |
-| `mash fix <desc>` | Debug with a pre-seeded description |
-| `mash config` | View or change git settings and sub-agent permissions |
-| `mash status` | Show current progress table |
-| `mash update` | Check for and install framework updates |
+| `/mash` | Show dashboard with feature status and next steps |
+| `/mash init` | Interactively define project scope, architecture, and settings |
+| `/mash init <filename>` | Same, but seeds the conversation from an existing project description file |
+| `/mash plan` / `/mash plan <desc>` | Create new feature specifications through guided conversation |
+| `/mash plan <id>` | Redefine an existing feature spec interactively, then reimplement it |
+| `/mash dev` | Implement and test all DEV_READY features |
+| `/mash dev 1,3` | Implement specific features by ID; if a feature is already DONE, offers reimplementation |
+| `/mash fix` | Debug a defect collaboratively, then patch and verify |
+| `/mash fix <id>` | Retry a previously logged defect by ID |
+| `/mash fix <desc>` | Debug with a pre-seeded description |
+| `/mash config` | View or change git settings and sub-agent permissions |
+| `/mash status` | Show current progress table |
+| `/mash update` | Check for and install framework updates |
 
 ## Architecture
 
@@ -131,13 +134,16 @@ Configured during `mash init` (saved to `.mash/plan/settings.md`):
 **Global (installed once, shared across all projects):**
 ```
 ~/.claude/
-└── skills/mash/                       # Claude Code skill
+├── commands/mash.md                   # /mash slash command entry point
+└── mash/                              # Framework files
     ├── SKILL.md                       #   Orchestrator
     ├── VERSION
     └── references/                    #   All personas and templates
 
 ~/.config/opencode/
-└── skills/mash/                       # opencode skill (auto-discovered)
+├── commands/mash.md                   # /mash slash command entry point
+├── config.json                        # external_directory permission pre-approved
+└── mash/                              # Framework files
     ├── SKILL.md
     ├── VERSION
     └── references/
@@ -166,7 +172,7 @@ your-project/
 ## Updating
 
 ```
-mash update
+/mash update
 ```
 
 Or manually:
