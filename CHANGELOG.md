@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.1] — 2026-04-04
+
+### Fixed
+- **opencode persona delegation** — the PREAMBLE instruction "Execute all commands and flows described below directly in this conversation" was too broad: it conflicted with SKILL.md's `INVOKE DEV` / `INVOKE QA` / `INVOKE ARCHITECT` directives, causing the model to perform implementation work in the main conversation instead of spawning sub-agents. Replaced with a two-tier clarification: orchestration (GREET, routing, status updates) runs in the main conversation; persona work (dev, qa, patch, architect) is always spawned via the Agent tool.
+
 ## [0.6.9] — 2026-04-03
 
 ### Changed
