@@ -4,6 +4,20 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.8.2] — 2026-04-05
+
+### Fixed
+- **opencode preamble blockquotes** — `opencode-command/mash/PREAMBLE.md` was using Markdown blockquote syntax (`>`) which some models interpret as citations rather than instructions. Replaced with plain paragraphs.
+
+### Changed
+- **Renamed `opencode-agents/` → `opencode-command/`** — better reflects the directory's purpose (source for the `/mash` command file, not agent definitions).
+- **Removed unused `AGENT.md`** from `opencode-command/mash/` — was not referenced anywhere in the install process.
+
+## [0.8.1] — 2026-04-05
+
+### Fixed
+- **opencode command blockquotes** — removed Markdown blockquote formatting from the installed `~/.config/opencode/commands/mash.md`.
+
 ## [0.8.0] — 2026-04-05
 
 ### Added

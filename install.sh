@@ -281,7 +281,7 @@ if [ "$INSTALL_OPENCODE" = true ]; then
   # Install /mash global command (preamble + read instruction)
   {
     printf -- '---\ndescription: "MASH — Multi-Agent Software Harness. Commands: init, plan, dev [ids], fix [id|desc], status, update, config"\n---\n\n'
-    cat "$MASH_SRC/opencode-agents/mash/PREAMBLE.md"
+    cat "$MASH_SRC/opencode-command/mash/PREAMBLE.md"
     printf '\nRead `%s/mash/SKILL.md` and follow its instructions exactly. $ARGUMENTS\n' "$OPENCODE_HOME"
   } > "$OPENCODE_HOME/commands/mash.md"
   ok "$OPENCODE_HOME/commands/mash.md"
