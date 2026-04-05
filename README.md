@@ -1,23 +1,23 @@
 # MASH — Multi-Agent Software Harness
 
-MASH is a framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [opencode](https://opencode.ai) that orchestrates multiple AI personas to plan, implement, and verify software features. Instead of writing code in a single conversation, MASH separates concerns into specialized agents — each with strict read/write boundaries — and manages the full lifecycle from idea to tested code.
+Stop writing features in a single AI conversation that loses context, skips tests, and hopes for the best. MASH is a framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [opencode](https://opencode.ai) that splits the work across specialized personas — each with strict read/write boundaries — managing the full lifecycle from idea to tested, verified code.
 
 ## How It Works
 
-MASH uses seven specialized personas:
+MASH pipelines every feature through seven personas with two architect gates — one before implementation, one after QA — so nothing ships without verified alignment and goal coverage:
 
 ```
-  You ──► /mash init ──► Init Agent       → defines project scope & architecture
-       ──► /mash plan ──► Plan Agent      → turns ideas into detailed feature specs
-       ──► /mash dev  ──► Architect Agent → checks spec against architecture (pre-dev)
-                       ──► Dev Agent(s)   → implements features autonomously
-                       ──► QA Agent(s)    → writes and runs tests to verify
-                       ──► Architect Agent→ verifies QA evidence covers stated goals (post-qa)
-       ──► /mash fix  ──► Fix Agent       → collaborative debugging with the user
-                       ──► Patch Agent    → minimal-change fix implementation
+  You ──► /mash init ──► Init Persona       → defines project scope & architecture
+       ──► /mash plan ──► Plan Persona      → turns ideas into detailed feature specs
+       ──► /mash dev  ──► Architect Persona → checks spec against architecture (pre-dev)
+                       ──► Dev Persona(s)   → implements features autonomously
+                       ──► QA Persona(s)    → writes and runs tests to verify
+                       ──► Architect Persona→ verifies QA evidence covers stated goals (post-qa)
+       ──► /mash fix  ──► Fix Persona       → collaborative debugging with the user
+                       ──► Patch Persona    → minimal-change fix implementation
 ```
 
-**Init**, **Plan**, and **Fix** run interactively in your conversation, asking clarifying questions. **Dev**, **QA**, **Patch**, and **Architect** are spawned as isolated sub-agents that work autonomously within defined boundaries.
+**Init**, **Plan**, and **Fix** run interactively in your conversation, asking clarifying questions. **Dev**, **QA**, **Patch**, and **Architect** are spawned as isolated sub-agents that work autonomously within defined boundaries. Features that fail retry automatically (up to 3x) with failure analysis fed back. Third-party skills can hook into the pipeline as optional superpowers — see [External Skills](#external-skills).
 
 ## Installation
 
@@ -71,7 +71,7 @@ Existing files are preserved. The installer only adds scaffolding for directorie
 | `/mash fix` | Debug a defect collaboratively, then patch and verify |
 | `/mash fix <id>` | Retry a previously logged defect by ID |
 | `/mash fix <desc>` | Debug with a pre-seeded description |
-| `/mash config` | View or change git settings and sub-agent permissions |
+| `/mash config` | View or change git settings, sub-agent permissions, and external skills |
 | `/mash status` | Show current progress table |
 | `/mash update` | Check for and install framework updates |
 
@@ -117,6 +117,22 @@ title: User Authentication
 
 Each spec includes a description, acceptance criteria, verification steps (exact commands proving the feature works through its user-facing entry point), regression tests, and technical notes.
 
+### External Skills
+
+MASH can integrate with other Claude Code skills as optional "superpowers." During `/mash config` or `/mash init`, MASH discovers available third-party skills and lets you assign them to stages:
+
+- **Hook stages** (`post-dev`, `post-patch`, `post-qa`) — MASH invokes the skill between persona steps in the main conversation. For example, `simplify` can review code quality after dev writes it, before QA begins.
+- **Inline stages** (`dev`, `qa`, `patch`, `plan`, `init`, `fix`, `architect`) — for interactive personas, MASH invokes the skill at natural breakpoints. For sub-agent personas, skill descriptions are injected into the agent prompt as supplementary context.
+
+Skills are configured in `.mash/plan/settings.md`:
+```
+skills:
+  simplify: post-dev, post-patch
+  claude-api: dev, patch
+```
+
+All skill invocations are advisory — if a skill is unavailable or fails, MASH logs a warning and continues. No configured skills means no change to the default behavior.
+
 ### Git Workflow Options
 
 Configured during `mash init` (saved to `.mash/plan/settings.md`):
@@ -160,7 +176,7 @@ your-project/
 │   ├── plan/                          # Source of truth (specs, architecture)
 │   │   ├── project.md
 │   │   ├── architecture.md
-│   │   ├── settings.md
+│   │   ├── settings.md                # Git workflow, permissions, and external skills
 │   │   ├── progress.md
 │   │   └── features/
 │   │       └── feature-1.md
@@ -222,6 +238,7 @@ Superpowers is a composable skills plugin that enforces mandatory process guardr
 - **Autonomous execution** — dev and QA agents work independently within their boundaries
 - **Retry with context** — failed features are retried up to 3 times with failure analysis fed back to the next attempt
 - **Application-level verification** — dev must run the full application end-to-end before marking a feature done; QA checks the app starts before writing tests; a milestone smoke test confirms the whole application works after all features land
+- **Extensible via skills** — integrate third-party Claude Code skills as optional superpowers at any stage of the pipeline
 - **Framework, not boilerplate** — MASH manages the process; your project's code, structure, and tools are entirely up to you
 
 ## License

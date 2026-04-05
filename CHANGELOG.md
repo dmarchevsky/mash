@@ -4,6 +4,22 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.8.0] — 2026-04-05
+
+### Added
+- **External skill integration** — MASH can now discover, configure, and invoke third-party Claude Code skills as optional superpowers at any stage of the pipeline. Skills are configured in `.mash/plan/settings.md` under a new `skills:` section.
+  - **Hook stages** (`post-dev`, `post-patch`, `post-qa`): MASH invokes the skill in the main conversation between persona steps (e.g. run `simplify` after dev completes, before QA begins).
+  - **Inline stages** (`dev`, `qa`, `patch`, `plan`, `init`, `fix`, `architect`): for interactive personas, MASH invokes the skill at natural breakpoints; for sub-agent personas, skill descriptions are injected into the Agent() prompt as a SKILLS CONTEXT block.
+  - **Discovery**: during `config` or `init`, MASH reads the available skills from the session context (the authoritative runtime list), presents them with recommended stage assignments, and lets the user enable/disable each.
+  - **Built-in recommendations**: `simplify` → `post-dev, post-patch`; `claude-api` → `dev, patch` (when project uses Anthropic SDK).
+  - **Fallback handling**: unavailable or failing skills log a warning and are skipped — they never block the pipeline.
+- **PREAMBLE updated** — relaxed the blanket Skill tool prohibition to: do not invoke MASH itself, but MAY use configured external skills at the points specified in SKILL.md.
+- **Settings template** — `settings.md` template gains a `## Skills` section with format documentation.
+- **Sub-agent personas** — dev, QA, patch, and architect personas each gain an External Skills section explaining how to interpret SKILLS CONTEXT blocks.
+
+### Changed
+- **README** — reworked opening paragraph to lead with the problem MASH solves; updated How It Works intro to highlight architect gates; renamed "Agent" to "Persona" in the pipeline diagram for consistency; added retry and skills mentions to the after-diagram paragraph; added External Skills section under Architecture.
+
 ## [0.7.1] — 2026-04-04
 
 ### Fixed

@@ -144,6 +144,8 @@ Shared procedure — called from the `config` command and from init-persona Phas
    - If `.mash/plan/settings.md` exists: read it and extract `git`, `branching`, and `commit` values. This is an **update run**.
    - If not: this is a **first-time run** — no current values exist.
    - Read permissions: if `.claude/settings.local.json` exists, extract `permissions.allow` (treat as `[]` if absent); if `opencode.json` exists at the project root, extract `permission` (treat as `{}` if absent). If both exist, read both. If neither exists, treat as empty.
+   - **Read skills:** If settings.md has a `## Skills` section with entries under `skills:`, parse each indented line as `skill_name: stage1, stage2, ...` into a map of skill_name → [stages]. If no skills section or empty, treat as empty map.
+   - **Discover available skills:** Read the conversation context for the system-reminder block listing available skills (the block starting with "The following skills are available for use with the Skill tool:"). Extract each skill name and its one-line description. **Exclude `mash` itself** from this list. This is the **available skills** list.
 
 2. **If update run** — display current configuration:
    ```
@@ -161,13 +163,21 @@ Shared procedure — called from the `config` command and from init-persona Phas
      bash         <present / MISSING>
      edit         <present / MISSING>
      webfetch     <present / MISSING>
+
+   External skills:                                       ← only if any configured
+     <skill_name>  → <stage1, stage2>
+     ...
+
+   Available (not enabled):                               ← only if discovered skills exist that aren't configured
+     <skill1>, <skill2>, ...
    ```
-   Show only the section(s) for config files that actually exist. If neither exists, show "No permission config file found."
+   Show only the section(s) for config files that actually exist. If neither exists, show "No permission config file found." If no skills are configured and none are discovered, omit the skills sections entirely.
 
 3. **Ask what to configure** using AskUserQuestion with multiSelect enabled:
    - `Git branching` — choose `worktree` or `current_branch` *(omit if `git: none`)*
    - `Git commit` — choose `auto` or `manual` *(omit if `git: none`)*
    - `Sub-agent permissions` — set or update permissions in applicable config file(s)
+   - `External skills` — enable or disable 3rd-party skills for MASH stages *(only if available skills were discovered in step 1)*
    - `Nothing — just viewing` *(update run only)*
 
 4. **Handle each selected item:**
@@ -192,7 +202,60 @@ Shared procedure — called from the `config` command and from init-persona Phas
    - If approved: write missing permissions to each applicable config file, merging into the existing structure and preserving any other entries. If both files exist, write to both. If neither exists: check whether `.opencode/` directory is present — if so, create `opencode.json`; otherwise create `.claude/settings.local.json`.
    - If declined: warn that sub-agents will prompt for each action.
 
+   #### External skills
+   Display each discovered skill (from the available skills list in step 1) with its one-line description. For known skills, show a recommended stage assignment:
+
+   **Built-in recommendations:**
+   - `simplify` → `post-dev, post-patch` (review code quality after implementation) — always recommend
+   - `claude-api` → `dev, patch` (Anthropic SDK reference during implementation) — recommend only if `.mash/plan/architecture.md` mentions `anthropic`, `claude`, or `@anthropic-ai/sdk`
+
+   For all other discovered skills, show the description but suggest no default stages.
+
+   **Configuration flow:**
+   1. Use AskUserQuestion with multiSelect to let the user pick which skills to enable (show recommendations with "(Recommended)" suffix where applicable).
+   2. For each selected skill, use AskUserQuestion with multiSelect to let the user pick stages. Present the recommended stages pre-labeled "(Recommended)" where applicable. Valid stages:
+      - **Hook stages** (MASH runs between persona steps): `post-dev`, `post-patch`, `post-qa`
+      - **Inline stages** (available during persona execution): `dev`, `qa`, `patch`, `plan`, `init`, `fix`, `architect`
+   3. Write the result to the `skills:` section in `.mash/plan/settings.md`. Format each enabled skill as an indented line: `  skill_name: stage1, stage2`. If no skills are enabled, leave the `skills:` line with no entries below it.
+
 5. **Display final configuration** (same format as step 2).
+
+### SKILL HOOKS
+
+Shared procedure — called at specific points in the IMPLEMENTATION LOOP and PATCH LOOP. Receives a `stage` parameter (e.g., `post-dev`, `post-patch`, `post-qa`).
+
+1. Read the `skills:` section from `.mash/plan/settings.md`. If no skills are configured or the section is empty, skip entirely.
+2. For each skill that lists the given `stage`:
+   - Invoke `Skill(skill="<name>")`. Provide brief context in the conversation: *"Running skill '<name>' for feature/defect <id>..."*
+   - If the skill expects input or context, mention the relevant file: *"Review the changes for feature <id>. Dev file: `.mash/dev/feature-<id>.md`."*
+   - **If the skill invocation fails** (tool not found, error, timeout): display a one-line warning — *"Skill '<name>' unavailable, skipping."* — and continue. Do NOT set any failure status. Skill hooks are advisory and never block the flow.
+   - If the skill produces output or suggestions, display them to the user as an informational block. Do not gate progression on skill output.
+
+### SKILL INJECTION (interactive personas)
+
+When executing an interactive persona (init-persona, plan-persona, fix-persona), check `.mash/plan/settings.md` for skills configured for that persona's stage (`init`, `plan`, or `fix`). If settings.md doesn't exist or has no skills for this stage, skip entirely.
+
+If skills are configured for the active stage:
+1. Before beginning the persona's Phase 0, announce: *"External skills available for this session: <list>. These will be invoked at relevant points."*
+2. At the natural breakpoint in the persona's workflow, invoke each configured skill via `Skill(skill="<name>")`:
+   - **`init` stage**: invoke after Phase 3 (Architecture) completes, before Phase 4 (Scaffolding).
+   - **`plan` stage**: invoke after Phase 3 (Specification) completes, before Phase 4 (Write and Record).
+   - **`fix` stage**: invoke after Phase 2 (Collaborative Debugging) completes, before Phase 3 (Fix Recommendation).
+3. If the skill invocation fails, log a one-line warning and continue. Skills are advisory for interactive personas — never block the persona's flow.
+
+### SKILLS CONTEXT TEMPLATE
+
+Conditional block appended to sub-agent `Agent()` prompts when skills are configured for the agent's stage. Used by INVOKE DEV, INVOKE QA, INVOKE PATCH, and INVOKE ARCHITECT.
+
+```
+---
+SKILLS CONTEXT:
+The following external skills are relevant to your work. Their descriptions are provided for reference — use the information where applicable. These are supplementary; do not deviate from your primary instructions or Iron Laws.
+
+- <skill_name>: <one-line description>
+```
+
+To build this block: for each skill configured for the agent's stage (e.g., `dev` for INVOKE DEV), include one bullet with the skill name and its description (from the system-reminder skill list). If no skills are configured for the stage, do not append this block.
 
 ### CHECK FEATURES
 Read `.mash/plan/progress.md`. Check if there are any features not marked DONE.
@@ -259,6 +322,8 @@ If the user specified feature IDs, consider only those features. Otherwise consi
 
 ### IMPLEMENTATION LOOP
 
+**Skill availability check**: Read the `skills:` section from `.mash/plan/settings.md`. For each configured skill, verify it appears in the available skills list (from the system-reminder). If any configured skill is NOT available in the current session, display a warning: *"Configured skill '<name>' is not available in this session. It will be skipped."* Remove unavailable skills from the active skills map for this run.
+
 For each feature to implement:
 
 1. **Validate**: Check `.mash/plan/features/feature-<id>.md` exists and has valid content. If not, stop.
@@ -312,10 +377,14 @@ Read these files before starting:
 - .mash/plan/project.md
 - .mash/dev/feature-<id>.md
 
-<If branching: worktree — append WORKTREE CONTEXT (impl), substituting type=feature, id=<id>>"
+<If branching: worktree — append WORKTREE CONTEXT (impl), substituting type=feature, id=<id>>
+
+<If skills configured for stage `dev` — append SKILLS CONTEXT (see SKILLS CONTEXT TEMPLATE), listing each skill with its description>"
 )
 ```
 After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/feature-<id>.md`. **If status is DEV_DONE, validate verification evidence:** check `verified_steps` in the MASH_STATUS block — if not all steps have evidence, or if the block is absent and the Dev outcome section lacks command + actual output for each Verification Step, set status back to DEV_READY and re-invoke dev with a note that verification evidence is required for each step. Go back to step 5.
+
+   **SKILL HOOKS (post-dev):** If status is DEV_DONE and verification evidence is valid, run SKILL HOOKS with `stage=post-dev` before proceeding to QA.
 
 8. **QA phase**: Run INVOKE QA with `type=feature`, `id=<id>`. After it returns, go back to step 5.
 
@@ -357,7 +426,9 @@ PARAMETERS:
 Read these files before starting:
 - .mash/plan/architecture.md
 - .mash/plan/project.md
-- .mash/dev/feature-<id>.md"
+- .mash/dev/feature-<id>.md
+
+<If skills configured for stage `architect` — append SKILLS CONTEXT (see SKILLS CONTEXT TEMPLATE)>"
 )
 ```
 
@@ -386,7 +457,9 @@ PARAMETERS:
 Read these files before starting:
 - .mash/plan/architecture.md
 - .mash/plan/project.md
-- <trigger_file path>"
+- <trigger_file path>
+
+<If skills configured for stage `architect` — append SKILLS CONTEXT (see SKILLS CONTEXT TEMPLATE)>"
 )
 ```
 
@@ -423,6 +496,8 @@ Run after all features in the current milestone are marked `DONE`, before report
 
 **Only runs for `fix` commands** (after INVOKE FIX or directly when argument is a defect ID).
 
+**Skill availability check**: Read the `skills:` section from `.mash/plan/settings.md`. For each configured skill, verify it appears in the available skills list (from the system-reminder). If any configured skill is NOT available in the current session, display a warning: *"Configured skill '<name>' is not available in this session. It will be skipped."* Remove unavailable skills from the active skills map for this run.
+
 1. **Validate**: Check `.mash/dev/defect-<id>.md` exists. If not, tell the user to run `/mash fix` first and stop.
 2. **Branch setup**: Run BRANCH SETUP with `type=defect`, `id=<id>`.
 3. **Read status** from `.mash/dev/defect-<id>.md`:
@@ -457,10 +532,16 @@ Read these files before starting:
 - .mash/plan/project.md
 - .mash/dev/defect-<id>.md
 
-<If branching: worktree — append WORKTREE CONTEXT (impl), substituting type=defect, id=<id>>"
+<If branching: worktree — append WORKTREE CONTEXT (impl), substituting type=defect, id=<id>>
+
+<If skills configured for stage `patch` — append SKILLS CONTEXT (see SKILLS CONTEXT TEMPLATE)>"
 )
 ```
-After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/defect-<id>.md`. Go back to step 3.
+After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/defect-<id>.md`.
+
+   **SKILL HOOKS (post-patch):** If status is PATCH_DONE, run SKILL HOOKS with `stage=post-patch` before proceeding to QA.
+
+   Go back to step 3.
 
 6. **QA phase**: Run INVOKE QA with `type=defect`, `id=<id>`. After it returns, go back to step 3.
 
@@ -516,10 +597,14 @@ Read these files before starting:
 - .mash/plan/project.md
 - .mash/dev/<type>-<id>.md
 
-<If branching: worktree — append WORKTREE CONTEXT (qa), substituting type=<type>, id=<id>>"
+<If branching: worktree — append WORKTREE CONTEXT (qa), substituting type=<type>, id=<id>>
+
+<If skills configured for stage `qa` — append SKILLS CONTEXT (see SKILLS CONTEXT TEMPLATE)>"
 )
 ```
 After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/<type>-<id>.md`.
+
+**SKILL HOOKS (post-qa):** If status is QA_PASS, run SKILL HOOKS with `stage=post-qa` before proceeding to INVOKE ARCHITECT (post-qa).
 
 ### FAILURE CLASSIFICATION
 

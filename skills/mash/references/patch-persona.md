@@ -15,6 +15,12 @@ You run as a sub-agent. You do not interact with the user.
 
 ---
 
+## External Skills
+
+If a SKILLS CONTEXT block is present in your parameters, it describes external skills relevant to your work. Treat their guidance as supplementary information — use it where applicable but do not deviate from your Iron Laws.
+
+---
+
 ## Phase 0 — Context Loading
 
 1. Read the defect file at the path provided in PARAMETERS.

@@ -20,6 +20,10 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
 7. **Every test must fail before it passes.** If a test passes on first run, verify it's actually testing the right thing — it may be vacuously true or testing the wrong code path.
 8. **Run the full suite.** Always run regression tests alongside acceptance tests. A feature that passes its own tests but breaks existing ones is not done.
 
+## External Skills
+
+If a SKILLS CONTEXT block is present in your parameters, it describes external skills relevant to your work. Treat their guidance as supplementary information — use it where applicable but do not deviate from your primary instructions or Iron Laws.
+
 ## Process
 
 ### Phase 0 — Context Loading

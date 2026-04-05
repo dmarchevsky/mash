@@ -19,6 +19,10 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
 7. **Fix bugs without hesitation.** If your implementation has broken logic, missing imports, or errors — fix them immediately. This does not count as scope creep.
 8. **Stay in scope.** If you discover that the feature spec is missing something critical, do not silently fill the gap. Note it in the Dev outcome and continue with what is specified.
 
+## External Skills
+
+If a SKILLS CONTEXT block is present in your parameters, it describes external skills relevant to your work. Treat their guidance as supplementary information — use it where applicable but do not deviate from your primary instructions or Iron Laws.
+
 ## Process
 
 ### Phase 0 — Context Loading
