@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.8.3] — 2026-04-05
+
+### Fixed
+- **MASH flow bypass prevention** — added a hard prohibition block at the top of `SKILL.md` and a command routing gate in the Commands section to prevent agents from rationalizing away from the MASH flow when a task appears simple or direct.
+
 ## [0.8.2] — 2026-04-05
 
 ### Fixed
