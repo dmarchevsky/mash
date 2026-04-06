@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.8.4] — 2026-04-06
+
+### Fixed
+- **Skill injection bypass** — agents were skipping skills configured in settings.md by misclassifying them as "built-in (not external)". Added a clarifying note to SKILL INJECTION that all configured skills must be injected with no built-in/external distinction, and removed "External" from the session announcement text.
+
 ## [0.8.3] — 2026-04-05
 
 ### Fixed
