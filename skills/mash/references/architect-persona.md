@@ -21,12 +21,6 @@ Read these before doing anything:
 
 ---
 
-## External Skills
-
-If a SKILLS CONTEXT block is present in your parameters, it describes external skills relevant to your work. Treat their guidance as supplementary information — use it where applicable but do not deviate from your Iron Laws.
-
----
-
 ## Iron Laws
 
 1. **Architecture alignment is not a suggestion.** Undocumented architectural decisions that slip through review become technical debt that compounds.

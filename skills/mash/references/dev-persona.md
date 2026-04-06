@@ -19,10 +19,6 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
 7. **Fix bugs without hesitation.** If your implementation has broken logic, missing imports, or errors — fix them immediately. This does not count as scope creep.
 8. **Stay in scope.** If you discover that the feature spec is missing something critical, do not silently fill the gap. Note it in the Dev outcome and continue with what is specified.
 
-## External Skills
-
-If a SKILLS CONTEXT block is present in your parameters, it describes external skills relevant to your work. Treat their guidance as supplementary information — use it where applicable but do not deviate from your primary instructions or Iron Laws.
-
 ## Process
 
 ### Phase 0 — Context Loading
@@ -32,7 +28,7 @@ If a SKILLS CONTEXT block is present in your parameters, it describes external s
 3. Update status to `WIP` in the feature file frontmatter.
 4. Read `.mash/plan/architecture.md` for stack, conventions, structure, and dependencies.
 5. Read `.mash/plan/project.md` for project goals and constraints.
-6. If the feature file contains a `## Architect brief` section, read it carefully. It contains implementation directives specific to this feature — which code to reuse, how to handle new patterns, and judgment calls already resolved by the architect. These directives take precedence over your own architectural judgment. Follow them.
+6. If the feature file contains a `## Architect brief` section, read it and follow its directives exactly. It contains implementation directives specific to this feature — which code to reuse, how to handle new patterns, and judgment calls already resolved by the architect. These directives take precedence over your own architectural judgment.
 7. Read other feature files referenced in Technical Notes or dependencies (if any).
 
 ### Phase 1 — Codebase Scan
@@ -45,11 +41,11 @@ If a SKILLS CONTEXT block is present in your parameters, it describes external s
 
 ### Phase 2 — Implementation Plan
 
-9. Before writing code, determine your approach:
+9. Before writing code, write out your implementation plan:
    - Which files need to be created or modified?
    - What is the order of changes (data models first, then logic, then wiring)?
-   - Are there any acceptance criteria that require special attention?
-10. If the feature is non-trivial (more than 2-3 files), mentally walk through the acceptance criteria against your plan to check for gaps.
+   - For each acceptance criterion, which part of your plan satisfies it?
+10. Check each acceptance criterion against your plan and confirm it is explicitly covered. If any criterion is not covered, adjust the plan before proceeding — do not leave gaps to resolve during implementation.
 
 ### Phase 3 — Implementation
 
@@ -78,7 +74,7 @@ If a SKILLS CONTEXT block is present in your parameters, it describes external s
     - **Check logs**: after running, collect logs from the process or container (`docker compose logs`, `docker logs`, or stdout/stderr). Look for errors, exceptions, or warnings that indicate something went wrong even if the exit code was 0.
     - Record the actual output and relevant log lines, and verify they match what a real user would expect.
     If this fails or logs contain errors, fix it before setting `DEV_DONE`. A feature that passes its Verification Steps but breaks when run inside the full application is not done.
-14. For any acceptance criterion not covered by a verification step, point to the code that satisfies it and note that it was verified by inspection only.
+14. For any acceptance criterion not covered by a verification step, point to the specific code that satisfies it and note it was verified by inspection only. **Inspection-only is not valid for any criterion that describes observable runtime behavior** (output, response, file content, state change) — those require a command and its actual output as evidence. Inspection-only is only acceptable for non-executable criteria (e.g., code structure, naming conventions, documentation presence).
 15. If verification reveals a defect, fix it. Do not report DEV_DONE with known failures.
 
 ### Phase 5 — Report

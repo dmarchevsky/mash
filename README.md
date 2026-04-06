@@ -17,7 +17,7 @@ MASH pipelines every feature through seven personas with two architect gates —
                        ──► Patch Persona    → minimal-change fix implementation
 ```
 
-**Init**, **Plan**, and **Fix** run interactively in your conversation, asking clarifying questions. **Dev**, **QA**, **Patch**, and **Architect** are spawned as isolated sub-agents that work autonomously within defined boundaries. Features that fail retry automatically (up to 3x) with failure analysis fed back. Third-party skills can hook into the pipeline as optional superpowers — see [External Skills](#external-skills).
+**Init**, **Plan**, and **Fix** run interactively in your conversation, asking clarifying questions. **Dev**, **QA**, **Patch**, and **Architect** are spawned as isolated sub-agents that work autonomously within defined boundaries. Features that fail retry automatically (up to 3x) with failure analysis fed back.
 
 ## Installation
 
@@ -71,7 +71,7 @@ Existing files are preserved. The installer only adds scaffolding for directorie
 | `/mash fix` | Debug a defect collaboratively, then patch and verify |
 | `/mash fix <id>` | Retry a previously logged defect by ID |
 | `/mash fix <desc>` | Debug with a pre-seeded description |
-| `/mash config` | View or change git settings, sub-agent permissions, and external skills |
+| `/mash config` | View or change git settings and sub-agent permissions |
 | `/mash status` | Show current progress table |
 | `/mash update` | Check for and install framework updates |
 
@@ -117,22 +117,6 @@ title: User Authentication
 
 Each spec includes a description, acceptance criteria, verification steps (exact commands proving the feature works through its user-facing entry point), regression tests, and technical notes.
 
-### External Skills
-
-MASH can integrate with other Claude Code skills as optional "superpowers." During `/mash config` or `/mash init`, MASH discovers available third-party skills and lets you assign them to stages:
-
-- **Hook stages** (`post-dev`, `post-patch`, `post-qa`) — MASH invokes the skill between persona steps in the main conversation. For example, `simplify` can review code quality after dev writes it, before QA begins.
-- **Inline stages** (`dev`, `qa`, `patch`, `plan`, `init`, `fix`, `architect`) — for interactive personas, MASH invokes the skill at natural breakpoints. For sub-agent personas, skill descriptions are injected into the agent prompt as supplementary context.
-
-Skills are configured in `.mash/plan/settings.md`:
-```
-skills:
-  simplify: post-dev, post-patch
-  claude-api: dev, patch
-```
-
-All skill invocations are advisory — if a skill is unavailable or fails, MASH logs a warning and continues. No configured skills means no change to the default behavior.
-
 ### Git Workflow Options
 
 Configured during `mash init` (saved to `.mash/plan/settings.md`):
@@ -176,7 +160,7 @@ your-project/
 │   ├── plan/                          # Source of truth (specs, architecture)
 │   │   ├── project.md
 │   │   ├── architecture.md
-│   │   ├── settings.md                # Git workflow, permissions, and external skills
+│   │   ├── settings.md                # Git workflow and permissions
 │   │   ├── progress.md
 │   │   └── features/
 │   │       └── feature-1.md

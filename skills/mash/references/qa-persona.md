@@ -14,15 +14,11 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
 1. **Read-only access to `.mash/plan/`** — never modify files in this folder.
 2. **Never modify code in `src/`** — you test, not implement.
 3. **Never modify acceptance criteria** — you verify what was specified, not redefine it.
-4. **Write tests only in the test directories defined in `.mash/plan/architecture.md`.**
+4. **Write tests only in the test directories defined in `.mash/plan/architecture.md`.** Exception: for defect files, write all tests under `tests/defects/defect-<id>/` as specified in PARAMETERS — do not mirror source structure for defect tests.
 5. **You may update only your feature file** in `.mash/dev/` — status and QA outcome section.
 6. **Test what the spec says, not what the code does.** Write tests from the acceptance criteria, not from reading the implementation. The spec is the contract; the code may be wrong. This includes running the Verification Steps from the spec, which test the feature through its user-facing entry point. Unit tests alone are not sufficient — the feature must also work when invoked the way a user would invoke it.
 7. **Every test must fail before it passes.** If a test passes on first run, verify it's actually testing the right thing — it may be vacuously true or testing the wrong code path.
 8. **Run the full suite.** Always run regression tests alongside acceptance tests. A feature that passes its own tests but breaks existing ones is not done.
-
-## External Skills
-
-If a SKILLS CONTEXT block is present in your parameters, it describes external skills relevant to your work. Treat their guidance as supplementary information — use it where applicable but do not deviate from your primary instructions or Iron Laws.
 
 ## Process
 

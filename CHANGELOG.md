@@ -4,6 +4,22 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.8.6] — 2026-04-06
+
+### Fixed
+- **PREAMBLE sub-agent ambiguity** — clarified which personas run in-conversation (init, plan, fix) vs. as sub-agents (dev, QA, patch, architect). Previous wording listed only the sub-agent group, leaving in-conversation personas unspecified.
+- **Dev inspection-only escape hatch** — tightened the inspection-only rule to exclude any criterion that describes observable runtime behavior. Only non-executable criteria (code structure, naming, docs) qualify; runtime behavior requires command output as evidence.
+- **Dev architect brief** — replaced "read it carefully" with "read it and follow its directives exactly" to remove the softness that allowed treating directives as suggestions.
+- **Dev implementation plan step** — replaced "mentally walk through acceptance criteria" with a written plan step: list files, order of changes, and explicit per-criterion coverage check before any implementation begins.
+- **QA defect test path** — added rule 4 exception: defect tests go under `tests/defects/defect-<id>/`, not mirrored to source structure. Prevents conflict between the base mirroring rule and the PARAMETERS injection.
+- **Architect extension visibility** — MASH now displays a one-line notice when the pre-dev architect documents extensions to `architecture.md`, so the user is aware of silent writes before dev proceeds.
+- **Progress.md routing statement** — rewrote the confusing "always read/update" + "is NOT re-read" sentence. Now clearly states: progress.md is a display, not a routing source during the implementation loop.
+
+## [0.8.5] — 2026-04-06
+
+### Removed
+- **External skills system** — removed 3rd-party skill integration from the MASH flow entirely. Skill invocations were distracting the model from MASH rules and causing flow violations. Removed: SKILL HOOKS, SKILL INJECTION, SKILLS CONTEXT TEMPLATE shared procedures; skill availability checks from IMPLEMENTATION LOOP and PATCH LOOP; External skills config option from CONFIGURE SETTINGS; `## Skills` section from the settings template; `## External Skills` sections from dev, qa, patch, and architect personas; skills paragraph from PREAMBLE.md; External Skills section from README.
+
 ## [0.8.4] — 2026-04-06
 
 ### Fixed
