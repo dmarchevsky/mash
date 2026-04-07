@@ -47,7 +47,7 @@ The installer detects which AI client(s) are available and installs MASH globall
 **Per project:**
 - `.mash/plan/` — where specs and feature definitions live
 
-Existing files are preserved. The installer only adds scaffolding for directories that don't exist yet. Running it in subsequent projects skips the global install if already up to date.
+Existing files are preserved. Running it in subsequent projects skips the global install if already up to date. Project-level scaffolding (`.mash/plan/`, `.mash/dev/`) is created by `/mash init`, not the installer.
 
 ## Quick Start
 
@@ -83,7 +83,7 @@ Each persona has a defined role and strict file access boundaries:
 
 | Persona | Role | Reads | Writes |
 |---------|------|-------|--------|
-| **Init** | Define project scope and technical decisions | Filesystem scan | `.mash/plan/project.md`, `architecture.md`, `settings.md`, `progress.md` |
+| **Init** | Define project scope and technical decisions | Filesystem scan | `.mash/plan/project.md`, `architecture.md`, `settings.md`, `progress.md`, `lessons.md` |
 | **Plan** | Turn ideas into detailed, testable feature specs | All plan files, `src/` | `.mash/plan/features/feature-<id>.md`, `progress.md` |
 | **Architect** | Verify spec-architecture alignment (pre-dev) and QA goal coverage (post-qa) | Plan files, dev/defect file | `.mash/dev/feature-<id>.md` (dev brief, pre-dev mode), `.mash/plan/architecture.md` (EXTENSION decisions, pre-dev mode) |
 | **Dev** | Implement a single feature according to spec | Plan files (read-only) | `src/`, `.mash/dev/feature-<id>.md` |
@@ -162,6 +162,7 @@ your-project/
 │   │   ├── architecture.md
 │   │   ├── settings.md                # Git workflow and permissions
 │   │   ├── progress.md
+│   │   ├── lessons.md                 # Operational lessons learned
 │   │   └── features/
 │   │       └── feature-1.md
 │   └── dev/                           # Working copies (gitignored)
@@ -222,7 +223,7 @@ Superpowers is a composable skills plugin that enforces mandatory process guardr
 - **Autonomous execution** — dev and QA agents work independently within their boundaries
 - **Retry with context** — failed features are retried up to 3 times with failure analysis fed back to the next attempt
 - **Application-level verification** — dev must run the full application end-to-end before marking a feature done; QA checks the app starts before writing tests; a milestone smoke test confirms the whole application works after all features land
-- **Extensible via skills** — integrate third-party Claude Code skills as optional superpowers at any stage of the pipeline
+- **Cross-feature learning** — operational lessons (failed approaches, pitfalls, QA gaps) are extracted after each completed feature/defect and fed to future dev and patch agents
 - **Framework, not boilerplate** — MASH manages the process; your project's code, structure, and tools are entirely up to you
 
 ## License
