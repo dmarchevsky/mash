@@ -70,14 +70,8 @@ fi
 INSTALLED_VERSION=""
 if [ -f "$CLAUDE_HOME/mash/VERSION" ]; then
   INSTALLED_VERSION="$(tr -d '[:space:]' < "$CLAUDE_HOME/mash/VERSION")"
-elif [ -f "$CLAUDE_HOME/skills/mash/VERSION" ]; then
-  INSTALLED_VERSION="$(tr -d '[:space:]' < "$CLAUDE_HOME/skills/mash/VERSION")"
 elif [ -f "$OPENCODE_HOME/mash/VERSION" ]; then
   INSTALLED_VERSION="$(tr -d '[:space:]' < "$OPENCODE_HOME/mash/VERSION")"
-elif [ -f "$OPENCODE_HOME/agents/mash/VERSION" ]; then
-  INSTALLED_VERSION="$(tr -d '[:space:]' < "$OPENCODE_HOME/agents/mash/VERSION")"
-elif [ -f "$OPENCODE_HOME/skills/mash/VERSION" ]; then
-  INSTALLED_VERSION="$(tr -d '[:space:]' < "$OPENCODE_HOME/skills/mash/VERSION")"
 fi
 
 if [ -n "$INSTALLED_VERSION" ]; then
@@ -88,14 +82,6 @@ if [ -n "$INSTALLED_VERSION" ]; then
   fi
   if [ "$INSTALLED_VERSION" != "$NEW_VERSION" ]; then
     info "Updating from v$INSTALLED_VERSION to v$NEW_VERSION"
-    # Check for migration notes
-    INSTALLED_MINOR="${INSTALLED_VERSION%.*}"
-    NEW_MINOR="${NEW_VERSION%.*}"
-    if [ "$INSTALLED_MINOR" != "$NEW_MINOR" ] && [ -d "$MASH_SRC/migrations" ]; then
-      for migration in "$MASH_SRC/migrations/"*.md; do
-        [ -f "$migration" ] && warn "Migration notes available: $(basename "$migration")"
-      done
-    fi
   fi
 else
   info "Installing MASH v$NEW_VERSION"
@@ -142,54 +128,12 @@ else
   die "Neither 'claude' nor 'opencode' found in PATH. Install one of them first."
 fi
 
-# --- Step 3c: Migrate from local to global installation ---
-
-OLD_CLAUDE_SKILL="$TARGET_DIR/skills/mash"
-OLD_OPENCODE_SKILL="$TARGET_DIR/.opencode/skills/mash"
-
-if [ -d "$OLD_CLAUDE_SKILL" ] || [ -d "$OLD_OPENCODE_SKILL" ]; then
-  warn "Migrating from local to global installation..."
-
-  # Remove local skill directories
-  [ -d "$TARGET_DIR/skills" ] && rm -rf "$TARGET_DIR/skills" && ok "Removed skills/"
-  [ -d "$TARGET_DIR/.opencode/skills" ] && rm -rf "$TARGET_DIR/.opencode/skills" && ok "Removed .opencode/skills/"
-  [ -d "$TARGET_DIR/.opencode/commands" ] && rm -rf "$TARGET_DIR/.opencode/commands" && ok "Removed .opencode/commands/"
-  [ -f "$TARGET_DIR/.claude/commands/mash.md" ] && rm -f "$TARGET_DIR/.claude/commands/mash.md" && ok "Removed .claude/commands/mash.md"
-
-  # Remove old gitignore entries
-  GITIGNORE="$TARGET_DIR/.gitignore"
-  if [ -f "$GITIGNORE" ]; then
-    sed -i '/^skills\/mash\/$/d; /^\.opencode\/$/d' "$GITIGNORE" 2>/dev/null || true
-    ok "Cleaned .gitignore"
-  fi
-
-  # Remove skills.paths from opencode.json if present
-  if [ -f "$TARGET_DIR/opencode.json" ]; then
-    if command -v node &>/dev/null; then
-      node -e "
-        const f='$TARGET_DIR/opencode.json';
-        const j=JSON.parse(require('fs').readFileSync(f,'utf8'));
-        delete j.skills;
-        require('fs').writeFileSync(f,JSON.stringify(j,null,2)+'\n');
-      " 2>/dev/null && ok "Removed skills path from opencode.json" || true
-    fi
-  fi
-
-  ok "Local install cleaned up — continuing with global install"
-fi
-
 # --- Step 4: Install framework files globally ---
 
 info "Installing framework files..."
 
 if [ "$INSTALL_CLAUDE" = true ]; then
   mkdir -p "$CLAUDE_HOME/mash" "$CLAUDE_HOME/commands"
-
-  # Migrate: remove legacy skill install if present
-  if [ -d "$CLAUDE_HOME/skills/mash" ]; then
-    rm -rf "$CLAUDE_HOME/skills/mash"
-    ok "Removed legacy $CLAUDE_HOME/skills/mash/"
-  fi
 
   # Install SKILL.md as content file (no frontmatter) with rewritten paths
   sed "s|skills/mash/references/|$CLAUDE_HOME/mash/references/|g; s|skills/mash/VERSION|$CLAUDE_HOME/mash/VERSION|g" \
@@ -246,20 +190,6 @@ fi
 if [ "$INSTALL_OPENCODE" = true ]; then
   mkdir -p "$OPENCODE_HOME/commands" "$OPENCODE_HOME/mash"
 
-  # Migrate: remove legacy installs if present
-  if [ -d "$OPENCODE_HOME/agents/mash" ]; then
-    rm -rf "$OPENCODE_HOME/agents/mash"
-    ok "Removed legacy $OPENCODE_HOME/agents/mash/"
-  fi
-  if [ -d "$OPENCODE_HOME/skills/mash" ]; then
-    rm -rf "$OPENCODE_HOME/skills/mash"
-    ok "Removed legacy $OPENCODE_HOME/skills/mash/"
-  fi
-  if [ -f "$OPENCODE_HOME/agents/mash.md" ]; then
-    rm -f "$OPENCODE_HOME/agents/mash.md"
-    ok "Removed legacy $OPENCODE_HOME/agents/mash.md"
-  fi
-
   # Install SKILL.md as content file with rewritten paths
   sed "s|skills/mash/references/|$OPENCODE_HOME/mash/references/|g; s|skills/mash/VERSION|$OPENCODE_HOME/mash/VERSION|g" \
     "$MASH_SRC/skills/mash/SKILL.md" > "$OPENCODE_HOME/mash/SKILL.md"
@@ -309,30 +239,7 @@ if [ "$INSTALL_OPENCODE" = true ]; then
   fi
 fi
 
-# --- Step 5: Create scaffolding (only if missing) ---
-
-created_scaffolding=false
-
-for dir in .mash .mash/plan .mash/plan/features .mash/dev; do
-  if [ ! -d "$TARGET_DIR/$dir" ]; then
-    mkdir -p "$TARGET_DIR/$dir"
-    ok "Created $dir/"
-    created_scaffolding=true
-  fi
-done
-
-# Add .gitkeep to empty dirs
-for dir in .mash/plan/features .mash/dev; do
-  if ! find "$TARGET_DIR/$dir" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null | grep -q .; then
-    touch "$TARGET_DIR/$dir/.gitkeep"
-  fi
-done
-
-if [ "$created_scaffolding" = false ]; then
-  ok "Scaffolding already exists — skipped"
-fi
-
-# --- Step 6: CLAUDE.md section (insert or replace) ---
+# --- Step 5: CLAUDE.md section (insert or replace) ---
 
 CLAUDE_MD="$TARGET_DIR/CLAUDE.md"
 
@@ -393,7 +300,7 @@ else
   ok "Appended MASH section to CLAUDE.md"
 fi
 
-# --- Step 7: Append gitignore entries ---
+# --- Step 6: Append gitignore entries ---
 
 GITIGNORE="$TARGET_DIR/.gitignore"
 
@@ -417,7 +324,7 @@ else
   ok ".gitignore already has MASH entries — skipped"
 fi
 
-# --- Step 8: Project-level opencode.json (permissions only) ---
+# --- Step 7: Project-level opencode.json (permissions only) ---
 
 if [ "$INSTALL_OPENCODE" = true ]; then
   OPENCODE_JSON="$TARGET_DIR/opencode.json"
@@ -429,17 +336,11 @@ if [ "$INSTALL_OPENCODE" = true ]; then
   fi
 fi
 
-# --- Step 9: Done ---
+# --- Step 8: Done ---
 
 if [ -n "$INSTALLED_VERSION" ] && [ "$INSTALLED_VERSION" != "$NEW_VERSION" ]; then
   printf '\n\033[1;32mMASH updated to v%s.\033[0m\n\n' "$NEW_VERSION"
 else
   printf '\n\033[1;32mMASH v%s installed successfully.\033[0m\n' "$NEW_VERSION"
-  if [ "$INSTALL_CLAUDE" = true ] && [ "$INSTALL_OPENCODE" = true ]; then
-    printf 'Run \033[1m/mash init\033[0m to get started.\n\n'
-  elif [ "$INSTALL_OPENCODE" = true ]; then
-    printf 'Run \033[1m/mash init\033[0m to get started.\n\n'
-  else
-    printf 'Run \033[1m/mash init\033[0m to get started.\n\n'
-  fi
+  printf 'Run \033[1m/mash init\033[0m to get started.\n\n'
 fi
