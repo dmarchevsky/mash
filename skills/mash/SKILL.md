@@ -17,6 +17,7 @@ You are MASH — the owner and driver of the project. You are responsible for th
 - `.mash/plan/architecture.md` — technical and architectural decisions
 - `.mash/plan/settings.md` — git workflow and commit preferences
 - `.mash/plan/progress.md` — user-facing status display. MASH updates it to reflect current state but **does not read it for routing decisions during the implementation loop**. Routing uses the `---MASH_STATUS---` block from agent output, falling back to the dev file. Outside the implementation loop (e.g., dashboard, status command), read progress.md directly.
+- `.mash/plan/lessons.md` — operational lessons learned across features and defects (what worked, what didn't, what to watch out for). For conventions and patterns, see `architecture.md`.
 - `.mash/plan/features/` — feature specifications (immutable during development)
 - `.mash/dev/` — working copies of features during implementation, and defect files (`defect-<id>.md`)
 
@@ -312,6 +313,15 @@ Blocker: <one-line blocker from the previous MASH_STATUS block or outcome sectio
 The Dev outcome (attempt N) section(s) in the feature file record what was tried. Read them before choosing your approach — do not repeat a failed approach.
 ```
 
+**Lesson injection:** If `.mash/plan/lessons.md` exists and contains lesson entries, read it and select up to 5 lessons relevant to this feature (by keyword match against the feature description, acceptance criteria, technical notes, and dependency chain). If relevant lessons are found, append a LESSONS CONTEXT block to the agent prompt (after RETRY CONTEXT if present):
+```
+---
+LESSONS CONTEXT:
+These lessons were learned from previous features and defects in this project. Apply them where relevant — they reflect real issues encountered in this codebase.
+<list of selected lessons, one per line, format: "- L-NNN [type]: lesson text">
+---
+```
+
 Read `skills/mash/references/dev-persona.md` and invoke:
 ```
 Agent(
@@ -326,6 +336,7 @@ Read these files before starting:
 - .mash/plan/project.md
 - .mash/dev/feature-<id>.md
 
+<If LESSONS CONTEXT — append it here>
 <If branching: worktree — append WORKTREE CONTEXT (impl), substituting type=feature, id=<id>>"
 )
 ```
@@ -461,6 +472,15 @@ Blocker: <one-line blocker from the previous MASH_STATUS block or outcome sectio
 The Patch outcome (attempt N) section(s) in the defect file record what was tried. Read them before proceeding — do not repeat a failed approach.
 ```
 
+**Lesson injection:** If `.mash/plan/lessons.md` exists and contains lesson entries, read it and select up to 5 lessons relevant to this defect (by keyword match against the defect Summary, Root Cause Hypothesis, Fix Recommendation, and feature_ref if set). If relevant lessons are found, append a LESSONS CONTEXT block to the agent prompt (after RETRY CONTEXT if present):
+```
+---
+LESSONS CONTEXT:
+These lessons were learned from previous features and defects in this project. Apply them where relevant — they reflect real issues encountered in this codebase.
+<list of selected lessons, one per line, format: "- L-NNN [type]: lesson text">
+---
+```
+
 Read `skills/mash/references/patch-persona.md` and invoke:
 ```
 Agent(
@@ -475,6 +495,7 @@ Read these files before starting:
 - .mash/plan/project.md
 - .mash/dev/defect-<id>.md
 
+<If LESSONS CONTEXT — append it here>
 <If branching: worktree — append WORKTREE CONTEXT (impl), substituting type=defect, id=<id>>"
 )
 ```
@@ -488,11 +509,12 @@ After the agent returns, read the `---MASH_STATUS---` block in the agent output 
    1. Run INVOKE ARCHITECT (post-qa) for this defect.
    2. If ARCH_FAIL, present gaps to the user via AskUserQuestion (same three options as in INVOKE ARCHITECT (post-qa) section).
    3. Present QA outcome to the user. Use AskUserQuestion to confirm the fix is resolved.
-   4. If `git: none` in settings.md, skip git operations. Otherwise:
+   4. Run **EXTRACT LESSONS** for this defect.
+   5. If `git: none` in settings.md, skip git operations. Otherwise:
       - Commit with a descriptive message referencing the defect (use `git commit` from within the worktree if `branching: worktree`, or from the project root if `branching: current_branch`).
       - If `commit: auto` and `branching: worktree`: merge the defect branch (`mash/defect-<id>`) back into the original branch. If the merge produces conflicts, stop and inform the user with the conflicting files listed — do NOT run WORKTREE CLEANUP. Ask the user to resolve conflicts, then confirm to proceed with cleanup.
-   5. Run WORKTREE CLEANUP if applicable.
-   6. Stop.
+   6. Run WORKTREE CLEANUP if applicable.
+   7. Stop.
 
 8. **Failure handling** (PATCH_FAIL or QA_FAIL): See FAILURE CLASSIFICATION below. For defects:
    - **Implementation bug**: propose targeted changes to the Fix Recommendation and retry.
@@ -548,7 +570,32 @@ Used by failure handling in both IMPLEMENTATION LOOP (step 9) and PATCH LOOP (st
 - **Implementation bug**: the approach is sound but the code has specific, fixable errors (wrong logic, missing import, off-by-one, etc.). → Propose targeted changes and retry.
 - **Approach failure**: the approach was executed correctly but did not achieve the goal — code ran, tests passed technically, but the real-world outcome was not achieved. → Do NOT retry the same approach. Use AskUserQuestion to ask the user what alternative approach to try, or whether to discuss why this approach is failing. Only proceed after the user proposes a different approach. Record what was tried and why it didn't work in the spec's Technical Notes (features) or Debugging Notes (defects) so future attempts don't repeat it.
 
+### EXTRACT LESSONS
+
+Called after a feature or defect completes successfully (after ARCH_VERIFIED). MASH performs this step itself — it is a meta-analysis task (reading outcomes and summarizing), not code writing.
+
+1. Read all `## Dev outcome (attempt N)`, `## QA outcome (attempt N)`, and `## Patch outcome (attempt N)` sections from the completed dev/defect file.
+2. Review the trajectory and ask these four questions:
+   - Did an approach fail that seemed like it should work? → **failure** lesson
+   - Did we discover a project-specific constraint the hard way? → **pitfall** lesson
+   - Did a non-obvious approach succeed? → **success** lesson
+   - Did QA catch something that dev should have caught? → **verification** lesson
+3. **Boundary check**: If a potential lesson is really a convention or pattern that should govern future code structure (naming, dependency choice, module organization), it belongs in `architecture.md` — the architect already handles this. Only write to `lessons.md` if it is operational experience (failed approaches, tool/environment pitfalls, debugging discoveries, QA gaps).
+4. **Skip extraction if**: attempt == 1 AND no QA failures AND no architect extensions — a clean first-attempt success does not produce lessons.
+5. If lessons are identified: read `.mash/plan/lessons.md`, determine the next `L-NNN` ID from the highest existing entry, and append 1-3 lessons to the appropriate category section. Each lesson uses this format:
+   ```
+   ### L-NNN: <concise title>
+   - **Source**: feature-<id> / defect-<id>
+   - **Type**: success | failure | pitfall
+   - **Context**: <one line: what was being built/fixed>
+   - **Lesson**: <1-2 sentences: what worked, what didn't, or what to do differently>
+   - **Tags**: <comma-separated keywords>
+   ```
+
 ### POST-FEATURE (after QA_PASS)
+
+Run **EXTRACT LESSONS** for this feature.
+
 Read `git`, `commit`, and `branching` from `.mash/plan/settings.md` and act accordingly:
 
 **If `git: none`:**

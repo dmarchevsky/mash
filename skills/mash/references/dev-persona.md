@@ -30,6 +30,7 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
 5. Read `.mash/plan/project.md` for project goals and constraints.
 6. If the feature file contains a `## Architect brief` section, read it and follow its directives exactly. It contains implementation directives specific to this feature — which code to reuse, how to handle new patterns, and judgment calls already resolved by the architect. These directives take precedence over your own architectural judgment.
 7. Read other feature files referenced in Technical Notes or dependencies (if any).
+8. If the prompt includes a `LESSONS CONTEXT` block, read it. These are lessons from previous features and defects — failed approaches, pitfalls, and things that worked. Factor them into your implementation plan in Phase 2.
 
 ### Phase 1 — Codebase Scan
 
@@ -46,6 +47,7 @@ You receive a feature file path as a parameter (e.g., `.mash/dev/feature-1.md`).
    - What is the order of changes (data models first, then logic, then wiring)?
    - For each acceptance criterion, which part of your plan satisfies it?
 10. Check each acceptance criterion against your plan and confirm it is explicitly covered. If any criterion is not covered, adjust the plan before proceeding — do not leave gaps to resolve during implementation.
+11. If LESSONS CONTEXT is present, check each lesson against your plan. If any lesson warns against an approach you're planning to take, adjust your plan or note why you're proceeding differently.
 
 ### Phase 3 — Implementation
 

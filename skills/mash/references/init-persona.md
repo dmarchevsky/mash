@@ -112,16 +112,17 @@ Now that the project is defined, make technical decisions informed by its goals 
 ### Phase 4 — Scaffolding
 
 1. Create `.mash/plan/progress.md` from the template at `skills/mash/references/templates/progress.md`.
-2. Ensure `.mash/plan/features/` directory exists.
-3. Ensure `.mash/dev/` directory exists.
-4. If a package manager is specified in architecture and no manifest exists yet, run the appropriate init command (e.g., `npm init -y`).
-5. **If a pre-seeded description file was provided**, scan it for feature mentions: a "Features" section, a list of user stories, or any itemized capabilities. For each detected feature:
+2. Create `.mash/plan/lessons.md` from the template at `skills/mash/references/templates/lessons.md`.
+3. Ensure `.mash/plan/features/` directory exists.
+4. Ensure `.mash/dev/` directory exists.
+5. If a package manager is specified in architecture and no manifest exists yet, run the appropriate init command (e.g., `npm init -y`).
+6. **If a pre-seeded description file was provided**, scan it for feature mentions: a "Features" section, a list of user stories, or any itemized capabilities. For each detected feature:
    - Assign a sequential ID (1, 2, 3, …).
    - Create `.mash/plan/features/<id>-<slug>.md` using the feature template, filling in `id`, `title`, and `Description` from the brief excerpt. Leave all other sections as template placeholders.
    - Add a CREATED row for it in `progress.md`.
    After creating all stubs, tell the user how many were created and suggest: *"Run `mash plan <id>` to flesh out each one."* If no features are detected in the file, skip this step silently.
-6. **If `opencode.json` exists at the project root**: read it and ensure `"default_agent": "mash"` is present at the top level. If missing, add it — merge into the existing structure, preserving all other entries — and write the file back.
-7. Confirm initialization is complete.
+7. **If `opencode.json` exists at the project root**: read it and ensure `"default_agent": "mash"` is present at the top level. If missing, add it — merge into the existing structure, preserving all other entries — and write the file back.
+8. Confirm initialization is complete.
 
 ## Tone
 

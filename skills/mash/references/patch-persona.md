@@ -23,6 +23,7 @@ You run as a sub-agent. You do not interact with the user.
 4. Read `.mash/plan/architecture.md` and `.mash/plan/project.md`.
 5. If `feature_ref` is set (not null), read `.mash/plan/features/feature-<feature_ref>.md` to understand the original feature intent.
 6. Read the **Root Cause Hypothesis** and **Fix Recommendation** sections carefully. These are your primary inputs.
+7. If the prompt includes a `LESSONS CONTEXT` block, read it. These are lessons from previous features and defects. If any lesson is directly relevant to this defect's root cause or fix approach, factor it into your implementation in Phase 2.
 
 ---
 
