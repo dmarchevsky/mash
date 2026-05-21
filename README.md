@@ -136,17 +136,24 @@ Configured during `mash init` (saved to `.mash/plan/settings.md`):
 ~/.claude/
 ├── commands/mash.md                   # /mash slash command entry point
 └── mash/                              # Framework files
-    ├── SKILL.md                       #   Orchestrator
+    ├── SKILL.md                       #   Thin dispatcher (~50 lines)
     ├── VERSION
+    ├── commands/                      #   Per-command instruction files
+    │   ├── status.md, update.md       #     Simple commands
+    │   ├── dashboard.md, config.md    #     Simple commands
+    │   ├── init.md, plan.md           #     Interactive commands
+    │   └── dev.md, fix.md             #     Heavy commands
+    ├── shared/                        #   Shared modules (read on demand)
+    │   ├── implementation-loop.md     #     Feature dev/QA cycle
+    │   ├── patch-loop.md              #     Defect patch/QA cycle
+    │   ├── invoke-architect.md        #     Pre-dev and post-qa gates
+    │   └── ...                        #     Other shared procedures
     └── references/                    #   All personas and templates
 
 ~/.config/opencode/
 ├── commands/mash.md                   # /mash slash command entry point
 ├── config.json                        # external_directory permission pre-approved
-└── mash/                              # Framework files
-    ├── SKILL.md
-    ├── VERSION
-    └── references/
+└── mash/                              # Framework files (same structure)
 ```
 
 **Per project:**
@@ -224,6 +231,7 @@ Superpowers is a composable skills plugin that enforces mandatory process guardr
 - **Retry with context** — failed features are retried up to 3 times with failure analysis fed back to the next attempt
 - **Application-level verification** — dev must run the full application end-to-end before marking a feature done; QA checks the app starts before writing tests; a milestone smoke test confirms the whole application works after all features land
 - **Cross-feature learning** — operational lessons (failed approaches, pitfalls, QA gaps) are extracted after each completed feature/defect and fed to future dev and patch agents
+- **Modular orchestrator** — SKILL.md is a thin dispatcher (~50 lines) that routes each command to a focused instruction file, loading shared modules on demand. Simple commands like `/mash status` load only ~60 lines of context instead of the full framework, making MASH reliable across model capability levels
 - **Framework, not boilerplate** — MASH manages the process; your project's code, structure, and tools are entirely up to you
 
 ## License

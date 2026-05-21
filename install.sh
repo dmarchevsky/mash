@@ -136,17 +136,20 @@ if [ "$INSTALL_CLAUDE" = true ]; then
   mkdir -p "$CLAUDE_HOME/mash" "$CLAUDE_HOME/commands"
 
   # Install SKILL.md as content file (no frontmatter) with rewritten paths
-  sed "s|skills/mash/references/|$CLAUDE_HOME/mash/references/|g; s|skills/mash/VERSION|$CLAUDE_HOME/mash/VERSION|g" \
+  sed "s|skills/mash/references/|$CLAUDE_HOME/mash/references/|g; s|skills/mash/commands/|$CLAUDE_HOME/mash/commands/|g; s|skills/mash/shared/|$CLAUDE_HOME/mash/shared/|g; s|skills/mash/VERSION|$CLAUDE_HOME/mash/VERSION|g" \
     "$MASH_SRC/skills/mash/SKILL.md" > "$CLAUDE_HOME/mash/SKILL.md"
   ok "$CLAUDE_HOME/mash/SKILL.md"
 
-  # Install references with rewritten paths
-  rm -rf "$CLAUDE_HOME/mash/references"
-  cp -r "$MASH_SRC/skills/mash/references" "$CLAUDE_HOME/mash/"
-  for f in "$CLAUDE_HOME/mash/references/"*.md; do
-    sed -i "s|skills/mash/references/|$CLAUDE_HOME/mash/references/|g" "$f"
+  # Install commands, shared, and references with rewritten paths
+  for subdir in commands shared references; do
+    if [ -d "$MASH_SRC/skills/mash/$subdir" ]; then
+      rm -rf "$CLAUDE_HOME/mash/$subdir"
+      cp -r "$MASH_SRC/skills/mash/$subdir" "$CLAUDE_HOME/mash/"
+      find "$CLAUDE_HOME/mash/$subdir" -name '*.md' -exec \
+        sed -i "s|skills/mash/references/|$CLAUDE_HOME/mash/references/|g; s|skills/mash/commands/|$CLAUDE_HOME/mash/commands/|g; s|skills/mash/shared/|$CLAUDE_HOME/mash/shared/|g; s|skills/mash/VERSION|$CLAUDE_HOME/mash/VERSION|g" {} +
+      ok "$CLAUDE_HOME/mash/$subdir/"
+    fi
   done
-  ok "$CLAUDE_HOME/mash/references/"
 
   if [ -f "$MASH_SRC/VERSION" ]; then
     cp "$MASH_SRC/VERSION" "$CLAUDE_HOME/mash/VERSION"
@@ -166,7 +169,7 @@ EOF
 
   # Update global Claude Code settings to pre-approve reads from ~/.claude/mash/
   GLOBAL_CC_SETTINGS="$CLAUDE_HOME/settings.json"
-  MASH_READ_PATTERN="Read($CLAUDE_HOME/mash/*)"
+  MASH_READ_PATTERN="Read($CLAUDE_HOME/mash/**)"
   if [ ! -f "$GLOBAL_CC_SETTINGS" ]; then
     printf '{\n  "permissions": {\n    "allow": [\n      "%s"\n    ]\n  }\n}\n' "$MASH_READ_PATTERN" > "$GLOBAL_CC_SETTINGS"
     ok "$GLOBAL_CC_SETTINGS"
@@ -191,17 +194,20 @@ if [ "$INSTALL_OPENCODE" = true ]; then
   mkdir -p "$OPENCODE_HOME/commands" "$OPENCODE_HOME/mash"
 
   # Install SKILL.md as content file with rewritten paths
-  sed "s|skills/mash/references/|$OPENCODE_HOME/mash/references/|g; s|skills/mash/VERSION|$OPENCODE_HOME/mash/VERSION|g" \
+  sed "s|skills/mash/references/|$OPENCODE_HOME/mash/references/|g; s|skills/mash/commands/|$OPENCODE_HOME/mash/commands/|g; s|skills/mash/shared/|$OPENCODE_HOME/mash/shared/|g; s|skills/mash/VERSION|$OPENCODE_HOME/mash/VERSION|g" \
     "$MASH_SRC/skills/mash/SKILL.md" > "$OPENCODE_HOME/mash/SKILL.md"
   ok "$OPENCODE_HOME/mash/SKILL.md"
 
-  # Install references with rewritten paths
-  rm -rf "$OPENCODE_HOME/mash/references"
-  cp -r "$MASH_SRC/skills/mash/references" "$OPENCODE_HOME/mash/"
-  for f in "$OPENCODE_HOME/mash/references/"*.md; do
-    sed -i "s|skills/mash/references/|$OPENCODE_HOME/mash/references/|g" "$f"
+  # Install commands, shared, and references with rewritten paths
+  for subdir in commands shared references; do
+    if [ -d "$MASH_SRC/skills/mash/$subdir" ]; then
+      rm -rf "$OPENCODE_HOME/mash/$subdir"
+      cp -r "$MASH_SRC/skills/mash/$subdir" "$OPENCODE_HOME/mash/"
+      find "$OPENCODE_HOME/mash/$subdir" -name '*.md' -exec \
+        sed -i "s|skills/mash/references/|$OPENCODE_HOME/mash/references/|g; s|skills/mash/commands/|$OPENCODE_HOME/mash/commands/|g; s|skills/mash/shared/|$OPENCODE_HOME/mash/shared/|g; s|skills/mash/VERSION|$OPENCODE_HOME/mash/VERSION|g" {} +
+      ok "$OPENCODE_HOME/mash/$subdir/"
+    fi
   done
-  ok "$OPENCODE_HOME/mash/references/"
 
   if [ -f "$MASH_SRC/VERSION" ]; then
     cp "$MASH_SRC/VERSION" "$OPENCODE_HOME/mash/VERSION"

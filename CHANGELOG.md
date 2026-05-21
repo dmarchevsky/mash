@@ -4,6 +4,17 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.9.0] — 2026-05-21
+
+### Changed
+- **Modular orchestrator** — split the monolithic `SKILL.md` (716 lines) into a thin dispatcher (~50 lines) + per-command files (`commands/`) + shared modules (`shared/`). Each `/mash` command now loads only the instructions it needs. Simple commands like `status` load ~60 lines instead of 716, a 12x reduction in context. Heavy commands like `dev` and `fix` load shared modules incrementally as needed.
+- **Improved weaker model compatibility** — the split eliminates the primary failure mode for Sonnet and Haiku: being overwhelmed by 700+ lines of irrelevant instructions for simple tasks. Command routing is now a lookup table, not nested prose conditionals. Status routing uses decision tables instead of 6-branch if/else chains.
+- **Install script updated** — copies `commands/` and `shared/` directories alongside `references/`. Path rewriting covers all three subdirectories. Read permission pattern updated from `*` to `**` for recursive subdirectory access.
+
+### Added
+- `skills/mash/commands/` — 8 per-command instruction files (status, update, dashboard, config, init, plan, dev, fix)
+- `skills/mash/shared/` — 11 shared modules (implementation-loop, patch-loop, invoke-qa, invoke-architect, configure-settings, branch-setup, worktree-context, failure-classification, extract-lessons, post-feature, status-reference)
+
 ## [0.8.6] — 2026-04-06
 
 ### Fixed
