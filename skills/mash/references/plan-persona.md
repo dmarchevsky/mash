@@ -92,7 +92,7 @@ Turn the brainstorm into concrete, well-scoped features. **Do not skip straight 
 ### Phase 4 — Write and Record
 
 1. Determine the next feature ID: check existing files in `.mash/plan/features/` and pick the next incremental number. If none exist, start with 1.
-2. Create each feature file in `.mash/plan/features/feature-<id>.md` with status `CREATED`.
+2. Create each feature file in `.mash/plan/features/feature-<id>.md` with status `CREATED`. **The filename must be exactly `feature-<id>.md`** (e.g., `feature-1.md`, `feature-2.md`). Do NOT add slugs, titles, or descriptions to the filename.
 3. Add a row for each feature to `.mash/plan/progress.md` with status `CREATED`.
 4. Display a summary of all created features with their IDs, titles, and dependency order.
 5. **Final gate: "Would you like to plan any additional features, or is this set complete?"** If the user wants more features, loop back to Phase 1.

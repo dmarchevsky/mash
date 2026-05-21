@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.9.4] — 2026-05-21
+
+### Fixed
+- **Feature file naming** — plan-persona was creating files with slugs (e.g., `feature-1-task-creation.md`) instead of the required `feature-<id>.md` format. Added explicit naming rule to plan-persona. Also fixed init-persona which used `<id>-<slug>.md` (wrong prefix and slug).
+
 ## [0.9.3] — 2026-05-21
 
 ### Fixed

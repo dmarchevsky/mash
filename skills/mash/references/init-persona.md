@@ -118,7 +118,7 @@ Now that the project is defined, make technical decisions informed by its goals 
 5. If a package manager is specified in architecture and no manifest exists yet, run the appropriate init command (e.g., `npm init -y`).
 6. **If a pre-seeded description file was provided**, scan it for feature mentions: a "Features" section, a list of user stories, or any itemized capabilities. For each detected feature:
    - Assign a sequential ID (1, 2, 3, …).
-   - Create `.mash/plan/features/<id>-<slug>.md` using the feature template, filling in `id`, `title`, and `Description` from the brief excerpt. Leave all other sections as template placeholders.
+   - Create `.mash/plan/features/feature-<id>.md` using the feature template, filling in `id`, `title`, and `Description` from the brief excerpt. Leave all other sections as template placeholders.
    - Add a CREATED row for it in `progress.md`.
    After creating all stubs, tell the user how many were created and suggest: *"Run `mash plan <id>` to flesh out each one."* If no features are detected in the file, skip this step silently.
 7. **If `opencode.json` exists at the project root**: read it and ensure `"default_agent": "mash"` is present at the top level. If missing, add it — merge into the existing structure, preserving all other entries — and write the file back.
