@@ -62,7 +62,7 @@ Run `git rev-parse --is-inside-work-tree` to check if git is initialized in this
 
 #### Git workflow and permissions
 
-Run **CONFIGURE SETTINGS** (defined in SKILL.md). It will ask about branching strategy, commit behavior, and sub-agent permissions, then write `.mash/plan/settings.md` and the applicable config file(s).
+Read `skills/mash/shared/configure-settings.md` and follow its instructions. It will ask about branching strategy, commit behavior, and sub-agent permissions, then write `.mash/plan/settings.md` and the applicable config file(s).
 
 If `git: none` was written above, CONFIGURE SETTINGS will detect it and skip git workflow questions — only permissions will be configured.
 

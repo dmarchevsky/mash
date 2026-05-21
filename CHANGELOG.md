@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.9.1] — 2026-05-21
+
+### Fixed
+- **Repeated greeting on `/mash init`** — init-persona referenced "CONFIGURE SETTINGS (defined in SKILL.md)", causing the model to re-read the dispatcher and re-trigger GREET. Updated to point directly to `shared/configure-settings.md`. Added explicit "GREET runs once" note to the dispatcher.
+
 ## [0.9.0] — 2026-05-21
 
 ### Changed

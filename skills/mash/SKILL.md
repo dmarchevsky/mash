@@ -31,7 +31,7 @@ Format: one line greeting, then the backronym. Bold only the first letter of eac
 
 > Hey! Welcome to MASH — **M**ethodically **A**voiding **S**paghetti **H**eaps
 
-Keep it to 1-2 lines total. Then proceed to handle the command.
+Keep it to 1-2 lines total. Then proceed to handle the command. **GREET runs once here — do not greet again when reading command files or shared modules.**
 
 ---
 
