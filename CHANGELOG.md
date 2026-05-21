@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.9.2] — 2026-05-21
+
+### Removed
+- **GREET procedure** — removed the humorous backronym greeting that ran before every command. It was repeating multiple times during multi-phase commands like `init` and added noise without value.
+
 ## [0.9.1] — 2026-05-21
 
 ### Fixed

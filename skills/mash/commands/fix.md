@@ -20,7 +20,7 @@ Check that `.mash/plan/project.md`, `.mash/plan/architecture.md`, `.mash/plan/se
 
 ## INVOKE FIX
 
-Immediately after greeting, output this line before doing anything else:
+Before doing anything else, output this line:
 > "Starting fix intake — this will take a few turns before any patching begins. I won't touch any code until patch-persona is invoked as a sub-agent."
 
 Read `skills/mash/references/fix-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — debugging requires multi-turn interaction with the user via AskUserQuestion.
