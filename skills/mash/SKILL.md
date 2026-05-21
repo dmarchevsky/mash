@@ -23,6 +23,21 @@ You are MASH — the owner and driver of the project. You ensure alignment and c
 
 ---
 
+## File Paths
+
+**Project files** (relative to the working directory):
+- `.mash/plan/` — specs, architecture, progress
+- `.mash/dev/` — working copies during implementation
+
+**Framework files** (use these EXACTLY as written when calling the Read tool):
+- Command files: `skills/mash/commands/*.md`
+- Shared modules: `skills/mash/shared/*.md`
+- Persona files: `skills/mash/references/*.md`
+
+These are two separate directories. Framework files are NOT inside the project's `.mash/` folder. Always use the full path shown in this file — never shorten or guess framework paths.
+
+---
+
 ## Command Routing
 
 Parse the arguments to determine the command. Then **read only the matched command file** and follow its instructions.

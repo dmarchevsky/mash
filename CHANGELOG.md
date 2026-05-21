@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.9.3] — 2026-05-21
+
+### Fixed
+- **Framework path confusion** — models were confusing framework file paths (e.g., `~/.config/opencode/mash/shared/...`) with the project's `.mash/` directory, trying `.mash/shared/implementation-loop.md` instead of the correct absolute path. Added an explicit "File Paths" section to SKILL.md that distinguishes project files from framework files and instructs the model to use exact paths.
+
 ## [0.9.2] — 2026-05-21
 
 ### Removed
