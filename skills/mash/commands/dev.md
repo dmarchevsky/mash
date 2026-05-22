@@ -21,7 +21,7 @@ If `plan_id` is set, this is a replan-then-implement flow. Do NOT stop between p
 2. **Check progress.md**: feature `<plan_id>` must have an entry. If missing, add it with status `CREATED`.
 3. Read `.mash/plan/features/feature-<plan_id>.md`.
 4. **Run plan-persona in replan mode**:
-   - Read `skills/mash/references/plan-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — plan requires multi-turn interaction with the user via AskUserQuestion.
+   - Read `${CLAUDE_SKILL_DIR}/references/plan-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — plan requires multi-turn interaction with the user via AskUserQuestion.
    - Provide plan-persona with:
      - `replan_mode: true`
      - `feature_file: .mash/plan/features/feature-<plan_id>.md`
@@ -50,6 +50,6 @@ If the user specified feature IDs, consider only those features. Otherwise consi
 
 ## IMPLEMENTATION LOOP
 
-Read `skills/mash/shared/implementation-loop.md` and follow its instructions for each feature to implement.
+Read `${CLAUDE_SKILL_DIR}/shared/implementation-loop.md` and follow its instructions for each feature to implement.
 
-When the implementation loop calls POST-FEATURE, read `skills/mash/shared/post-feature.md` and follow its instructions.
+When the implementation loop calls POST-FEATURE, read `${CLAUDE_SKILL_DIR}/shared/post-feature.md` and follow its instructions.

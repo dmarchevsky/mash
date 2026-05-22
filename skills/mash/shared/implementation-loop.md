@@ -1,12 +1,12 @@
 # IMPLEMENTATION LOOP
 
-Process each feature to implement. Before starting, read `skills/mash/shared/status-reference.md` for status codes and safety rules.
+Process each feature to implement. Before starting, read `${CLAUDE_SKILL_DIR}/shared/status-reference.md` for status codes and safety rules.
 
 For each feature:
 
 1. **Validate**: Check `.mash/plan/features/feature-<id>.md` exists and has valid content. If not, stop.
 2. **Check progress.md entry**: If no entry exists, stop.
-3. **Branch setup**: Read `skills/mash/shared/branch-setup.md` and follow it with `type=feature`, `id=<id>`.
+3. **Branch setup**: Read `${CLAUDE_SKILL_DIR}/shared/branch-setup.md` and follow it with `type=feature`, `id=<id>`.
 4. **Prepare dev copy**: If `.mash/dev/feature-<id>.md` does not exist, copy it from `.mash/plan/features/feature-<id>.md` and **add** `status: DEV_READY` and `attempt: 0` to the dev copy frontmatter (the plan file does not contain these fields).
 5. **Read dev status** from `.mash/dev/feature-<id>.md` and route using this table:
 
@@ -19,7 +19,7 @@ For each feature:
 | DEV_DONE | Skip to step 8 (QA phase). |
 | DEV_FAIL | Go to step 9 (failure handling). |
 | QA_FAIL | Go to step 9 (failure handling). |
-| QA_PASS | Read `skills/mash/shared/invoke-architect.md` and run post-qa mode. If ARCH_VERIFIED, mark DONE in progress.md and run POST-FEATURE. |
+| QA_PASS | Read `${CLAUDE_SKILL_DIR}/shared/invoke-architect.md` and run post-qa mode. If ARCH_VERIFIED, mark DONE in progress.md and run POST-FEATURE. |
 
 #### REIMPLEMENTATION SETUP
 1. Set status to `DEV_READY` in `.mash/dev/feature-<id>.md`.
@@ -28,10 +28,10 @@ For each feature:
 4. Set a `reimplementation: true` flag (in memory, not in the file) so the architect receives REIMPLEMENTATION CONTEXT.
 5. Continue to step 6.
 
-6. **Increment attempt**: Update the `attempt` field in `.mash/dev/feature-<id>.md` frontmatter. If attempt > 3, set progress.md status to FAILED and use AskUserQuestion: *"Feature <id> failed after 3 attempts. Clean up worktree now? (Keeping it lets you inspect the failed work.)"* If yes, run WORKTREE CLEANUP (see `skills/mash/shared/post-feature.md`). Stop this feature.
+6. **Increment attempt**: Update the `attempt` field in `.mash/dev/feature-<id>.md` frontmatter. If attempt > 3, set progress.md status to FAILED and use AskUserQuestion: *"Feature <id> failed after 3 attempts. Clean up worktree now? (Keeping it lets you inspect the failed work.)"* If yes, run WORKTREE CLEANUP (see `${CLAUDE_SKILL_DIR}/shared/post-feature.md`). Stop this feature.
 7. **Set progress.md to WIP.**
 
-Read `skills/mash/shared/invoke-architect.md` and run **pre-dev** mode for this feature before proceeding to dev.
+Read `${CLAUDE_SKILL_DIR}/shared/invoke-architect.md` and run **pre-dev** mode for this feature before proceeding to dev.
 
 #### INVOKE DEV
 
@@ -53,7 +53,7 @@ These lessons were learned from previous features and defects in this project. A
 ---
 ```
 
-Read `skills/mash/references/dev-persona.md` and invoke:
+Read `${CLAUDE_SKILL_DIR}/references/dev-persona.md` and invoke:
 ```
 Agent(
   prompt="<dev-persona.md contents>
@@ -68,14 +68,14 @@ Read these files before starting:
 - .mash/dev/feature-<id>.md
 
 <If LESSONS CONTEXT — append it here>
-<If branching: worktree — read skills/mash/shared/worktree-context.md, use the impl template, substitute type=feature, id=<id>, and append it here>"
+<If branching: worktree — read ${CLAUDE_SKILL_DIR}/shared/worktree-context.md, use the impl template, substitute type=feature, id=<id>, and append it here>"
 )
 ```
 After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/feature-<id>.md`. **If status is DEV_DONE, validate verification evidence:** check `verified_steps` in the MASH_STATUS block — if not all steps have evidence, or if the block is absent and the Dev outcome section lacks command + actual output for each Verification Step, set status back to DEV_READY and re-invoke dev with a note that verification evidence is required for each step. Go back to step 5.
 
-8. **QA phase**: Read `skills/mash/shared/invoke-qa.md` and follow it with `type=feature`, `id=<id>`. After it returns, go back to step 5.
+8. **QA phase**: Read `${CLAUDE_SKILL_DIR}/shared/invoke-qa.md` and follow it with `type=feature`, `id=<id>`. After it returns, go back to step 5.
 
-9. **Failure handling** (DEV_FAIL or QA_FAIL): Read `skills/mash/shared/failure-classification.md` and classify. For features:
+9. **Failure handling** (DEV_FAIL or QA_FAIL): Read `${CLAUDE_SKILL_DIR}/shared/failure-classification.md` and classify. For features:
    - Propose changes to `.mash/plan/features/feature-<id>.md` and/or `.mash/plan/architecture.md` based on failure type.
    - Present proposed changes to the user for review and confirmation.
    - Apply confirmed changes to the plan feature file.

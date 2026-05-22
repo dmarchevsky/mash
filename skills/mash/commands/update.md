@@ -2,7 +2,7 @@
 
 Check for framework updates and install them.
 
-1. Read `skills/mash/VERSION` to get the installed version. If missing, report "unknown version" and suggest re-installing.
+1. Read `${CLAUDE_SKILL_DIR}/VERSION` to get the installed version. If missing, report "unknown version" and suggest re-installing.
 2. Fetch the latest version from GitHub: `curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/VERSION`.
 3. Compare versions:
    - If identical, report "MASH is up to date (vX.Y.Z)" and stop.

@@ -2,7 +2,7 @@
 
 Runs after a feature reaches ARCH_VERIFIED (QA_PASS + architect confirmation).
 
-1. Read `skills/mash/shared/extract-lessons.md` and follow its instructions for this feature.
+1. Read `${CLAUDE_SKILL_DIR}/shared/extract-lessons.md` and follow its instructions for this feature.
 
 2. Read `git`, `commit`, and `branching` from `.mash/plan/settings.md` and act accordingly:
 

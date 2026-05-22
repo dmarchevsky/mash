@@ -81,7 +81,7 @@ Apply any adjustments the user requests.
 ## Phase 4 — Write Defect File
 
 1. Determine the defect file path: `.mash/dev/defect-<id>.md` using the ID from Phase 0. Before writing, confirm that file does not already exist — if it does, re-scan `.mash/dev/` for the true highest ID and increment from there.
-2. Create the file using the template at `skills/mash/references/templates/defect.md`.
+2. Create the file using the template at `${CLAUDE_SKILL_DIR}/references/templates/defect.md`.
 3. Populate all sections:
    - **Summary**: the user's description (or pre-seeded args)
    - **Steps to Reproduce**: from Phase 1

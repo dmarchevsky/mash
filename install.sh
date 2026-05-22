@@ -67,25 +67,17 @@ if [ -f "$MASH_SRC/VERSION" ]; then
   NEW_VERSION="$(tr -d '[:space:]' < "$MASH_SRC/VERSION")"
 fi
 
-INSTALLED_VERSION=""
-if [ -f "$CLAUDE_HOME/mash/VERSION" ]; then
-  INSTALLED_VERSION="$(tr -d '[:space:]' < "$CLAUDE_HOME/mash/VERSION")"
-elif [ -f "$OPENCODE_HOME/mash/VERSION" ]; then
-  INSTALLED_VERSION="$(tr -d '[:space:]' < "$OPENCODE_HOME/mash/VERSION")"
+CLAUDE_VERSION=""
+OPENCODE_VERSION=""
+if [ -f "$CLAUDE_HOME/skills/mash/VERSION" ]; then
+  CLAUDE_VERSION="$(tr -d '[:space:]' < "$CLAUDE_HOME/skills/mash/VERSION")"
+elif [ -f "$CLAUDE_HOME/mash/VERSION" ]; then
+  CLAUDE_VERSION="$(tr -d '[:space:]' < "$CLAUDE_HOME/mash/VERSION")"
 fi
-
-if [ -n "$INSTALLED_VERSION" ]; then
-  if [ "$INSTALLED_VERSION" = "$NEW_VERSION" ] && [ "$FORCE" = false ]; then
-    ok "Already up to date (v$NEW_VERSION)"
-    printf '\n'
-    exit 0
-  fi
-  if [ "$INSTALLED_VERSION" != "$NEW_VERSION" ]; then
-    info "Updating from v$INSTALLED_VERSION to v$NEW_VERSION"
-  fi
-else
-  info "Installing MASH v$NEW_VERSION"
+if [ -f "$OPENCODE_HOME/mash/VERSION" ]; then
+  OPENCODE_VERSION="$(tr -d '[:space:]' < "$OPENCODE_HOME/mash/VERSION")"
 fi
+INSTALLED_VERSION="${CLAUDE_VERSION:-$OPENCODE_VERSION}"
 
 # --- Step 3b: Detect AI clients ---
 
@@ -128,73 +120,103 @@ else
   die "Neither 'claude' nor 'opencode' found in PATH. Install one of them first."
 fi
 
+# --- Step 3c: Version check (after platform detection) ---
+
+# Only skip if ALL selected platforms are already at the target version
+ALL_CURRENT=true
+if [ "$INSTALL_CLAUDE" = true ] && [ "$CLAUDE_VERSION" != "$NEW_VERSION" ]; then
+  ALL_CURRENT=false
+fi
+if [ "$INSTALL_OPENCODE" = true ] && [ "$OPENCODE_VERSION" != "$NEW_VERSION" ]; then
+  ALL_CURRENT=false
+fi
+
+if [ "$ALL_CURRENT" = true ] && [ "$FORCE" = false ]; then
+  ok "Already up to date (v$NEW_VERSION)"
+  printf '\n'
+  exit 0
+fi
+
+if [ -n "$INSTALLED_VERSION" ] && [ "$INSTALLED_VERSION" != "$NEW_VERSION" ]; then
+  info "Updating from v$INSTALLED_VERSION to v$NEW_VERSION"
+elif [ -z "$INSTALLED_VERSION" ]; then
+  info "Installing MASH v$NEW_VERSION"
+fi
+
 # --- Step 4: Install framework files globally ---
 
 info "Installing framework files..."
 
 if [ "$INSTALL_CLAUDE" = true ]; then
-  mkdir -p "$CLAUDE_HOME/mash" "$CLAUDE_HOME/commands"
+  CLAUDE_SKILL_DIR="$CLAUDE_HOME/skills/mash"
+  mkdir -p "$CLAUDE_SKILL_DIR"
 
-  # Install SKILL.md as content file (no frontmatter) with rewritten paths
-  sed "s|skills/mash/references/|$CLAUDE_HOME/mash/references/|g; s|skills/mash/commands/|$CLAUDE_HOME/mash/commands/|g; s|skills/mash/shared/|$CLAUDE_HOME/mash/shared/|g; s|skills/mash/VERSION|$CLAUDE_HOME/mash/VERSION|g" \
-    "$MASH_SRC/skills/mash/SKILL.md" > "$CLAUDE_HOME/mash/SKILL.md"
-  ok "$CLAUDE_HOME/mash/SKILL.md"
+  # Clean up legacy install location if present
+  if [ -d "$CLAUDE_HOME/mash" ] && [ "$CLAUDE_HOME/mash" != "$CLAUDE_SKILL_DIR" ]; then
+    rm -rf "$CLAUDE_HOME/mash"
+    info "Removed legacy install at $CLAUDE_HOME/mash"
+  fi
+  # Remove legacy command shim (native skill discovery replaces it)
+  rm -f "$CLAUDE_HOME/commands/mash.md"
 
-  # Install commands, shared, and references with rewritten paths
+  # Install SKILL.md directly — ${CLAUDE_SKILL_DIR} resolves natively
+  cp "$MASH_SRC/skills/mash/SKILL.md" "$CLAUDE_SKILL_DIR/SKILL.md"
+  ok "$CLAUDE_SKILL_DIR/SKILL.md"
+
+  # Install commands, shared, and references (no sed rewriting needed)
   for subdir in commands shared references; do
     if [ -d "$MASH_SRC/skills/mash/$subdir" ]; then
-      rm -rf "$CLAUDE_HOME/mash/$subdir"
-      cp -r "$MASH_SRC/skills/mash/$subdir" "$CLAUDE_HOME/mash/"
-      find "$CLAUDE_HOME/mash/$subdir" -name '*.md' -exec \
-        sed -i "s|skills/mash/references/|$CLAUDE_HOME/mash/references/|g; s|skills/mash/commands/|$CLAUDE_HOME/mash/commands/|g; s|skills/mash/shared/|$CLAUDE_HOME/mash/shared/|g; s|skills/mash/VERSION|$CLAUDE_HOME/mash/VERSION|g" {} +
-      ok "$CLAUDE_HOME/mash/$subdir/"
+      rm -rf "$CLAUDE_SKILL_DIR/$subdir"
+      cp -r "$MASH_SRC/skills/mash/$subdir" "$CLAUDE_SKILL_DIR/"
+      ok "$CLAUDE_SKILL_DIR/$subdir/"
     fi
   done
 
   if [ -f "$MASH_SRC/VERSION" ]; then
-    cp "$MASH_SRC/VERSION" "$CLAUDE_HOME/mash/VERSION"
+    cp "$MASH_SRC/VERSION" "$CLAUDE_SKILL_DIR/VERSION"
     ok "VERSION (v$NEW_VERSION)"
   fi
 
-  # Install /mash global command
-  cat > "$CLAUDE_HOME/commands/mash.md" <<EOF
----
-name: mash
-description: "MASH — Multi-Agent Software Harness. Commands: init, plan, dev [ids], fix [id|desc], status, update, config"
----
-
-Read \`$CLAUDE_HOME/mash/SKILL.md\` and follow its instructions exactly. Pass through any arguments: \$ARGUMENTS
-EOF
-  ok "$CLAUDE_HOME/commands/mash.md"
-
-  # Update global Claude Code settings to pre-approve reads from ~/.claude/mash/
+  # Update global Claude Code settings to pre-approve reads from skill dir
   GLOBAL_CC_SETTINGS="$CLAUDE_HOME/settings.json"
-  MASH_READ_PATTERN="Read($CLAUDE_HOME/mash/**)"
+  MASH_READ_PATTERN="Read($CLAUDE_SKILL_DIR/**)"
   if [ ! -f "$GLOBAL_CC_SETTINGS" ]; then
     printf '{\n  "permissions": {\n    "allow": [\n      "%s"\n    ]\n  }\n}\n' "$MASH_READ_PATTERN" > "$GLOBAL_CC_SETTINGS"
     ok "$GLOBAL_CC_SETTINGS"
-  elif grep -qF "$MASH_READ_PATTERN" "$GLOBAL_CC_SETTINGS" 2>/dev/null; then
-    ok "$GLOBAL_CC_SETTINGS already has Read permission — skipped"
-  elif grep -q '"allow"' "$GLOBAL_CC_SETTINGS" 2>/dev/null; then
-    # Inject into existing allow array
-    sed -i 's|"allow": \[|"allow": [\n      "'"$MASH_READ_PATTERN"'",|' "$GLOBAL_CC_SETTINGS"
-    ok "$GLOBAL_CC_SETTINGS (Read permission for $CLAUDE_HOME/mash/*)"
-  elif grep -q '"permissions"' "$GLOBAL_CC_SETTINGS" 2>/dev/null; then
-    # Inject allow into existing permissions block
-    sed -i 's|"permissions": {|"permissions": {\n    "allow": [\n      "'"$MASH_READ_PATTERN"'"\n    ],|' "$GLOBAL_CC_SETTINGS"
-    ok "$GLOBAL_CC_SETTINGS (Read permission for $CLAUDE_HOME/mash/*)"
   else
-    # No permissions section — insert before last closing brace
-    sed -i '$ s|}|,\n  "permissions": {\n    "allow": [\n      "'"$MASH_READ_PATTERN"'"\n    ]\n  }\n}|' "$GLOBAL_CC_SETTINGS"
-    ok "$GLOBAL_CC_SETTINGS (Read permission for $CLAUDE_HOME/mash/*)"
+    # Remove any legacy permission patterns (both single * and double **)
+    if grep -qE "Read\($CLAUDE_HOME/mash/\*{1,2}\)" "$GLOBAL_CC_SETTINGS" 2>/dev/null; then
+      # Use awk to safely remove the line and fix trailing commas in the JSON array
+      awk -v pat="$CLAUDE_HOME/mash/" '
+        $0 ~ pat { next }
+        { print }
+      ' "$GLOBAL_CC_SETTINGS" > "$GLOBAL_CC_SETTINGS.tmp" && mv "$GLOBAL_CC_SETTINGS.tmp" "$GLOBAL_CC_SETTINGS"
+      # Clean up any trailing commas before ] that the removal may have created
+      sed -i -E ':a; N; $!ba; s/,([[:space:]]*\])/\1/g' "$GLOBAL_CC_SETTINGS"
+      info "Removed legacy Read permission for $CLAUDE_HOME/mash/"
+    fi
+    if grep -qF "$MASH_READ_PATTERN" "$GLOBAL_CC_SETTINGS" 2>/dev/null; then
+      ok "$GLOBAL_CC_SETTINGS already has Read permission — skipped"
+    elif grep -q '"allow"' "$GLOBAL_CC_SETTINGS" 2>/dev/null; then
+      sed -i 's|"allow": \[|"allow": [\n      "'"$MASH_READ_PATTERN"'",|' "$GLOBAL_CC_SETTINGS"
+      # Clean up any trailing commas before ] (e.g. if array was empty after legacy removal)
+      sed -i -E ':a; N; $!ba; s/,([[:space:]]*\])/\1/g' "$GLOBAL_CC_SETTINGS"
+      ok "$GLOBAL_CC_SETTINGS (Read permission for $CLAUDE_SKILL_DIR/**)"
+    elif grep -q '"permissions"' "$GLOBAL_CC_SETTINGS" 2>/dev/null; then
+      sed -i 's|"permissions": {|"permissions": {\n    "allow": [\n      "'"$MASH_READ_PATTERN"'"\n    ],|' "$GLOBAL_CC_SETTINGS"
+      ok "$GLOBAL_CC_SETTINGS (Read permission for $CLAUDE_SKILL_DIR/**)"
+    else
+      sed -i '$ s|}|,\n  "permissions": {\n    "allow": [\n      "'"$MASH_READ_PATTERN"'"\n    ]\n  }\n}|' "$GLOBAL_CC_SETTINGS"
+      ok "$GLOBAL_CC_SETTINGS (Read permission for $CLAUDE_SKILL_DIR/**)"
+    fi
   fi
 fi
 
 if [ "$INSTALL_OPENCODE" = true ]; then
   mkdir -p "$OPENCODE_HOME/commands" "$OPENCODE_HOME/mash"
 
-  # Install SKILL.md as content file with rewritten paths
-  sed "s|skills/mash/references/|$OPENCODE_HOME/mash/references/|g; s|skills/mash/commands/|$OPENCODE_HOME/mash/commands/|g; s|skills/mash/shared/|$OPENCODE_HOME/mash/shared/|g; s|skills/mash/VERSION|$OPENCODE_HOME/mash/VERSION|g" \
+  # Install SKILL.md with ${CLAUDE_SKILL_DIR} rewritten to absolute paths for OpenCode
+  sed "s|\${CLAUDE_SKILL_DIR}/|$OPENCODE_HOME/mash/|g; s|\${CLAUDE_SKILL_DIR}|$OPENCODE_HOME/mash|g" \
     "$MASH_SRC/skills/mash/SKILL.md" > "$OPENCODE_HOME/mash/SKILL.md"
   ok "$OPENCODE_HOME/mash/SKILL.md"
 
@@ -204,7 +226,7 @@ if [ "$INSTALL_OPENCODE" = true ]; then
       rm -rf "$OPENCODE_HOME/mash/$subdir"
       cp -r "$MASH_SRC/skills/mash/$subdir" "$OPENCODE_HOME/mash/"
       find "$OPENCODE_HOME/mash/$subdir" -name '*.md' -exec \
-        sed -i "s|skills/mash/references/|$OPENCODE_HOME/mash/references/|g; s|skills/mash/commands/|$OPENCODE_HOME/mash/commands/|g; s|skills/mash/shared/|$OPENCODE_HOME/mash/shared/|g; s|skills/mash/VERSION|$OPENCODE_HOME/mash/VERSION|g" {} +
+        sed -i "s|\${CLAUDE_SKILL_DIR}/|$OPENCODE_HOME/mash/|g; s|\${CLAUDE_SKILL_DIR}|$OPENCODE_HOME/mash|g" {} +
       ok "$OPENCODE_HOME/mash/$subdir/"
     fi
   done
@@ -267,7 +289,7 @@ This project uses the MASH framework for planning and implementation.
 
 ## Invocation
 
-Use `/mash [command]` (e.g. `/mash init`, `/mash dev 1,3`). The command reads `~/.claude/mash/SKILL.md` and follows its instructions, passing through any arguments.
+Use `/mash [command]` (e.g. `/mash init`, `/mash dev 1,3`).
 
 ## Workflow
 

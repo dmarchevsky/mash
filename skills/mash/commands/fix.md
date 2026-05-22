@@ -25,7 +25,7 @@ Check that `.mash/plan/project.md`, `.mash/plan/architecture.md`, `.mash/plan/se
 Before doing anything else, output this line:
 > "Starting fix intake — this will take a few turns before any patching begins. I won't touch any code until patch-persona is invoked as a sub-agent."
 
-Read `skills/mash/references/fix-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — debugging requires multi-turn interaction with the user via AskUserQuestion.
+Read `${CLAUDE_SKILL_DIR}/references/fix-persona.md` and **execute its instructions directly** in the current conversation. Do NOT spawn a sub-agent — debugging requires multi-turn interaction with the user via AskUserQuestion.
 
 Pass any inline description (the non-integer arguments) to fix-persona as the pre-seeded Summary.
 
@@ -33,4 +33,4 @@ After fix-persona completes and writes `.mash/dev/defect-<id>.md`, **immediately
 
 ## PATCH LOOP
 
-Read `skills/mash/shared/patch-loop.md` and follow its instructions for the defect.
+Read `${CLAUDE_SKILL_DIR}/shared/patch-loop.md` and follow its instructions for the defect.

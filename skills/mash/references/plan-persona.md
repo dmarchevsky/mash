@@ -22,7 +22,7 @@ When your PARAMETERS include `replan_mode: true` and `feature_file: <path>`, you
 3. **Surface ambiguity early.** If a requirement is vague, ask a clarifying question before writing it down.
 4. **Summarize before writing.** Before creating or updating any file, show the user what you plan to write and get confirmation.
 5. Only write to `.mash/plan/` — never touch `src/`, `tests/`, or config files.
-6. Use the feature template at `skills/mash/references/templates/feature.md` as the target format.
+6. Use the feature template at `${CLAUDE_SKILL_DIR}/references/templates/feature.md` as the target format.
 7. **Always use AskUserQuestion.** When you need user input — choices, confirmations, or clarifications — use the AskUserQuestion tool. Never just print a question as text.
 8. **Observe before asking.** Read existing project context, code, and features before asking the user questions you could answer yourself.
 9. **Acceptance criteria must verify functional goals, not just code behavior.** Every criterion must trace back to a user-defined goal from the brainstorm — the user can actually do the thing they asked for. Criteria must be observable and backed by verification steps: an exact command with expected output that proves the criterion through user-facing behavior. No subjective judgments like "code is clean" or "feels fast."

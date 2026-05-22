@@ -4,7 +4,7 @@ Used by both the implementation loop (features) and patch loop (defects). Called
 
 Before invoking for a defect, ensure the defect file status is `DEV_DONE` (patch-persona sets PATCH_DONE; translate this to DEV_DONE so qa-persona proceeds correctly).
 
-Read `skills/mash/references/qa-persona.md` and invoke:
+Read `${CLAUDE_SKILL_DIR}/references/qa-persona.md` and invoke:
 ```
 Agent(
   prompt="<qa-persona.md contents>
@@ -32,7 +32,7 @@ Read these files before starting:
 - .mash/plan/project.md
 - .mash/dev/<type>-<id>.md
 
-<If branching: worktree — read skills/mash/shared/worktree-context.md, use the QA template, substitute type and id, and append it here>"
+<If branching: worktree — read ${CLAUDE_SKILL_DIR}/shared/worktree-context.md, use the QA template, substitute type and id, and append it here>"
 )
 ```
 After the agent returns, read the `---MASH_STATUS---` block in the agent output to get the status directly. If the block is absent, fall back to reading `.mash/dev/<type>-<id>.md`.

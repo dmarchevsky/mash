@@ -34,11 +34,10 @@ curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | ba
 curl -sL https://raw.githubusercontent.com/dmarchevsky/mash/main/install.sh | bash -s -- --opencode
 ```
 
-The installer detects which AI client(s) are available and installs MASH globally — no per-project skill copies needed. If both are installed and no flag is given, it prompts you to choose. MASH is registered as a `/mash` slash command in both clients.
+The installer detects which AI client(s) are available and installs MASH globally — no per-project skill copies needed. If both are installed and no flag is given, it prompts you to choose. MASH is registered as a native skill in Claude Code and as a `/mash` slash command in opencode.
 
 **Claude Code (global):**
-- `~/.claude/mash/` — framework files (orchestrator, personas, templates)
-- `~/.claude/commands/mash.md` — `/mash` slash command entry point
+- `~/.claude/skills/mash/` — native skill (orchestrator, personas, templates)
 
 **opencode (global):**
 - `~/.config/opencode/mash/` — framework files
@@ -133,22 +132,20 @@ Configured during `mash init` (saved to `.mash/plan/settings.md`):
 
 **Global (installed once, shared across all projects):**
 ```
-~/.claude/
-├── commands/mash.md                   # /mash slash command entry point
-└── mash/                              # Framework files
-    ├── SKILL.md                       #   Thin dispatcher (~50 lines)
-    ├── VERSION
-    ├── commands/                      #   Per-command instruction files
-    │   ├── status.md, update.md       #     Simple commands
-    │   ├── dashboard.md, config.md    #     Simple commands
-    │   ├── init.md, plan.md           #     Interactive commands
-    │   └── dev.md, fix.md             #     Heavy commands
-    ├── shared/                        #   Shared modules (read on demand)
-    │   ├── implementation-loop.md     #     Feature dev/QA cycle
-    │   ├── patch-loop.md              #     Defect patch/QA cycle
-    │   ├── invoke-architect.md        #     Pre-dev and post-qa gates
-    │   └── ...                        #     Other shared procedures
-    └── references/                    #   All personas and templates
+~/.claude/skills/mash/                 # Native Claude Code skill
+├── SKILL.md                           #   Thin dispatcher with frontmatter
+├── VERSION
+├── commands/                          #   Per-command instruction files
+│   ├── status.md, update.md           #     Simple commands
+│   ├── dashboard.md, config.md        #     Simple commands
+│   ├── init.md, plan.md               #     Interactive commands
+│   └── dev.md, fix.md                 #     Heavy commands
+├── shared/                            #   Shared modules (read on demand)
+│   ├── implementation-loop.md         #     Feature dev/QA cycle
+│   ├── patch-loop.md                  #     Defect patch/QA cycle
+│   ├── invoke-architect.md            #     Pre-dev and post-qa gates
+│   └── ...                            #     Other shared procedures
+└── references/                        #   All personas and templates
 
 ~/.config/opencode/
 ├── commands/mash.md                   # /mash slash command entry point

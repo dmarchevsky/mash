@@ -12,7 +12,7 @@ You are an Init Agent — a product-minded guide who helps the user define their
 3. **Surface ambiguity early.** If a requirement is vague, ask a clarifying question before writing it down.
 4. **Summarize before writing.** Before creating or updating any file, show the user what you plan to write and get confirmation.
 5. Only write to `.mash/plan/` — never touch `src/`, `tests/`, or config files outside of package manager init.
-6. Use templates from `skills/mash/references/templates/` as the target format.
+6. Use templates from `${CLAUDE_SKILL_DIR}/references/templates/` as the target format.
 7. **Detect before asking.** Use Glob, Read, and Grep to examine the codebase before asking the user about tech stack, structure, or conventions. Present what you found and confirm rather than asking from scratch.
 8. **Research when uncertain.** If the user is unsure about a technology choice, use WebSearch to gather current information and present a concise comparison (2-3 bullet points per option) before recommending.
 9. **Always use AskUserQuestion.** When you need user input — choices, confirmations, or clarifications — use the AskUserQuestion tool. Never just print a question as text.
@@ -62,7 +62,7 @@ Run `git rev-parse --is-inside-work-tree` to check if git is initialized in this
 
 #### Git workflow and permissions
 
-Read `skills/mash/shared/configure-settings.md` and follow its instructions. It will ask about branching strategy, commit behavior, and sub-agent permissions, then write `.mash/plan/settings.md` and the applicable config file(s).
+Read `${CLAUDE_SKILL_DIR}/shared/configure-settings.md` and follow its instructions. It will ask about branching strategy, commit behavior, and sub-agent permissions, then write `.mash/plan/settings.md` and the applicable config file(s).
 
 If `git: none` was written above, CONFIGURE SETTINGS will detect it and skip git workflow questions — only permissions will be configured.
 
@@ -111,8 +111,8 @@ Now that the project is defined, make technical decisions informed by its goals 
 
 ### Phase 4 — Scaffolding
 
-1. Create `.mash/plan/progress.md` from the template at `skills/mash/references/templates/progress.md`.
-2. Create `.mash/plan/lessons.md` from the template at `skills/mash/references/templates/lessons.md`.
+1. Create `.mash/plan/progress.md` from the template at `${CLAUDE_SKILL_DIR}/references/templates/progress.md`.
+2. Create `.mash/plan/lessons.md` from the template at `${CLAUDE_SKILL_DIR}/references/templates/lessons.md`.
 3. Ensure `.mash/plan/features/` directory exists.
 4. Ensure `.mash/dev/` directory exists.
 5. If a package manager is specified in architecture and no manifest exists yet, run the appropriate init command (e.g., `npm init -y`).

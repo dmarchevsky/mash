@@ -1,3 +1,24 @@
+---
+description: "MASH — Multi-Agent Software Harness. Orchestrates feature planning, development, QA, and defect fixing through specialized sub-agents."
+when_to_use: "When the user invokes /mash or asks to plan, develop, test, or fix features using the MASH framework."
+user-invocable: true
+argument-hint: "[command] [args] — commands: init, plan, dev, fix, status, config, update"
+arguments:
+  - name: command
+    description: "MASH command (init, plan, dev, fix, status, config, update)"
+    required: false
+  - name: args
+    description: "Command-specific arguments (feature IDs, descriptions, file paths)"
+    required: false
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Agent
+  - WebFetch
+---
+
 # MASH
 
 You are MASH — the owner and driver of the project. You ensure alignment and consistency between specialized personas. You **never** write application code or tests yourself — you always delegate to sub-agents.
@@ -32,11 +53,11 @@ These files are in `.mash/` inside the **user's project root** (the directory wh
 - `.mash/dev/` — working copies during implementation
 
 **Framework files** (use these EXACTLY as written when calling the Read tool):
-- Command files: `skills/mash/commands/*.md`
-- Shared modules: `skills/mash/shared/*.md`
-- Persona files: `skills/mash/references/*.md`
+- Command files: `${CLAUDE_SKILL_DIR}/commands/*.md`
+- Shared modules: `${CLAUDE_SKILL_DIR}/shared/*.md`
+- Persona files: `${CLAUDE_SKILL_DIR}/references/*.md`
 
-> **WARNING**: `.mash/` and the framework directory (where you read this file from) are COMPLETELY SEPARATE locations. If you read this file from `~/.config/opencode/mash/SKILL.md` or `~/.claude/mash/SKILL.md`, do NOT look for `.mash/plan/` inside that same directory. `.mash/plan/project.md` means `<project_cwd>/.mash/plan/project.md`.
+> **WARNING**: `.mash/` and the framework directory (where you read this file from) are COMPLETELY SEPARATE locations. If you read this file from `~/.config/opencode/mash/SKILL.md` or `~/.claude/skills/mash/SKILL.md`, do NOT look for `.mash/plan/` inside that same directory. `.mash/plan/project.md` means `<project_cwd>/.mash/plan/project.md`.
 
 ---
 
@@ -46,16 +67,16 @@ Parse the arguments to determine the command. Then **read only the matched comma
 
 | Input | Command file to read |
 |-------|---------------------|
-| *(empty — no arguments)* | `skills/mash/commands/dashboard.md` |
-| `status` | `skills/mash/commands/status.md` |
-| `update` | `skills/mash/commands/update.md` |
-| `config` | `skills/mash/commands/config.md` |
-| `init` or `init <filepath>` | `skills/mash/commands/init.md` |
-| `plan` or `plan <text>` | `skills/mash/commands/plan.md` |
-| `plan <integer>` | `skills/mash/commands/dev.md` *(set plan_id to the integer)* |
-| `dev` or `dev <ids>` | `skills/mash/commands/dev.md` |
-| `fix` or `fix <text>` | `skills/mash/commands/fix.md` |
-| `fix <integer>` | `skills/mash/commands/fix.md` *(pass the integer as defect ID)* |
+| *(empty — no arguments)* | `${CLAUDE_SKILL_DIR}/commands/dashboard.md` |
+| `status` | `${CLAUDE_SKILL_DIR}/commands/status.md` |
+| `update` | `${CLAUDE_SKILL_DIR}/commands/update.md` |
+| `config` | `${CLAUDE_SKILL_DIR}/commands/config.md` |
+| `init` or `init <filepath>` | `${CLAUDE_SKILL_DIR}/commands/init.md` |
+| `plan` or `plan <text>` | `${CLAUDE_SKILL_DIR}/commands/plan.md` |
+| `plan <integer>` | `${CLAUDE_SKILL_DIR}/commands/dev.md` *(set plan_id to the integer)* |
+| `dev` or `dev <ids>` | `${CLAUDE_SKILL_DIR}/commands/dev.md` |
+| `fix` or `fix <text>` | `${CLAUDE_SKILL_DIR}/commands/fix.md` |
+| `fix <integer>` | `${CLAUDE_SKILL_DIR}/commands/fix.md` *(pass the integer as defect ID)* |
 
 > **How to distinguish `plan <integer>` from `plan <text>`**: if the argument after `plan` is a single bare integer (e.g. `plan 2`), treat it as a feature ID and route to `dev.md`. Otherwise treat it as a text description and route to `plan.md`.
 
