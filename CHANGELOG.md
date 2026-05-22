@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.10.3] — 2026-05-22
+
+### Changed
+- **CLAUDE.md** — replaced installer-template copy with dev-focused project instructions. Codifies post-change checklist (changelog, readme review, version bump, commit & push) and documents project structure.
+
 ## [0.10.2] — 2026-05-22
 
 ### Fixed
