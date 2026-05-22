@@ -28,7 +28,7 @@ For each feature:
 4. Set a `reimplementation: true` flag (in memory, not in the file) so the architect receives REIMPLEMENTATION CONTEXT.
 5. Continue to step 6.
 
-6. **Increment attempt**: Update the `attempt` field in `.mash/dev/feature-<id>.md` frontmatter. If attempt > 3, set progress.md status to FAILED, clean up worktree if applicable (see `skills/mash/shared/post-feature.md` WORKTREE CLEANUP section), and stop this feature.
+6. **Increment attempt**: Update the `attempt` field in `.mash/dev/feature-<id>.md` frontmatter. If attempt > 3, set progress.md status to FAILED and use AskUserQuestion: *"Feature <id> failed after 3 attempts. Clean up worktree now? (Keeping it lets you inspect the failed work.)"* If yes, run WORKTREE CLEANUP (see `skills/mash/shared/post-feature.md`). Stop this feature.
 7. **Set progress.md to WIP.**
 
 Read `skills/mash/shared/invoke-architect.md` and run **pre-dev** mode for this feature before proceeding to dev.
@@ -92,7 +92,7 @@ After processing a feature:
 
 ### MILESTONE SMOKE TEST
 
-Run after all features in the current milestone are marked `DONE`, before reporting completion to the user.
+Run after all features in the current milestone are marked `DONE`, before reporting completion to the user. By this point all worktrees have been merged and cleaned up — run all verification from the project root.
 
 1. Collect all Verification Steps from all completed feature files in `.mash/dev/`.
 2. **Check architecture.md for how the application is meant to run** (local process, Docker, docker-compose, etc.).

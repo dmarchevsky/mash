@@ -15,7 +15,7 @@ Process a defect through the patch/QA cycle. Before starting, read `skills/mash/
 | QA_FAIL | Go to step 8 (failure handling). |
 | QA_PASS | Go to step 7 (post-fix completion). |
 
-4. **Increment attempt**: Update `attempt` in frontmatter. If attempt > 3, report FAILED to the user, run WORKTREE CLEANUP (see `skills/mash/shared/post-feature.md`) if applicable, and stop.
+4. **Increment attempt**: Update `attempt` in frontmatter. If attempt > 3, report FAILED to the user and use AskUserQuestion: *"Defect <id> failed after 3 attempts. Clean up worktree now? (Keeping it lets you inspect the failed work.)"* If yes, run WORKTREE CLEANUP (see `skills/mash/shared/post-feature.md`). Stop.
 
 5. **INVOKE PATCH**: **If this is a retry (attempt > 1):** Read the `## Patch outcome (attempt <n-1>)` section in `.mash/dev/defect-<id>.md`. Extract the blocker or failure summary. Append a RETRY CONTEXT block:
 ```
@@ -65,8 +65,9 @@ Go back to step 3.
    3. Present QA outcome to the user. Use AskUserQuestion to confirm the fix is resolved.
    4. Read `skills/mash/shared/extract-lessons.md` and follow its instructions for this defect.
    5. If `git: none` in settings.md, skip git operations. Otherwise:
-      - Commit with a descriptive message referencing the defect (use `git commit` from within the worktree if `branching: worktree`, or from the project root if `branching: current_branch`).
-      - If `commit: auto` and `branching: worktree`: merge the defect branch (`mash/defect-<id>`) back into the original branch. If the merge produces conflicts, stop and inform the user with the conflicting files listed — do NOT run WORKTREE CLEANUP. Ask the user to resolve conflicts, then confirm to proceed with cleanup.
+      - Stage all changes: run `git add -A` from within the worktree if `branching: worktree`, or from the project root if `branching: current_branch`.
+      - Commit with a descriptive message referencing the defect: run `git commit` from the same location.
+      - If `commit: auto` and `branching: worktree`: switch to the original branch (`git checkout <original_branch>` from project root), then merge: `git merge mash/defect-<id> --no-ff`. If the merge produces conflicts, stop and inform the user with the conflicting files listed — do NOT run WORKTREE CLEANUP. Ask the user to resolve conflicts, then confirm to proceed with cleanup.
    6. Run WORKTREE CLEANUP (see `skills/mash/shared/post-feature.md`) if applicable.
    7. Stop.
 

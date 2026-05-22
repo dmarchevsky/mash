@@ -10,15 +10,16 @@ Runs after a feature reaches ARCH_VERIFIED (QA_PASS + architect confirmation).
 - Mark feature as DONE in progress.md. Inform the user that feature <id> passed QA and changes are ready (no git in use).
 
 **If `commit: auto`:**
-- Commit the changes for this feature with a descriptive message (run `git commit` from within the worktree if `branching: worktree`, or from the project root if `branching: current_branch`).
+- Stage all changes: run `git add -A` from within the worktree if `branching: worktree`, or from the project root if `branching: current_branch`.
+- Commit with a descriptive message: run `git commit` from the same location.
 - If `branching: worktree`:
-  - Merge the feature branch (`mash/feature-<id>`) back into the original branch.
+  - Switch to the original branch (the branch that was active when `mash dev` started): `git checkout <original_branch>` from the project root.
+  - Merge the feature branch: `git merge mash/feature-<id>` (use `--no-ff` for a merge commit that preserves history).
   - If the merge produces conflicts: stop and inform the user with the conflicting files listed — do NOT run WORKTREE CLEANUP. Ask the user to resolve conflicts on the original branch, then confirm to proceed with cleanup.
   - On successful merge: run WORKTREE CLEANUP for this feature.
 
 **If `commit: manual`:**
-- Do NOT commit or merge. Inform the user that feature <id> passed QA and changes are ready.
-- If `branching: worktree`, inform the user which worktree/branch contains the changes and leave it in place.
+- Do NOT commit or merge. Inform the user that feature <id> passed QA and changes are ready for committing.
 
 ### WORKTREE CLEANUP
 

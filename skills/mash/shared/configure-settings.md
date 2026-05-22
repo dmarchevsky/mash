@@ -36,8 +36,9 @@ Shared procedure — called from the `config` command and from init-persona Phas
 
    #### Git branching
    Ask the user to choose with AskUserQuestion:
-   - `worktree` — create a per-feature branch and git worktree. Keeps the current branch clean.
+   - `worktree` — create a per-feature branch and git worktree. Keeps the current branch clean. **Requires `commit: auto`** (MASH must handle merge-back).
    - `current_branch` — work directly on the current branch. Simpler but mixes feature work.
+   If the user selects `worktree` and `commit` is currently `manual`, automatically set `commit: auto` and inform the user: *"Switched commit mode to auto — worktrees require automated merge-back."*
    Write or update the `branching:` line in `.mash/plan/settings.md`.
 
    #### Git commit
@@ -45,6 +46,7 @@ Shared procedure — called from the `config` command and from init-persona Phas
    - `auto` — MASH commits and merges after each feature/defect passes QA.
    - `manual` — MASH leaves changes uncommitted. The user handles commits and merges.
    If choosing `auto`, note that sub-agents will run git commands autonomously (`git commit`, `git merge`, `git checkout`) — covered by `Bash(*)`.
+   **Constraint**: If `branching: worktree` is set, `commit` must be `auto`. Worktrees require automated merge-back — manual commit with worktrees leaves the user with a complex multi-step git cleanup. If the user selects `manual` while `branching: worktree`, inform them of this constraint and offer: switch branching to `current_branch`, or keep `commit: auto`.
    Write or update the `commit:` line in `.mash/plan/settings.md`.
 
    #### Sub-agent permissions
