@@ -4,9 +4,10 @@ Used by both the implementation loop (features) and patch loop (defects). Called
 
 Before invoking for a defect, ensure the defect file status is `DEV_DONE` (patch-persona sets PATCH_DONE; translate this to DEV_DONE so qa-persona proceeds correctly).
 
-Read `${CLAUDE_SKILL_DIR}/references/qa-persona.md` and invoke:
+Read `${CLAUDE_SKILL_DIR}/references/qa-persona.md` and invoke the Agent tool with both required parameters (`description` and `prompt`):
 ```
 Agent(
+  description="MASH QA agent",
   prompt="<qa-persona.md contents>
 
 ---

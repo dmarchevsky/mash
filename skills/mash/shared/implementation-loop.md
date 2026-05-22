@@ -53,9 +53,10 @@ These lessons were learned from previous features and defects in this project. A
 ---
 ```
 
-Read `${CLAUDE_SKILL_DIR}/references/dev-persona.md` and invoke:
+Read `${CLAUDE_SKILL_DIR}/references/dev-persona.md` and invoke the Agent tool with both required parameters (`description` and `prompt`):
 ```
 Agent(
+  description="MASH Dev agent",
   prompt="<dev-persona.md contents>
 
 ---

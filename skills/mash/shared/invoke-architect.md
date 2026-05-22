@@ -21,9 +21,10 @@ Review these outcomes alongside the feature spec and consider:
 Include a concrete approach direction in your report for the dev agent to follow.
 ```
 
-Read `${CLAUDE_SKILL_DIR}/references/architect-persona.md` and invoke:
+Read `${CLAUDE_SKILL_DIR}/references/architect-persona.md` and invoke the Agent tool with both required parameters (`description` and `prompt`):
 ```
 Agent(
+  description="MASH Architect pre-dev",
   prompt="<architect-persona.md contents>
 
 ---
@@ -54,9 +55,10 @@ After the agent returns, read the `---MASH_STATUS---` block in the agent output 
 
 Runs after QA_PASS for both features and defects. Invoked by MASH — not a sub-agent of QA. Verifies that QA evidence covers all stated goals and acceptance criteria, not just that tests passed.
 
-Read `${CLAUDE_SKILL_DIR}/references/architect-persona.md` and invoke:
+Read `${CLAUDE_SKILL_DIR}/references/architect-persona.md` and invoke the Agent tool with both required parameters (`description` and `prompt`):
 ```
 Agent(
+  description="MASH Architect post-qa",
   prompt="<architect-persona.md contents>
 
 ---

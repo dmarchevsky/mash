@@ -35,9 +35,10 @@ These lessons were learned from previous features and defects in this project. A
 ---
 ```
 
-Read `${CLAUDE_SKILL_DIR}/references/patch-persona.md` and invoke:
+Read `${CLAUDE_SKILL_DIR}/references/patch-persona.md` and invoke the Agent tool with both required parameters (`description` and `prompt`):
 ```
 Agent(
+  description="MASH Patch agent",
   prompt="<patch-persona.md contents>
 
 ---

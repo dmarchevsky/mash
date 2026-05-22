@@ -4,6 +4,11 @@ All notable changes to MASH will be documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.10.1] — 2026-05-22
+
+### Fixed
+- **Sub-agent invocation on smaller models** — added missing `description` parameter to all Agent() pseudo-code blocks and explicit "invoke the Agent tool" instruction lines. Weaker models (Sonnet, Haiku) were following templates literally and omitting the required field, causing `SchemaError(Missing key at ["description"])`.
+
 ## [0.9.4] — 2026-05-21
 
 ### Fixed
