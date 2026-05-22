@@ -1,5 +1,7 @@
 # MASH: plan
 
+> **Path note**: `.mash/` paths below are in the user's project directory (CWD), not in this framework's install directory.
+
 Create or refine feature specifications.
 
 **Arguments**: optional `<description>` — an inline feature description to pre-seed the conversation.

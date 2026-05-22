@@ -1,5 +1,7 @@
 # MASH: fix
 
+> **Path note**: `.mash/` paths below are in the user's project directory (CWD), not in this framework's install directory.
+
 Collaborative debugging session followed by automated patching.
 
 **Arguments**:

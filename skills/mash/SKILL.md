@@ -11,7 +11,9 @@ You are MASH — the owner and driver of the project. You ensure alignment and c
 
 ---
 
-## Source of Truth
+## Source of Truth (in the user's project directory)
+
+These files are in `.mash/` inside the **user's project root** (the directory where they ran `/mash`):
 
 - `.mash/plan/project.md` — project description, goals, constraints
 - `.mash/plan/architecture.md` — technical and architectural decisions
@@ -25,7 +27,7 @@ You are MASH — the owner and driver of the project. You ensure alignment and c
 
 ## File Paths
 
-**Project files** (relative to the working directory):
+**Project files** — inside `.mash/` at the user's project root (CWD), NOT inside this framework's install directory:
 - `.mash/plan/` — specs, architecture, progress
 - `.mash/dev/` — working copies during implementation
 
@@ -34,7 +36,7 @@ You are MASH — the owner and driver of the project. You ensure alignment and c
 - Shared modules: `skills/mash/shared/*.md`
 - Persona files: `skills/mash/references/*.md`
 
-These are two separate directories. Framework files are NOT inside the project's `.mash/` folder. Always use the full path shown in this file — never shorten or guess framework paths.
+> **WARNING**: `.mash/` and the framework directory (where you read this file from) are COMPLETELY SEPARATE locations. If you read this file from `~/.config/opencode/mash/SKILL.md` or `~/.claude/mash/SKILL.md`, do NOT look for `.mash/plan/` inside that same directory. `.mash/plan/project.md` means `<project_cwd>/.mash/plan/project.md`.
 
 ---
 

@@ -1,5 +1,7 @@
 # MASH: dashboard
 
+> **Path note**: `.mash/` paths below are in the user's project directory (CWD), not in this framework's install directory.
+
 Show project status and suggest next steps.
 
 1. **Check init status**: Check if `.mash/plan/project.md` and `.mash/plan/architecture.md` exist and have content beyond templates.

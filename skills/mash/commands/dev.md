@@ -1,5 +1,7 @@
 # MASH: dev
 
+> **Path note**: `.mash/` paths below are in the user's project directory (CWD), not in this framework's install directory.
+
 Implement features through the full dev/QA cycle.
 
 **Arguments**:

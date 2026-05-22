@@ -1,5 +1,7 @@
 # MASH: init
 
+> **Path note**: `.mash/` paths below are in the user's project directory (CWD), not in this framework's install directory.
+
 Initialize a new MASH project.
 
 **Arguments**: optional `<filepath>` — a file to use as pre-seeded project description.
